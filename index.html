@@ -9,8 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    
-    <!-- SheetJS for Excel generation -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <style>
@@ -133,12 +131,15 @@
         .commission-item .rule-text { font-weight: 600; }
         .commission-item .rule-amount { color: #28a745; font-weight: bold; }
         
-        .inline-flex { display: flex; gap: 8px; flex-wrap: wrap; }
-        .inline-flex .form-group { flex: 1; min-width: 120px; }
-        .inline-flex .btn-primary { flex: 0.5; min-width: 80px; }
+        .connection-status { padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px; font-weight: 600; text-align: center; }
+        .connection-status.online { background: #d4edda; color: #155724; }
+        .connection-status.offline { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status online">✅ Connected to Firebase</div>
+
     <!-- ========== HOME ========== -->
     <div id="pageHome" class="page active">
         <div class="header">
@@ -470,9 +471,49 @@
             measurementId: "G-09Q5HBQQS4"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
+        // Initialize Firebase with error handling
+        let db, storage;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            storage = firebase.storage();
+
+            // Enable offline persistence
+            db.enablePersistence()
+                .then(() => {
+                    console.log('🔥 Firebase offline persistence enabled');
+                    updateConnectionStatus(true);
+                })
+                .catch((err) => {
+                    console.warn('⚠️ Firebase persistence error:', err);
+                    updateConnectionStatus(true);
+                });
+
+            // Connection status listener
+            db.collection('stats').doc('summary').onSnapshot(
+                () => updateConnectionStatus(true),
+                (error) => {
+                    console.error('🔥 Firebase connection error:', error);
+                    updateConnectionStatus(false);
+                }
+            );
+
+        } catch (error) {
+            console.error('🔥 Firebase init error:', error);
+            showToast('❌ Firebase initialization failed!', 'error');
+        }
+
+        function updateConnectionStatus(online) {
+            const el = document.getElementById('connectionStatus');
+            if (online) {
+                el.className = 'connection-status online';
+                el.textContent = '✅ Connected to Firebase';
+            } else {
+                el.className = 'connection-status offline';
+                el.textContent = '❌ Offline - Check your internet connection';
+            }
+        }
 
         // =============================================
         // TELEGRAM
@@ -491,31 +532,36 @@
         // INIT
         // =============================================
         function init() {
-            if (isAdmin) {
-                document.getElementById('adminBadge').style.display = 'inline';
-                document.getElementById('adminMenu').style.display = 'block';
-            }
-
-            if (tgUser.id) {
-                document.getElementById('userName').textContent = tgUser.first_name || 'User';
-                document.getElementById('userIdDisplay').textContent = `ID: ${tgUser.id}`;
-                document.getElementById('profileName').textContent = tgUser.first_name || 'User';
-                document.getElementById('profileUserId').textContent = tgUser.id || '---';
-                if (tgUser.photo_url) {
-                    document.querySelector('.user-avatar').innerHTML = `<img src="${tgUser.photo_url}">`;
+            try {
+                if (isAdmin) {
+                    document.getElementById('adminBadge').style.display = 'inline';
+                    document.getElementById('adminMenu').style.display = 'block';
                 }
+
+                if (tgUser.id) {
+                    document.getElementById('userName').textContent = tgUser.first_name || 'User';
+                    document.getElementById('userIdDisplay').textContent = `ID: ${tgUser.id}`;
+                    document.getElementById('profileName').textContent = tgUser.first_name || 'User';
+                    document.getElementById('profileUserId').textContent = tgUser.id || '---';
+                    if (tgUser.photo_url) {
+                        document.querySelector('.user-avatar').innerHTML = `<img src="${tgUser.photo_url}">`;
+                    }
+                }
+
+                tg.expand();
+                tg.ready();
+
+                if (currentUserId) {
+                    initUser();
+                } else {
+                    showToast('❌ Could not identify user', 'error');
+                }
+
+                document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+            } catch (error) {
+                console.error('Init error:', error);
+                showToast('❌ Initialization error: ' + error.message, 'error');
             }
-
-            tg.expand();
-            tg.ready();
-
-            if (currentUserId) {
-                initUser();
-            } else {
-                showToast('❌ Could not identify user', 'error');
-            }
-
-            document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
         }
 
         // =============================================
@@ -523,6 +569,11 @@
         // =============================================
         async function initUser() {
             try {
+                if (!db) {
+                    showToast('❌ Firebase not initialized!', 'error');
+                    return;
+                }
+
                 const userRef = db.collection('users').doc(currentUserId);
                 const doc = await userRef.get();
 
@@ -540,9 +591,22 @@
                         referralEarnings: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    await db.collection('stats').doc('summary').update({
-                        totalUsers: firebase.firestore.FieldValue.increment(1)
-                    });
+                    
+                    // Update stats
+                    const statsRef = db.collection('stats').doc('summary');
+                    const statsDoc = await statsRef.get();
+                    if (statsDoc.exists) {
+                        await statsRef.update({
+                            totalUsers: firebase.firestore.FieldValue.increment(1)
+                        });
+                    } else {
+                        await statsRef.set({
+                            totalUsers: 1,
+                            totalBalance: 0,
+                            totalSubmissions: 0,
+                            todaySubmissions: 0
+                        });
+                    }
                 }
 
                 await loadUserData();
@@ -566,7 +630,7 @@
                 }
 
             } catch (error) {
-                console.error('Init error:', error);
+                console.error('Init user error:', error);
                 showToast('❌ Error: ' + error.message, 'error');
             }
         }
@@ -583,6 +647,7 @@
         // =============================================
         async function loadUserData() {
             try {
+                if (!db) return;
                 const doc = await db.collection('users').doc(currentUserId).get();
                 if (doc.exists) {
                     const data = doc.data();
@@ -599,19 +664,32 @@
                     document.getElementById('refEarnings').textContent = data.referralEarnings?.toFixed(2) || '0.00';
                     document.getElementById('referralLink').textContent = `https://t.me/YourBot?start=ref_${data.referralCode}`;
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load user data error:', e); }
         }
 
-        db.collection('users').doc(currentUserId).onSnapshot(doc => {
-            if (doc.exists) document.getElementById('userBalance').textContent = doc.data().balance?.toFixed(2) || '0.00';
-        });
+        // Real-time balance
+        if (currentUserId && db) {
+            db.collection('users').doc(currentUserId).onSnapshot(doc => {
+                if (doc.exists) {
+                    document.getElementById('userBalance').textContent = doc.data().balance?.toFixed(2) || '0.00';
+                }
+            }, (error) => {
+                console.error('Balance listener error:', error);
+            });
+        }
 
         // =============================================
         // LOAD DASHBOARD
         // =============================================
         async function loadDashboard() {
             try {
-                const subs = await db.collection('submissions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(5).get();
+                if (!db) return;
+                const subs = await db.collection('submissions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(5)
+                    .get();
+                    
                 const container = document.getElementById('recentSubmissions');
                 if (subs.empty) {
                     container.innerHTML = `<div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">No submissions</div>`;
@@ -621,13 +699,14 @@
                 subs.forEach(d => {
                     const data = d.data();
                     html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><div style="font-weight:600; font-size:14px;">${data.fileName}</div><div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div></div>
+                        <div><div style="font-weight:600; font-size:14px;">${data.fileName}</div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div></div>
                         <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
                     </div>`;
                 });
                 html += '</div>';
                 container.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load dashboard error:', e); }
         }
 
         // =============================================
@@ -635,6 +714,7 @@
         // =============================================
         async function loadCategories() {
             try {
+                if (!db) return;
                 const snapshot = await db.collection('categories').get();
                 const grid = document.getElementById('categoryGrid');
                 if (snapshot.empty) {
@@ -653,7 +733,7 @@
                         </div>
                     `;
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load categories error:', e); }
         }
 
         function selectCategory(catId) {
@@ -664,7 +744,7 @@
         }
 
         // =============================================
-        // FILE UPLOAD - With Admin Notification
+        // FILE UPLOAD
         // =============================================
         async function uploadFile(input) {
             const file = input.files[0];
@@ -674,6 +754,11 @@
             document.getElementById('uploadProgress').style.display = 'block';
 
             try {
+                if (!db || !storage) {
+                    showToast('❌ Firebase not connected!', 'error');
+                    return;
+                }
+
                 // Get category name
                 const catDoc = await db.collection('categories').doc(selectedCategory).get();
                 const catName = catDoc.exists ? catDoc.data().name : 'Unknown';
@@ -695,19 +780,29 @@
                     status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
-                const subRef = await db.collection('submissions').add(subData);
+                await db.collection('submissions').add(subData);
 
                 await db.collection('users').doc(currentUserId).update({
                     totalSubmits: firebase.firestore.FieldValue.increment(1)
                 });
-                await db.collection('stats').doc('summary').update({
-                    totalSubmissions: firebase.firestore.FieldValue.increment(1),
-                    todaySubmissions: firebase.firestore.FieldValue.increment(1)
-                });
+                
+                const statsRef = db.collection('stats').doc('summary');
+                const statsDoc = await statsRef.get();
+                if (statsDoc.exists) {
+                    await statsRef.update({
+                        totalSubmissions: firebase.firestore.FieldValue.increment(1),
+                        todaySubmissions: firebase.firestore.FieldValue.increment(1)
+                    });
+                } else {
+                    await statsRef.set({
+                        totalUsers: 0,
+                        totalBalance: 0,
+                        totalSubmissions: 1,
+                        todaySubmissions: 1
+                    });
+                }
 
-                // =============================================
-                // SEND ADMIN NOTIFICATION WITH FILE
-                // =============================================
+                // Send admin notification with file
                 const adminMsg = 
                     `📤 <b>New File Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
@@ -715,17 +810,15 @@
                     `📁 <b>Category:</b> ${catName}\n` +
                     `📄 <b>File:</b> ${file.name}\n` +
                     `⏳ <b>Status:</b> Pending Review\n\n` +
-                    `📌 <b>Action Required:</b> Please review the file.`;
+                    `📌 Action Required: Please review the file.`;
 
-                // Send message with file to admin
                 sendTelegramDocument(ADMIN_CHAT_ID, file, adminMsg);
-
                 showToast('✅ File uploaded! Admin notified.', 'success');
                 loadDashboard();
                 
             } catch (e) {
-                console.error(e);
-                showToast('❌ Upload failed', 'error');
+                console.error('Upload error:', e);
+                showToast('❌ Upload failed: ' + e.message, 'error');
             } finally {
                 document.getElementById('uploadProgress').style.display = 'none';
                 input.value = '';
@@ -761,6 +854,7 @@
         // =============================================
         async function loadWithdrawMethods() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('withdrawMethods').get();
                 const select = document.getElementById('withdrawMethod');
                 select.innerHTML = '<option value="">Select</option>';
@@ -804,9 +898,14 @@
                 await db.collection('users').doc(currentUserId).update({
                     balance: firebase.firestore.FieldValue.increment(-amount)
                 });
-                await db.collection('stats').doc('summary').update({
-                    totalBalance: firebase.firestore.FieldValue.increment(-amount)
-                });
+                
+                const statsRef = db.collection('stats').doc('summary');
+                const statsDoc = await statsRef.get();
+                if (statsDoc.exists) {
+                    await statsRef.update({
+                        totalBalance: firebase.firestore.FieldValue.increment(-amount)
+                    });
+                }
 
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `💳 <b>New Withdraw Request</b>\n\n` +
@@ -822,7 +921,7 @@
                 loadUserData();
                 document.getElementById('withdrawAmount').value = '';
                 document.getElementById('withdrawNumber').value = '';
-            } catch (e) { console.error(e); showToast('❌ Failed', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Failed: ' + e.message, 'error'); }
         }
 
         // =============================================
@@ -830,8 +929,19 @@
         // =============================================
         async function loadHistory() {
             try {
-                const subs = await db.collection('submissions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(50).get();
-                const txs = await db.collection('transactions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(50).get();
+                if (!db) return;
+                const subs = await db.collection('submissions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+                    
+                const txs = await db.collection('transactions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+                    
                 const container = document.getElementById('historyList');
                 let html = '';
 
@@ -857,6 +967,7 @@
         // =============================================
         async function loadSupportContacts() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('support').get();
                 const container = document.getElementById('supportContacts');
                 if (doc.exists) {
@@ -868,6 +979,7 @@
 
         async function loadPriceRules() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('priceRules').get();
                 document.getElementById('priceRules').innerHTML = doc.exists ? `<div style="white-space:pre-wrap;">${doc.data().rules || 'No rules'}</div>` : '<div style="color:var(--tg-hint);">No rules</div>';
                 document.getElementById('priceRulesInput').value = doc.exists ? doc.data().rules || '' : '';
@@ -876,6 +988,7 @@
 
         async function loadTutorialVideo() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('tutorial').get();
                 const container = document.getElementById('howToUseVideo');
                 if (doc.exists && doc.data().videoUrl) {
@@ -891,7 +1004,7 @@
         // ADMIN: CATEGORIES
         // =============================================
         async function loadAdminCategories() {
-            if (!isAdmin) return;
+            if (!isAdmin || !db) return;
             try {
                 const snapshot = await db.collection('categories').get();
                 const container = document.getElementById('adminCategoryList');
@@ -903,7 +1016,8 @@
                 snapshot.forEach(doc => {
                     const cat = doc.data();
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div><div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active ? '🟢 Active' : '🔴 Inactive'}</div></div>
+                        <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
+                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active ? '🟢 Active' : '🔴 Inactive'}</div></div>
                         <div style="display:flex; gap:4px;">
                             <button onclick="editCategory('${doc.id}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
                             <button onclick="deleteCategory('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
@@ -911,7 +1025,7 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load admin categories error:', e); }
         }
 
         function openCategoryModal(catId = null) {
@@ -927,7 +1041,7 @@
                         document.getElementById('categoryDetails').value = data.details || '';
                         document.getElementById('categoryStatus').value = String(data.active !== false);
                     }
-                });
+                }).catch(e => showToast('❌ Error loading category', 'error'));
             } else {
                 document.getElementById('categoryName').value = '';
                 document.getElementById('categoryIcon').value = '';
@@ -947,6 +1061,8 @@
             if (!name) { showToast('❌ Enter name', 'error'); return; }
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
+                
                 const data = { name, icon, details, active };
                 if (editingCategoryId) {
                     await db.collection('categories').doc(editingCategoryId).update(data);
@@ -956,23 +1072,30 @@
                     showToast('✅ Added!', 'success');
                 }
                 closeModal('categoryModal');
-                loadAdminCategories();
-                loadCategories();
-                loadCommissionCategories();
-                loadReportCategories();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadAdminCategories();
+                await loadCategories();
+                await loadCommissionCategories();
+                await loadReportCategories();
+            } catch (e) { 
+                console.error('Save category error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         async function deleteCategory(catId) {
-            if (!confirm('Delete?')) return;
+            if (!confirm('Delete this category?')) return;
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 await db.collection('categories').doc(catId).delete();
                 showToast('✅ Deleted!', 'success');
-                loadAdminCategories();
-                loadCategories();
-                loadCommissionCategories();
-                loadReportCategories();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadAdminCategories();
+                await loadCategories();
+                await loadCommissionCategories();
+                await loadReportCategories();
+            } catch (e) { 
+                console.error('Delete category error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         // =============================================
@@ -980,6 +1103,7 @@
         // =============================================
         async function loadCommissionCategories() {
             try {
+                if (!db) return;
                 const snapshot = await db.collection('categories').get();
                 const select = document.getElementById('commissionCategorySelect');
                 select.innerHTML = '<option value="">Select Category</option>';
@@ -998,6 +1122,7 @@
             }
 
             try {
+                if (!db) return;
                 const doc = await db.collection('categoryCommission').doc(catId).get();
                 const container = document.getElementById('commissionRulesList');
                 
@@ -1032,28 +1157,36 @@
             if (!bonus || bonus < 0) { showToast('❌ Valid bonus', 'error'); return; }
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('categoryCommission').doc(catId).get();
                 let rules = doc.exists ? doc.data().rules || {} : {};
                 rules[String(minIds)] = bonus;
 
                 await db.collection('categoryCommission').doc(catId).set({ rules });
                 showToast('✅ Commission rule added!', 'success');
-                loadCommissionRules();
+                await loadCommissionRules();
                 document.getElementById('commissionMinIds').value = '';
                 document.getElementById('commissionBonus').value = '';
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { 
+                console.error('Add commission error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         async function deleteCommissionRule(catId, key) {
             if (!confirm('Delete this rule?')) return;
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('categoryCommission').doc(catId).get();
                 let rules = doc.exists ? doc.data().rules || {} : {};
                 delete rules[key];
                 await db.collection('categoryCommission').doc(catId).set({ rules });
                 showToast('✅ Rule deleted!', 'success');
-                loadCommissionRules();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadCommissionRules();
+            } catch (e) { 
+                console.error('Delete commission error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         // =============================================
@@ -1061,6 +1194,7 @@
         // =============================================
         async function loadAllUsers() {
             try {
+                if (!db) return;
                 const snapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(50).get();
                 const container = document.getElementById('userList');
                 if (snapshot.empty) { container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>'; return; }
@@ -1075,7 +1209,7 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load users error:', e); }
         }
 
         function searchUsers() {
@@ -1087,6 +1221,7 @@
 
         async function viewUser(userId) {
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('users').doc(userId).get();
                 if (!doc.exists) { showToast('❌ Not found', 'error'); return; }
                 const u = doc.data();
@@ -1103,17 +1238,22 @@
                 html += '</div>';
                 document.getElementById('userDetailContent').innerHTML = html;
                 document.getElementById('userDetailModal').classList.add('active');
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function deleteUser(userId) {
             if (!confirm(`Delete ${userId}?`)) return;
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 await db.collection('users').doc(userId).delete();
-                await db.collection('stats').doc('summary').update({ totalUsers: firebase.firestore.FieldValue.increment(-1) });
+                const statsRef = db.collection('stats').doc('summary');
+                const statsDoc = await statsRef.get();
+                if (statsDoc.exists) {
+                    await statsRef.update({ totalUsers: firebase.firestore.FieldValue.increment(-1) });
+                }
                 showToast('✅ Deleted!', 'success');
-                loadAllUsers();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadAllUsers();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
@@ -1127,26 +1267,42 @@
             if (isNaN(amount) || amount === 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('users').doc(userId).get();
                 if (!doc.exists) { showToast('❌ User not found', 'error'); return; }
                 await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
-                await db.collection('transactions').add({ userId, amount, reason, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                await db.collection('stats').doc('summary').update({ totalBalance: firebase.firestore.FieldValue.increment(amount) });
+                await db.collection('transactions').add({ 
+                    userId, amount, reason, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                
+                const statsRef = db.collection('stats').doc('summary');
+                const statsDoc = await statsRef.get();
+                if (statsDoc.exists) {
+                    await statsRef.update({ totalBalance: firebase.firestore.FieldValue.increment(amount) });
+                }
+                
                 showToast(`✅ ${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} Taka`, 'success');
-                loadBalanceStats();
-                loadUserData();
+                await loadBalanceStats();
+                await loadUserData();
+                
                 sendTelegramMessage(userId,
                     `💵 <b>Balance Updated</b>\n\n` +
                     `${amount > 0 ? '➕' : '➖'} ${Math.abs(amount)} Taka\n` +
                     `📝 ${reason}`
                 );
+                
                 document.getElementById('balanceAmount').value = '';
                 document.getElementById('balanceReason').value = '';
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { 
+                console.error('Update balance error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         async function loadBalanceStats() {
             try {
+                if (!db) return;
                 const doc = await db.collection('stats').doc('summary').get();
                 if (doc.exists) {
                     document.getElementById('totalBalance').textContent = doc.data().totalBalance?.toFixed(2) || '0.00';
@@ -1167,7 +1323,13 @@
 
         async function loadFileList(status = 'pending') {
             try {
-                const snapshot = await db.collection('submissions').where('status', '==', status).orderBy('timestamp', 'desc').limit(50).get();
+                if (!db) return;
+                const snapshot = await db.collection('submissions')
+                    .where('status', '==', status)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+                    
                 const container = document.getElementById('adminFileList');
                 if (snapshot.empty) {
                     container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
@@ -1194,20 +1356,20 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('Load files error:', e); }
         }
 
         // =============================================
-        // ADMIN: APPROVE/REJECT WITH COMMISSION
+        // APPROVE/REJECT WITH COMMISSION
         // =============================================
         async function approveFile(fileId) {
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('submissions').doc(fileId).get();
                 const data = doc.data();
                 await doc.ref.update({ status: 'approved' });
                 await db.collection('users').doc(data.userId).update({ approved: firebase.firestore.FieldValue.increment(1) });
 
-                // Get rate per ID (from settings or default 5)
                 let ratePerId = 5;
                 const rateDoc = await db.collection('settings').doc('priceRules').get();
                 if (rateDoc.exists && rateDoc.data().ratePerId) {
@@ -1217,7 +1379,6 @@
                 const approvedCount = data.idCount || 0;
                 const earnings = approvedCount * ratePerId;
 
-                // Check for category commission
                 let commissionBonus = 0;
                 const commissionDoc = await db.collection('categoryCommission').doc(data.categoryId).get();
                 if (commissionDoc.exists) {
@@ -1244,7 +1405,6 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Send report to user with Excel files
                     await sendReportToUser(data.userId, data.categoryId, approvedCount, ratePerId, commissionBonus, totalEarnings);
 
                     sendTelegramMessage(data.userId,
@@ -1259,20 +1419,23 @@
                 }
 
                 showToast('✅ Approved with commission!', 'success');
-                loadFileList(currentFileTab);
-                loadDashboard();
+                await loadFileList(currentFileTab);
+                await loadDashboard();
 
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { 
+                console.error('Approve error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         async function rejectFile(fileId) {
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('submissions').doc(fileId).get();
                 const data = doc.data();
                 await doc.ref.update({ status: 'rejected' });
                 await db.collection('users').doc(data.userId).update({ rejected: firebase.firestore.FieldValue.increment(1) });
 
-                // Send rejection report
                 await sendRejectionReport(data.userId, data.fileName);
 
                 sendTelegramMessage(data.userId,
@@ -1283,8 +1446,11 @@
                 );
 
                 showToast('✅ Rejected!', 'success');
-                loadFileList(currentFileTab);
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadFileList(currentFileTab);
+            } catch (e) { 
+                console.error('Reject error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         // =============================================
@@ -1292,7 +1458,6 @@
         // =============================================
         async function sendReportToUser(userId, categoryId, approvedCount, ratePerId, commission, totalEarnings) {
             try {
-                // Get approved IDs for this user
                 const subs = await db.collection('submissions')
                     .where('userId', '==', userId)
                     .where('categoryId', '==', categoryId)
@@ -1304,7 +1469,6 @@
 
                 subs.forEach(doc => {
                     const data = doc.data();
-                    // Assuming IDs are stored in the file
                     if (data.idCount) {
                         for (let i = 0; i < data.idCount; i++) {
                             approvedIds.push(`ID_${data.userId}_${i+1}`);
@@ -1312,20 +1476,18 @@
                     }
                 });
 
-                // Create Approved Excel
+                // Approved Excel
                 const wbApproved = XLSX.utils.book_new();
                 const approvedData = [
                     ['SL', 'ID', 'Status', 'Rate', 'Earnings'],
                     ...approvedIds.map((id, i) => [i+1, id, 'Approved', ratePerId, ratePerId])
                 ];
-                if (approvedIds.length === 0) {
-                    approvedData.push(['No approved IDs found']);
-                }
+                if (approvedIds.length === 0) approvedData.push(['No approved IDs found']);
                 const wsApproved = XLSX.utils.aoa_to_sheet(approvedData);
                 XLSX.utils.book_append_sheet(wbApproved, wsApproved, 'Approved');
                 const approvedExcel = XLSX.write(wbApproved, { type: 'array', bookType: 'xlsx' });
 
-                // Create Rejected Excel (empty for now)
+                // Rejected Excel
                 const wbRejected = XLSX.utils.book_new();
                 const rejectedData = [
                     ['SL', 'ID', 'Status', 'Reason']
@@ -1341,11 +1503,10 @@
                 XLSX.utils.book_append_sheet(wbRejected, wsRejected, 'Rejected');
                 const rejectedExcel = XLSX.write(wbRejected, { type: 'array', bookType: 'xlsx' });
 
-                // Convert to Blobs
                 const approvedBlob = new Blob([approvedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const rejectedBlob = new Blob([rejectedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-                // Send to user via Telegram
+                // Send Approved
                 const formDataApproved = new FormData();
                 formDataApproved.append('chat_id', userId);
                 formDataApproved.append('document', approvedBlob, `approved_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -1358,13 +1519,9 @@
                     `📅 ${new Date().toLocaleDateString()}`
                 );
                 formDataApproved.append('parse_mode', 'HTML');
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataApproved });
 
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                    method: 'POST',
-                    body: formDataApproved
-                });
-
-                // Send rejected file
+                // Send Rejected
                 const formDataRejected = new FormData();
                 formDataRejected.append('chat_id', userId);
                 formDataRejected.append('document', rejectedBlob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -1374,11 +1531,7 @@
                     `📅 ${new Date().toLocaleDateString()}`
                 );
                 formDataRejected.append('parse_mode', 'HTML');
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                    method: 'POST',
-                    body: formDataRejected
-                });
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataRejected });
 
             } catch (e) { console.error('Send report error:', e); }
         }
@@ -1386,9 +1539,7 @@
         async function sendRejectionReport(userId, fileName) {
             try {
                 const wb = XLSX.utils.book_new();
-                const data = [
-                    ['SL', 'ID', 'Status', 'Reason']
-                ];
+                const data = [['SL', 'ID', 'Status', 'Reason']];
                 data.push([1, 'All IDs', 'Rejected', 'File rejected by admin']);
                 const ws = XLSX.utils.aoa_to_sheet(data);
                 XLSX.utils.book_append_sheet(wb, ws, 'Rejected');
@@ -1405,12 +1556,7 @@
                     `📅 ${new Date().toLocaleDateString()}`
                 );
                 formData.append('parse_mode', 'HTML');
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                    method: 'POST',
-                    body: formData
-                });
-
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
             } catch (e) { console.error('Send rejection error:', e); }
         }
 
@@ -1419,7 +1565,12 @@
         // =============================================
         async function loadWithdrawRequests() {
             try {
-                const snapshot = await db.collection('withdrawals').where('status', '==', 'pending').orderBy('timestamp', 'desc').get();
+                if (!db) return;
+                const snapshot = await db.collection('withdrawals')
+                    .where('status', '==', 'pending')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                    
                 const container = document.getElementById('withdrawRequests');
                 if (snapshot.empty) {
                     container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending</div>';
@@ -1450,8 +1601,8 @@
                 await db.collection('withdrawals').doc(wdId).update({ status: 'approved' });
                 sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka\n✅ Status: Approved`);
                 showToast('✅ Approved!', 'success');
-                loadWithdrawRequests();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadWithdrawRequests();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function rejectWithdraw(wdId, userId, amount) {
@@ -1460,8 +1611,8 @@
                 await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
                 sendTelegramMessage(userId, `❌ <b>Withdraw Rejected</b>\n\n💰 ${amount} Taka refunded`);
                 showToast('✅ Rejected, refunded', 'success');
-                loadWithdrawRequests();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadWithdrawRequests();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
@@ -1469,6 +1620,7 @@
         // =============================================
         async function loadReportCategories() {
             try {
+                if (!db) return;
                 const snapshot = await db.collection('categories').get();
                 const selects = ['reportCategorySelect', 'reportCategoryDownload'];
                 selects.forEach(id => {
@@ -1485,7 +1637,7 @@
         }
 
         // =============================================
-        // SEND REPORT (Admin) - Full System
+        // SEND REPORT (Admin)
         // =============================================
         async function sendReport() {
             const category = document.getElementById('reportCategorySelect').value;
@@ -1495,17 +1647,17 @@
             showToast('📤 Processing report...', 'info');
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
+                
                 let targetUsers = [];
 
                 if (idsText) {
-                    // Specific users
                     const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
                     for (const id of ids) {
                         const doc = await db.collection('users').doc(id).get();
                         if (doc.exists) targetUsers.push({ id, ...doc.data() });
                     }
                 } else if (category) {
-                    // All users in category
                     const subs = await db.collection('submissions').where('categoryId', '==', category).get();
                     const userIds = new Set();
                     subs.forEach(d => userIds.add(d.data().userId));
@@ -1527,7 +1679,6 @@
                 let totalApproved = 0;
 
                 for (const user of targetUsers) {
-                    // Get approved submissions for this user
                     let query = db.collection('submissions')
                         .where('userId', '==', user.id)
                         .where('status', '==', 'approved');
@@ -1551,7 +1702,6 @@
 
                     if (approvedCount === 0) continue;
 
-                    // Check commission
                     let commissionBonus = 0;
                     if (category) {
                         const commissionDoc = await db.collection('categoryCommission').doc(category).get();
@@ -1584,19 +1734,18 @@
                         totalEarnings += total;
                         totalApproved += approvedCount;
 
-                        // Send Excel report to user
                         await sendReportToUser(user.id, category, approvedCount, ratePerId, commissionBonus, total);
                     }
                 }
 
                 showToast(`✅ Report sent to ${targetUsers.length} users! Total: ${totalApproved} IDs, ${totalEarnings} Taka`, 'success');
-                loadUserData();
-                loadBalanceStats();
+                await loadUserData();
+                await loadBalanceStats();
                 document.getElementById('reportIdsInput').value = '';
 
             } catch (e) {
                 console.error(e);
-                showToast('❌ Error sending report', 'error');
+                showToast('❌ Error: ' + e.message, 'error');
             }
         }
 
@@ -1610,7 +1759,12 @@
             showToast('📊 Generating report...', 'info');
 
             try {
-                let query = db.collection('submissions').where('status', '==', 'approved').orderBy('timestamp', 'desc');
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
+                
+                let query = db.collection('submissions')
+                    .where('status', '==', 'approved')
+                    .orderBy('timestamp', 'desc');
+                    
                 if (date) {
                     const start = new Date(date); start.setHours(0,0,0,0);
                     const end = new Date(date); end.setHours(23,59,59,999);
@@ -1644,7 +1798,7 @@
                 a.click();
                 URL.revokeObjectURL(url);
                 showToast(`✅ Report downloaded! Total: ${totalIds} IDs, ${totalEarnings} Taka`, 'success');
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
@@ -1652,6 +1806,7 @@
         // =============================================
         async function loadWithdrawMethodsList() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('withdrawMethods').get();
                 const container = document.getElementById('withdrawMethodsList');
                 if (doc.exists) {
@@ -1673,51 +1828,56 @@
             if (!minAmount || minAmount <= 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('settings').doc('withdrawMethods').get();
                 let methods = doc.exists ? doc.data().methods || [] : [];
                 if (methods.find(m => m.name === name)) { showToast('❌ Exists', 'error'); return; }
                 methods.push({ name, minAmount });
                 await db.collection('settings').doc('withdrawMethods').set({ methods });
                 showToast('✅ Added!', 'success');
-                loadWithdrawMethodsList();
-                loadWithdrawMethods();
+                await loadWithdrawMethodsList();
+                await loadWithdrawMethods();
                 document.getElementById('newMethodName').value = '';
                 document.getElementById('newMethodLimit').value = '';
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function removeWithdrawMethod(index) {
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('settings').doc('withdrawMethods').get();
                 let methods = doc.exists ? doc.data().methods || [] : [];
                 methods.splice(index, 1);
                 await db.collection('settings').doc('withdrawMethods').set({ methods });
                 showToast('✅ Removed!', 'success');
-                loadWithdrawMethodsList();
-                loadWithdrawMethods();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadWithdrawMethodsList();
+                await loadWithdrawMethods();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function updatePriceRules() {
             const rules = document.getElementById('priceRulesInput').value.trim();
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 await db.collection('settings').doc('priceRules').set({ rules });
                 showToast('✅ Rules updated!', 'success');
-                loadPriceRules();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadPriceRules();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function updateTutorialVideo() {
             const videoUrl = document.getElementById('tutorialVideoUrl').value.trim();
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 await db.collection('settings').doc('tutorial').set({ videoUrl });
                 showToast('✅ Video updated!', 'success');
-                loadTutorialVideo();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadTutorialVideo();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function loadSupportContactsList() {
             try {
+                if (!db) return;
                 const doc = await db.collection('settings').doc('support').get();
                 const container = document.getElementById('supportContactsList');
                 if (doc.exists) {
@@ -1738,28 +1898,30 @@
             if (!name || !username) { showToast('❌ Enter all fields', 'error'); return; }
 
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('settings').doc('support').get();
                 let contacts = doc.exists ? doc.data().contacts || [] : [];
                 contacts.push({ name, username });
                 await db.collection('settings').doc('support').set({ contacts });
                 showToast('✅ Contact added!', 'success');
-                loadSupportContactsList();
-                loadSupportContacts();
+                await loadSupportContactsList();
+                await loadSupportContacts();
                 document.getElementById('newSupportName').value = '';
                 document.getElementById('newSupportUsername').value = '';
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function removeSupportContact(index) {
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const doc = await db.collection('settings').doc('support').get();
                 let contacts = doc.exists ? doc.data().contacts || [] : [];
                 contacts.splice(index, 1);
                 await db.collection('settings').doc('support').set({ contacts });
                 showToast('✅ Removed!', 'success');
-                loadSupportContactsList();
-                loadSupportContacts();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadSupportContactsList();
+                await loadSupportContacts();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
@@ -1768,6 +1930,7 @@
         async function downloadBackup() {
             showToast('💾 Creating backup...', 'info');
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats', 'categoryCommission'];
                 const backup = {};
                 for (const c of collections) {
@@ -1783,7 +1946,7 @@
                 a.click();
                 URL.revokeObjectURL(url);
                 showToast('✅ Backup downloaded!', 'success');
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function restoreBackup(input) {
@@ -1791,6 +1954,7 @@
             if (!file) return;
             showToast('📤 Restoring...', 'info');
             try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const text = await file.text();
                 const backup = JSON.parse(text);
                 for (const [collection, data] of Object.entries(backup)) {
@@ -1799,11 +1963,27 @@
                     }
                 }
                 showToast('✅ Restored!', 'success');
-                loadAllUsers();
-                loadFileList('pending');
-                loadWithdrawRequests();
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                await loadAllUsers();
+                await loadFileList('pending');
+                await loadWithdrawRequests();
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
             input.value = '';
+        }
+
+        // =============================================
+        // DELETE FILE
+        // =============================================
+        async function deleteFile(fileId) {
+            if (!confirm('Delete this file?')) return;
+            try {
+                if (!db) { showToast('❌ Database not connected', 'error'); return; }
+                await db.collection('submissions').doc(fileId).delete();
+                showToast('✅ File deleted!', 'success');
+                await loadFileList(currentFileTab);
+            } catch (e) { 
+                console.error('Delete file error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         // =============================================
