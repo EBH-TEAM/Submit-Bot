@@ -79,11 +79,13 @@
         .category-item { background: var(--tg-secondary); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .category-item:active { transform: scale(0.95); }
         .category-item.selected { border-color: var(--tg-button); background: var(--tg-bg); }
+        .category-item.disabled { opacity: 0.5; cursor: not-allowed; }
         .category-item .cat-icon { font-size: 28px; }
         .category-item .cat-name { font-size: 13px; font-weight: 600; margin-top: 4px; }
         .category-item .cat-status { font-size: 11px; color: var(--tg-hint); }
         .category-item .cat-status.online { color: #28a745; }
         .category-item .cat-status.offline { color: #dc3545; }
+        .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         
         .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .history-left .h-title { font-weight: 600; font-size: 14px; }
@@ -134,6 +136,22 @@
         .connection-status { padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px; font-weight: 600; text-align: center; }
         .connection-status.online { background: #d4edda; color: #155724; }
         .connection-status.offline { background: #f8d7da; color: #721c24; }
+        
+        .file-preview { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+        .file-preview .file-info { display: flex; align-items: center; gap: 10px; }
+        .file-preview .file-info .icon { font-size: 24px; }
+        .file-preview .file-info .details .name { font-weight: 600; font-size: 14px; }
+        .file-preview .file-info .details .size { font-size: 11px; color: var(--tg-hint); }
+        
+        .withdraw-status-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid #ffc107; }
+        .withdraw-status-item.approved { border-left-color: #28a745; }
+        .withdraw-status-item.rejected { border-left-color: #dc3545; }
+        .withdraw-status-item .wd-amount { font-weight: bold; font-size: 16px; }
+        .withdraw-status-item .wd-method { font-size: 12px; color: var(--tg-hint); }
+        .withdraw-status-item .wd-date { font-size: 11px; color: var(--tg-hint); }
+        
+        .copy-number { background: none; border: none; color: var(--tg-link); cursor: pointer; font-size: 12px; }
+        .copy-number:active { opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -187,6 +205,7 @@
                 <div class="menu-item" onclick="switchPage('adminReport')"><span class="menu-icon">📊</span><span class="menu-label">Report</span></div>
                 <div class="menu-item" onclick="switchPage('adminSettings')"><span class="menu-icon">⚙️</span><span class="menu-label">Settings</span></div>
                 <div class="menu-item" onclick="switchPage('adminBackup')"><span class="menu-icon">💾</span><span class="menu-label">Backup</span></div>
+                <div class="menu-item" onclick="switchPage('adminDownload')"><span class="menu-icon">📥</span><span class="menu-label">Download</span></div>
             </div>
         </div>
 
@@ -197,15 +216,25 @@
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 Submit IDs</h3>
+        
         <div class="category-grid" id="categoryGrid"><div class="loading"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
+        
         <div id="uploadSection" style="display:none;">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="uploadFile(this)">
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="previewFile(this)">
                 <span class="icon">📁</span>
                 <p>Click to select Excel file</p>
                 <div style="font-size:12px; color:var(--tg-hint);">Supported: .xlsx, .xls</div>
             </div>
+            
+            <div id="filePreview" style="display:none;"></div>
+            
             <div id="uploadProgress" class="loading" style="display:none;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading...</div></div>
+            
+            <div id="confirmButtons" style="display:none; gap:10px; margin-top:12px;">
+                <button class="btn-primary btn-success" onclick="uploadFile()">✅ Confirm Submit</button>
+                <button class="btn-primary btn-danger" onclick="cancelSubmit()">❌ Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -362,12 +391,24 @@
             </div>
             <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
         </div>
+    </div>
 
+    <!-- ========== ADMIN: DOWNLOAD ========== -->
+    <div id="pageAdminDownload" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📥 Download Files</h3>
+        
         <div class="card">
-            <div class="card-title">📥 Download Report</div>
-            <div class="form-group"><label>📅 Date</label><input type="date" id="reportDate"></div>
-            <div class="form-group"><label>📁 Category</label><select id="reportCategoryDownload"><option value="">All Categories</option></select></div>
-            <button class="btn-primary" onclick="downloadReport()">📥 Download CSV</button>
+            <div class="card-title">📅 Download by Date & Category</div>
+            <div class="form-group">
+                <label>📅 Select Date</label>
+                <input type="date" id="downloadDate">
+            </div>
+            <div class="form-group">
+                <label>📁 Select Category</label>
+                <select id="downloadCategorySelect"><option value="">All Categories</option></select>
+            </div>
+            <button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button>
         </div>
     </div>
 
@@ -440,7 +481,7 @@
             <div class="modal-header"><h3 id="categoryModalTitle">📁 Add Category</h3><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
             <div class="form-group"><label>Name</label><input type="text" id="categoryName" placeholder="Category name"></div>
             <div class="form-group"><label>Icon</label><input type="text" id="categoryIcon" placeholder="Emoji icon"></div>
-            <div class="form-group"><label>Details</label><input type="text" id="categoryDetails" placeholder="Details"></div>
+            <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details (show to users)"></textarea></div>
             <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
             <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
@@ -457,7 +498,7 @@
 
     <script>
         // =============================================
-        // FIREBASE CONFIG - Realtime Database
+        // FIREBASE CONFIG
         // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
@@ -470,7 +511,6 @@
             measurementId: "G-09Q5HBQQS4"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const storage = firebase.storage();
@@ -485,69 +525,27 @@
         let selectedCategory = null;
         let editingCategoryId = null;
         let currentFileTab = 'pending';
+        let selectedFile = null;
+        let selectedFileName = null;
+        let fileIdCount = 0;
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
         // =============================================
         // DATABASE HELPERS
         // =============================================
-        function getRef(path) {
-            return db.ref(path);
-        }
-
-        function getData(path) {
-            return new Promise((resolve, reject) => {
-                db.ref(path).once('value', (snapshot) => {
-                    resolve(snapshot.val());
-                }, (error) => {
-                    reject(error);
-                });
-            });
-        }
-
-        function setData(path, data) {
-            return new Promise((resolve, reject) => {
-                db.ref(path).set(data, (error) => {
-                    if (error) reject(error);
-                    else resolve();
-                });
-            });
-        }
-
-        function pushData(path, data) {
-            return new Promise((resolve, reject) => {
-                const ref = db.ref(path).push();
-                ref.set(data, (error) => {
-                    if (error) reject(error);
-                    else resolve(ref.key);
-                });
-            });
-        }
-
-        function updateData(path, data) {
-            return new Promise((resolve, reject) => {
-                db.ref(path).update(data, (error) => {
-                    if (error) reject(error);
-                    else resolve();
-                });
-            });
-        }
-
-        function deleteData(path) {
-            return new Promise((resolve, reject) => {
-                db.ref(path).remove((error) => {
-                    if (error) reject(error);
-                    else resolve();
-                });
-            });
-        }
+        function getRef(path) { return db.ref(path); }
+        function getData(path) { return new Promise((resolve, reject) => { db.ref(path).once('value', (snap) => { resolve(snap.val()); }, (err) => { reject(err); }); }); }
+        function setData(path, data) { return new Promise((resolve, reject) => { db.ref(path).set(data, (err) => { if(err) reject(err); else resolve(); }); }); }
+        function pushData(path, data) { return new Promise((resolve, reject) => { const ref = db.ref(path).push(); ref.set(data, (err) => { if(err) reject(err); else resolve(ref.key); }); }); }
+        function updateData(path, data) { return new Promise((resolve, reject) => { db.ref(path).update(data, (err) => { if(err) reject(err); else resolve(); }); }); }
+        function deleteData(path) { return new Promise((resolve, reject) => { db.ref(path).remove((err) => { if(err) reject(err); else resolve(); }); }); }
 
         // =============================================
         // INIT
         // =============================================
         function init() {
             try {
-                // Check connection
                 db.ref('.info/connected').on('value', (snap) => {
                     const status = document.getElementById('connectionStatus');
                     if (snap.val() === true) {
@@ -583,7 +581,7 @@
                     showToast('❌ Could not identify user', 'error');
                 }
 
-                document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('downloadDate').value = new Date().toISOString().split('T')[0];
             } catch (error) {
                 console.error('Init error:', error);
                 showToast('❌ Error: ' + error.message, 'error');
@@ -613,19 +611,11 @@
                     };
                     await setData(`users/${currentUserId}`, newUser);
                     
-                    // Update stats
                     const stats = await getData('stats/summary');
                     if (stats) {
-                        await updateData('stats/summary', {
-                            totalUsers: (stats.totalUsers || 0) + 1
-                        });
+                        await updateData('stats/summary', { totalUsers: (stats.totalUsers || 0) + 1 });
                     } else {
-                        await setData('stats/summary', {
-                            totalUsers: 1,
-                            totalBalance: 0,
-                            totalSubmissions: 0,
-                            todaySubmissions: 0
-                        });
+                        await setData('stats/summary', { totalUsers: 1, totalBalance: 0, totalSubmissions: 0, todaySubmissions: 0 });
                     }
                 }
 
@@ -647,6 +637,7 @@
                     await loadSupportContactsList();
                     await loadReportCategories();
                     await loadCommissionCategories();
+                    await loadDownloadCategories();
                 }
 
             } catch (error) {
@@ -685,7 +676,6 @@
             } catch (e) { console.error('Load user data error:', e); }
         }
 
-        // Real-time balance
         db.ref(`users/${currentUserId}/balance`).on('value', (snapshot) => {
             document.getElementById('userBalance').textContent = snapshot.val()?.toFixed(2) || '0.00';
         });
@@ -703,7 +693,6 @@
                     return;
                 }
 
-                // Filter user's submissions
                 const userSubs = Object.entries(submissions)
                     .filter(([key, val]) => val.userId === currentUserId)
                     .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
@@ -728,7 +717,7 @@
         }
 
         // =============================================
-        // LOAD CATEGORIES (User)
+        // LOAD CATEGORIES (User) - With Details & Offline Check
         // =============================================
         async function loadCategories() {
             try {
@@ -742,12 +731,17 @@
 
                 grid.innerHTML = '';
                 Object.entries(categories).forEach(([key, cat]) => {
-                    const statusClass = cat.active !== false ? 'online' : 'offline';
+                    const isActive = cat.active !== false;
+                    const statusClass = isActive ? 'online' : 'offline';
+                    const disabledClass = isActive ? '' : 'disabled';
+                    const statusText = isActive ? '🟢 Online' : '🔴 Offline';
+                    
                     grid.innerHTML += `
-                        <div class="category-item" onclick="selectCategory('${key}')" data-id="${key}">
+                        <div class="category-item ${disabledClass}" onclick="${isActive ? `selectCategory('${key}')` : ''}" data-id="${key}" style="${!isActive ? 'opacity:0.5; cursor:not-allowed;' : ''}">
                             <div class="cat-icon">${cat.icon || '📁'}</div>
                             <div class="cat-name">${cat.name}</div>
-                            <div class="cat-status ${statusClass}">${cat.active !== false ? '🟢 Online' : '🔴 Offline'}</div>
+                            <div class="cat-status ${statusClass}">${statusText}</div>
+                            ${cat.details ? `<div class="cat-details">📋 ${cat.details}</div>` : ''}
                         </div>
                     `;
                 });
@@ -758,50 +752,128 @@
             document.querySelectorAll('.category-item').forEach(el => el.classList.toggle('selected', el.dataset.id === catId));
             selectedCategory = catId;
             document.getElementById('uploadSection').style.display = 'block';
-            showToast('📁 Category selected!', 'info');
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('confirmButtons').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            selectedFile = null;
+            showToast('📁 Category selected! Upload your file.', 'info');
+        }
+
+        // =============================================
+        // FILE PREVIEW
+        // =============================================
+        function previewFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            selectedFile = file;
+            selectedFileName = file.name;
+            
+            // Count IDs from Excel
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    // Count valid IDs (first column)
+                    let count = 0;
+                    jsonData.forEach(row => {
+                        if (row[0] && row[0].toString().trim()) count++;
+                    });
+                    fileIdCount = count;
+                    
+                    // Show preview
+                    const preview = document.getElementById('filePreview');
+                    preview.style.display = 'block';
+                    preview.innerHTML = `
+                        <div class="file-preview">
+                            <div class="file-info">
+                                <span class="icon">📄</span>
+                                <div class="details">
+                                    <div class="name">${file.name}</div>
+                                    <div class="size">📊 ${count} IDs found • ${(file.size / 1024).toFixed(1)} KB</div>
+                                </div>
+                            </div>
+                            <span style="color:#28a745;">✅ Ready</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('confirmButtons').style.display = 'flex';
+                } catch (err) {
+                    fileIdCount = 0;
+                    const preview = document.getElementById('filePreview');
+                    preview.style.display = 'block';
+                    preview.innerHTML = `
+                        <div class="file-preview" style="border-left:4px solid #dc3545;">
+                            <div class="file-info">
+                                <span class="icon">⚠️</span>
+                                <div class="details">
+                                    <div class="name">${file.name}</div>
+                                    <div class="size" style="color:#dc3545;">Could not read Excel file</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('confirmButtons').style.display = 'flex';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function cancelSubmit() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('confirmButtons').style.display = 'none';
+            selectedFile = null;
+            fileIdCount = 0;
+            showToast('❌ Submission cancelled', 'info');
         }
 
         // =============================================
         // FILE UPLOAD
         // =============================================
-        async function uploadFile(input) {
-            const file = input.files[0];
-            if (!file) { showToast('❌ Select a file', 'error'); return; }
+        async function uploadFile() {
+            if (!selectedFile) { showToast('❌ No file selected', 'error'); return; }
             if (!selectedCategory) { showToast('❌ Select category first', 'error'); return; }
 
             document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('confirmButtons').style.display = 'none';
 
             try {
-                // Get category name
                 const catData = await getData(`categories/${selectedCategory}`);
                 const catName = catData ? catData.name : 'Unknown';
+                const isActive = catData ? catData.active !== false : true;
+                
+                if (!isActive) {
+                    showToast('❌ Category is offline', 'error');
+                    return;
+                }
 
-                // Upload to Storage
-                const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
-                const task = await ref.put(file);
+                const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`);
+                const task = await ref.put(selectedFile);
                 const url = await task.ref.getDownloadURL();
 
-                // Save to Database
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
-                    fileName: file.name,
+                    fileName: selectedFile.name,
                     fileUrl: url,
                     categoryId: selectedCategory,
                     categoryName: catName,
-                    idCount: 0,
+                    idCount: fileIdCount || 0,
                     status: 'pending',
                     timestamp: new Date().toISOString()
                 };
                 await pushData('submissions', subData);
 
-                // Update user stats
                 const userData = await getData(`users/${currentUserId}`);
                 await updateData(`users/${currentUserId}`, {
                     totalSubmits: (userData.totalSubmits || 0) + 1
                 });
 
-                // Update stats
                 const stats = await getData('stats/summary');
                 if (stats) {
                     await updateData('stats/summary', {
@@ -810,25 +882,43 @@
                     });
                 }
 
-                // Send admin notification with file
+                // Send admin notification
                 const adminMsg = 
                     `📤 <b>New File Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
                     `📁 <b>Category:</b> ${catName}\n` +
-                    `📄 <b>File:</b> ${file.name}\n` +
+                    `📄 <b>File:</b> ${selectedFile.name}\n` +
+                    `📊 <b>Total IDs:</b> ${fileIdCount || 0}\n` +
                     `⏳ <b>Status:</b> Pending Review`;
 
-                sendTelegramDocument(ADMIN_CHAT_ID, file, adminMsg);
-                showToast('✅ File uploaded! Admin notified.', 'success');
+                sendTelegramDocument(ADMIN_CHAT_ID, selectedFile, adminMsg);
+
+                // Send confirmation to user
+                sendTelegramMessage(currentUserId,
+                    `✅ <b>File Submitted Successfully!</b>\n\n` +
+                    `📁 Category: ${catName}\n` +
+                    `📄 File: ${selectedFile.name}\n` +
+                    `📊 Total IDs: ${fileIdCount || 0}\n` +
+                    `⏳ Status: Pending Review\n\n` +
+                    `📌 You will get report when admin approves.`
+                );
+
+                showToast('✅ File submitted successfully!', 'success');
                 loadDashboard();
+                
+                document.getElementById('fileInput').value = '';
+                document.getElementById('filePreview').style.display = 'none';
+                document.getElementById('confirmButtons').style.display = 'none';
+                document.getElementById('uploadSection').style.display = 'none';
+                selectedFile = null;
+                fileIdCount = 0;
                 
             } catch (e) {
                 console.error('Upload error:', e);
                 showToast('❌ Upload failed: ' + e.message, 'error');
             } finally {
                 document.getElementById('uploadProgress').style.display = 'none';
-                input.value = '';
             }
         }
 
@@ -895,7 +985,7 @@
             if (amount > balance) { showToast('❌ Insufficient balance', 'error'); return; }
 
             try {
-                await pushData('withdrawals', {
+                const wdId = await pushData('withdrawals', {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
                     method, number, amount, status: 'pending',
@@ -914,13 +1004,26 @@
                     });
                 }
 
+                // Send to user
+                sendTelegramMessage(currentUserId,
+                    `💳 <b>Withdraw Request Submitted</b>\n\n` +
+                    `📱 Method: ${method.toUpperCase()}\n` +
+                    `📞 Number: ${number}\n` +
+                    `💰 Amount: ${amount} Taka\n` +
+                    `⏳ Status: Pending\n\n` +
+                    `🆔 Request ID: <code>${wdId}</code>\n\n` +
+                    `📌 You will get notification when processed.`
+                );
+
+                // Send to admin
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `💳 <b>New Withdraw Request</b>\n\n` +
                     `👤 ${tgUser.first_name || 'User'}\n` +
                     `🆔 <code>${currentUserId}</code>\n` +
                     `📱 ${method}\n` +
-                    `📞 ${number}\n` +
-                    `💰 ${amount} Taka`
+                    `📞 <code>${number}</code>\n` +
+                    `💰 ${amount} Taka\n` +
+                    `🆔 Request: <code>${wdId}</code>`
                 );
 
                 closeModal('withdrawModal');
@@ -932,14 +1035,42 @@
         }
 
         // =============================================
-        // HISTORY
+        // LOAD HISTORY (with Withdraw Status)
         // =============================================
         async function loadHistory() {
             try {
                 const submissions = await getData('submissions');
                 const transactions = await getData('transactions');
+                const withdrawals = await getData('withdrawals');
                 const container = document.getElementById('historyList');
                 let html = '';
+
+                // Withdrawals
+                if (withdrawals) {
+                    const userWds = Object.entries(withdrawals)
+                        .filter(([key, val]) => val.userId === currentUserId)
+                        .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                        .slice(0, 50);
+
+                    userWds.forEach(([key, data]) => {
+                        const statusClass = data.status === 'approved' ? 'approved' : data.status === 'rejected' ? 'rejected' : '';
+                        const statusEmoji = data.status === 'approved' ? '✅' : data.status === 'rejected' ? '❌' : '⏳';
+                        html += `
+                            <div class="withdraw-status-item ${statusClass}">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <div class="wd-amount">💳 ${data.amount} Taka</div>
+                                        <div class="wd-method">📱 ${data.method.toUpperCase()} • ${data.number} <button class="copy-number" onclick="copyNumber('${data.number}')">📋 Copy</button></div>
+                                        <div class="wd-date">${new Date(data.timestamp).toLocaleString()}</div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <span class="status-badge status-${data.status || 'pending'}">${statusEmoji} ${data.status || 'pending'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
 
                 // Transactions
                 if (transactions) {
@@ -970,6 +1101,14 @@
 
                 container.innerHTML = html || '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No history</div>';
             } catch (e) { console.error(e); }
+        }
+
+        // =============================================
+        // COPY NUMBER
+        // =============================================
+        function copyNumber(number) {
+            navigator.clipboard?.writeText(number);
+            showToast('📋 Number copied!', 'success');
         }
 
         // =============================================
@@ -1024,9 +1163,10 @@
 
                 let html = '';
                 Object.entries(categories).forEach(([key, cat]) => {
+                    const status = cat.active !== false ? '🟢 Active' : '🔴 Inactive';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
-                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active !== false ? '🟢 Active' : '🔴 Inactive'}</div></div>
+                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${status}</div></div>
                         <div style="display:flex; gap:4px;">
                             <button onclick="editCategory('${key}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
                             <button onclick="deleteCategory('${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
@@ -1084,6 +1224,7 @@
                 await loadCategories();
                 await loadCommissionCategories();
                 await loadReportCategories();
+                await loadDownloadCategories();
             } catch (e) { 
                 console.error('Save category error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1099,6 +1240,7 @@
                 await loadCategories();
                 await loadCommissionCategories();
                 await loadReportCategories();
+                await loadDownloadCategories();
             } catch (e) { 
                 console.error('Delete category error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1194,7 +1336,7 @@
         }
 
         // =============================================
-        // ADMIN: USERS
+        // ADMIN: USERS (No Delete, Only View & Edit)
         // =============================================
         async function loadAllUsers() {
             try {
@@ -1212,8 +1354,7 @@
                     html += `<div class="user-item">
                         <div><div class="user-name">${u.firstName || 'User'}</div><div style="font-size:12px; color:var(--tg-hint);">${u.userId}</div></div>
                         <div style="text-align:right;"><div style="font-weight:600;">${u.balance?.toFixed(2) || '0.00'} Taka</div><div style="font-size:11px; color:var(--tg-hint);">📝 ${u.totalSubmits || 0}</div></div>
-                        <div><button onclick="viewUser('${u.userId}')" class="btn-sm" style="background:var(--tg-button); color:white;">👤</button>
-                        <button onclick="deleteUser('${u.userId}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button></div>
+                        <div><button onclick="viewUser('${u.userId}')" class="btn-sm" style="background:var(--tg-button); color:white;">👤</button></div>
                     </div>`;
                 });
                 container.innerHTML = html;
@@ -1239,7 +1380,19 @@
                         <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${user.totalSubmits || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Submits</div></div>
                         <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#28a745;">${user.approved || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Approved</div></div>
                         <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#dc3545;">${user.rejected || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Rejected</div></div>
-                    </div><div><div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>`;
+                    </div>
+                    
+                    <div style="margin-bottom:16px; background:var(--tg-secondary); border-radius:12px; padding:16px;">
+                        <div style="font-weight:600; margin-bottom:8px;">💰 Edit Balance</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input type="number" id="editBalanceAmount" placeholder="Amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
+                            <input type="text" id="editBalanceReason" placeholder="Reason" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
+                            <button onclick="editUserBalance('${userId}')" class="btn-primary" style="flex:0.5; min-width:80px; padding:10px;">Update</button>
+                        </div>
+                        <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Positive = Add, Negative = Remove</div>
+                    </div>
+                    
+                    <div><div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>`;
 
                 if (submissions) {
                     const userSubs = Object.entries(submissions)
@@ -1261,19 +1414,53 @@
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
-        async function deleteUser(userId) {
-            if (!confirm(`Delete ${userId}?`)) return;
+        async function editUserBalance(userId) {
+            const amount = parseFloat(document.getElementById('editBalanceAmount').value);
+            const reason = document.getElementById('editBalanceReason').value.trim() || 'Admin balance update';
+
+            if (isNaN(amount) || amount === 0) {
+                showToast('❌ Enter valid amount', 'error');
+                return;
+            }
+
             try {
-                await deleteData(`users/${userId}`);
+                const user = await getData(`users/${userId}`);
+                if (!user) { showToast('❌ User not found', 'error'); return; }
+
+                await updateData(`users/${userId}`, {
+                    balance: (user.balance || 0) + amount
+                });
+
+                await pushData('transactions', {
+                    userId, amount, reason,
+                    timestamp: new Date().toISOString()
+                });
+
                 const stats = await getData('stats/summary');
                 if (stats) {
                     await updateData('stats/summary', {
-                        totalUsers: Math.max(0, (stats.totalUsers || 0) - 1)
+                        totalBalance: (stats.totalBalance || 0) + amount
                     });
                 }
-                showToast('✅ Deleted!', 'success');
-                await loadAllUsers();
-            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
+
+                // Notify user
+                sendTelegramMessage(userId,
+                    `💵 <b>Balance Updated</b>\n\n` +
+                    `${amount > 0 ? '➕' : '➖'} ${Math.abs(amount)} Taka\n` +
+                    `📝 ${reason}`
+                );
+
+                showToast(`✅ ${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} Taka`, 'success');
+                await loadBalanceStats();
+                await loadUserData();
+                viewUser(userId);
+                
+                document.getElementById('editBalanceAmount').value = '';
+                document.getElementById('editBalanceReason').value = '';
+            } catch (e) { 
+                console.error('Edit balance error:', e); 
+                showToast('❌ Error: ' + e.message, 'error'); 
+            }
         }
 
         // =============================================
@@ -1617,7 +1804,7 @@
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                             <div><div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div>
-                            <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.number}</div>
+                            <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.number} <button class="copy-number" onclick="copyNumber('${data.number}')">📋 Copy</button></div>
                             <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; align-items:center;">
                                 <div style="font-weight:bold; color:#ffc107;">${data.amount} Taka</div>
@@ -1659,23 +1846,18 @@
         async function loadReportCategories() {
             try {
                 const categories = await getData('categories');
-                const selects = ['reportCategorySelect', 'reportCategoryDownload'];
-                selects.forEach(id => {
-                    const sel = document.getElementById(id);
-                    if (sel) {
-                        sel.innerHTML = '<option value="">All Categories</option>';
-                        if (categories) {
-                            Object.entries(categories).forEach(([key, cat]) => {
-                                sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
-                            });
-                        }
-                    }
-                });
+                const sel = document.getElementById('reportCategorySelect');
+                sel.innerHTML = '<option value="">All Categories</option>';
+                if (categories) {
+                    Object.entries(categories).forEach(([key, cat]) => {
+                        sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                }
             } catch (e) { console.error(e); }
         }
 
         // =============================================
-        // SEND REPORT (Admin)
+        // SEND REPORT
         // =============================================
         async function sendReport() {
             const category = document.getElementById('reportCategorySelect').value;
@@ -1723,7 +1905,6 @@
                 for (const user of targetUsers) {
                     const submissions = await getData('submissions');
                     let approvedCount = 0;
-                    const approvedIds = [];
 
                     if (submissions) {
                         Object.values(submissions).forEach(data => {
@@ -1785,46 +1966,73 @@
         }
 
         // =============================================
-        // DOWNLOAD REPORT
+        // ADMIN: DOWNLOAD FILES
         // =============================================
-        async function downloadReport() {
-            const date = document.getElementById('reportDate').value;
-            const category = document.getElementById('reportCategoryDownload').value;
+        async function loadDownloadCategories() {
+            try {
+                const categories = await getData('categories');
+                const sel = document.getElementById('downloadCategorySelect');
+                sel.innerHTML = '<option value="">All Categories</option>';
+                if (categories) {
+                    Object.entries(categories).forEach(([key, cat]) => {
+                        sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
 
-            showToast('📊 Generating report...', 'info');
+        async function downloadFiles() {
+            const date = document.getElementById('downloadDate').value;
+            const category = document.getElementById('downloadCategorySelect').value;
+
+            showToast('📥 Generating download...', 'info');
 
             try {
                 const submissions = await getData('submissions');
                 if (!submissions) { showToast('❌ No data', 'error'); return; }
 
-                let csv = 'User ID,User Name,File Name,ID Count,Status,Category,Date,Earnings\n';
+                const data = [];
                 let totalIds = 0;
-                let totalEarnings = 0;
-                const ratePerId = 5;
 
-                Object.values(submissions).forEach(data => {
-                    if (data.status !== 'approved') return;
-                    if (category && data.categoryId !== category) return;
+                Object.values(submissions).forEach(item => {
+                    if (category && item.categoryId !== category) return;
                     if (date) {
-                        const subDate = new Date(data.timestamp).toISOString().split('T')[0];
-                        if (subDate !== date) return;
+                        const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+                        if (itemDate !== date) return;
                     }
-                    const earnings = (data.idCount || 0) * ratePerId;
-                    totalIds += data.idCount || 0;
-                    totalEarnings += earnings;
-                    csv += `${data.userId},${data.userName || 'User'},${data.fileName},${data.idCount || 0},${data.status},${data.categoryName || ''},${new Date(data.timestamp).toLocaleDateString()},${earnings}\n`;
+                    data.push([
+                        item.userName || item.userId,
+                        item.fileName,
+                        item.idCount || 0,
+                        item.status || 'pending',
+                        item.categoryName || 'Unknown',
+                        new Date(item.timestamp).toLocaleString()
+                    ]);
+                    totalIds += item.idCount || 0;
                 });
 
-                csv += `\nTOTAL,,,${totalIds},,,,${totalEarnings}`;
+                if (data.length === 0) {
+                    showToast('❌ No data found', 'error');
+                    return;
+                }
 
-                const blob = new Blob([csv], { type: 'text/csv' });
+                const wb = XLSX.utils.book_new();
+                const wsData = [
+                    ['User', 'File Name', 'ID Count', 'Status', 'Category', 'Date'],
+                    ...data
+                ];
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, 'Submissions');
+                const excel = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+                const blob = new Blob([excel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `report_${date || 'all'}_${totalIds}_ids.csv`;
+                a.download = `submissions_${date || 'all'}_${category || 'all'}_${totalIds}.xlsx`;
                 a.click();
                 URL.revokeObjectURL(url);
-                showToast(`✅ Report downloaded! Total: ${totalIds} IDs, ${totalEarnings} Taka`, 'success');
+                showToast(`✅ Downloaded! ${data.length} files, ${totalIds} IDs`, 'success');
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
@@ -2018,6 +2226,7 @@
             if (page === 'adminCategories') loadAdminCategories();
             if (page === 'adminCommission') { loadCommissionCategories(); loadCommissionRules(); }
             if (page === 'adminReport') loadReportCategories();
+            if (page === 'adminDownload') { loadDownloadCategories(); }
         }
 
         // =============================================
