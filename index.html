@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ID Submit System</title>
     
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     
     <style>
         * {
@@ -27,6 +23,7 @@
             color: var(--tg-theme-text-color, #000000);
             min-height: 100vh;
             padding: 12px;
+            padding-bottom: 80px;
         }
 
         :root {
@@ -39,7 +36,6 @@
             --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
         }
 
-        /* Header */
         .header {
             background: var(--tg-secondary);
             border-radius: 16px;
@@ -78,9 +74,6 @@
         .user-name {
             font-size: 18px;
             font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .user-id {
@@ -98,7 +91,6 @@
             margin-left: 6px;
         }
 
-        /* Balance Card */
         .balance-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 16px;
@@ -148,7 +140,6 @@
             color: white;
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -175,7 +166,6 @@
             margin-top: 2px;
         }
 
-        /* Menu */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -214,7 +204,6 @@
             color: var(--tg-text);
         }
 
-        /* Admin Menu */
         .admin-menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -229,98 +218,6 @@
             background: var(--tg-bg);
         }
 
-        /* Category Grid */
-        .category-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .category-item {
-            background: var(--tg-secondary);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .category-item:active {
-            transform: scale(0.95);
-        }
-
-        .category-item.selected {
-            border-color: var(--tg-button);
-            background: var(--tg-bg);
-        }
-
-        .category-item .cat-icon {
-            font-size: 28px;
-        }
-
-        .category-item .cat-name {
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .category-item .cat-status {
-            font-size: 11px;
-            color: var(--tg-hint);
-        }
-
-        .category-item .cat-status.online {
-            color: #28a745;
-        }
-
-        .category-item .cat-status.offline {
-            color: #dc3545;
-        }
-
-        /* Upload Area */
-        .upload-area {
-            border: 2px dashed var(--tg-hint);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 16px;
-        }
-
-        .upload-area:active {
-            transform: scale(0.98);
-        }
-
-        .upload-area .icon {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .upload-area p {
-            font-size: 14px;
-            color: var(--tg-hint);
-        }
-
-        /* Pages */
-        .page {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Cards */
         .card {
             background: var(--tg-secondary);
             border-radius: 16px;
@@ -334,64 +231,6 @@
             margin-bottom: 12px;
         }
 
-        /* History Item */
-        .history-item {
-            background: var(--tg-bg);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-left .h-title {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .history-left .h-date {
-            font-size: 11px;
-            color: var(--tg-hint);
-        }
-
-        .history-amount {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .history-amount.positive {
-            color: #28a745;
-        }
-
-        .history-amount.negative {
-            color: #dc3545;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Form */
         .form-group {
             margin-bottom: 14px;
         }
@@ -446,10 +285,12 @@
 
         .btn-danger {
             background: #dc3545;
+            color: white;
         }
 
         .btn-success {
             background: #28a745;
+            color: white;
         }
 
         .btn-warning {
@@ -457,7 +298,172 @@
             color: #333;
         }
 
-        /* Modal */
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--tg-link);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--tg-hint);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+
+        .upload-area:active {
+            transform: scale(0.98);
+        }
+
+        .upload-area .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: var(--tg-hint);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .category-item {
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .category-item:active {
+            transform: scale(0.95);
+        }
+
+        .category-item.selected {
+            border-color: var(--tg-button);
+            background: var(--tg-bg);
+        }
+
+        .category-item .cat-icon {
+            font-size: 28px;
+        }
+
+        .category-item .cat-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .category-item .cat-status {
+            font-size: 11px;
+            color: var(--tg-hint);
+        }
+
+        .category-item .cat-status.online {
+            color: #28a745;
+        }
+
+        .category-item .cat-status.offline {
+            color: #dc3545;
+        }
+
+        .history-item {
+            background: var(--tg-bg);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-left .h-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .history-left .h-date {
+            font-size: 11px;
+            color: var(--tg-hint);
+        }
+
+        .history-amount {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .history-amount.positive {
+            color: #28a745;
+        }
+
+        .history-amount.negative {
+            color: #dc3545;
+        }
+
+        .status-badge {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -505,112 +511,6 @@
             color: var(--tg-hint);
         }
 
-        /* Back Button */
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--tg-link);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 12px;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 2000;
-            max-width: 90%;
-            text-align: center;
-            animation: fadeIn 0.3s ease;
-            display: none;
-        }
-
-        .toast.success {
-            background: #28a745;
-        }
-
-        .toast.error {
-            background: #dc3545;
-        }
-
-        .toast.info {
-            background: var(--tg-button);
-        }
-
-        /* Loading */
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid var(--tg-secondary);
-            border-top: 3px solid var(--tg-button);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* User List */
-        .user-item {
-            background: var(--tg-bg);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-item .user-name {
-            font-weight: 600;
-        }
-
-        .user-item .user-balance {
-            color: var(--tg-hint);
-        }
-
-        .user-item .user-actions button {
-            padding: 4px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 4px;
-        }
-
-        .user-item .user-actions .view-btn {
-            background: var(--tg-button);
-            color: white;
-        }
-
-        .user-item .user-actions .delete-btn {
-            background: #dc3545;
-            color: white;
-        }
-
-        /* Referral Box */
         .referral-box {
             background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             border-radius: 16px;
@@ -648,7 +548,24 @@
             transform: scale(0.95);
         }
 
-        /* Tabs */
+        .user-item {
+            background: var(--tg-bg);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item .user-name {
+            font-weight: 600;
+        }
+
+        .user-item .user-balance {
+            color: var(--tg-hint);
+        }
+
         .tabs {
             display: flex;
             gap: 4px;
@@ -676,352 +593,277 @@
             color: var(--tg-text);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+            display: none;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.info {
+            background: var(--tg-button);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid var(--tg-secondary);
+            border-top: 3px solid var(--tg-button);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .id-input-area textarea {
+            min-height: 120px;
+            font-size: 13px;
+            font-family: monospace;
+        }
+
+        .inline-flex {
+            display: flex;
+            gap: 8px;
+        }
+
+        .inline-flex .btn-primary {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
-    <!-- ============================================= -->
-    <!-- HOME PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== HOME ========== -->
     <div id="pageHome" class="page active">
-        <!-- Header -->
         <div class="header">
             <div class="user-avatar" id="userAvatar">👤</div>
             <div class="user-info">
-                <div class="user-name" id="userName">
-                    Loading...
-                    <span class="admin-badge" id="adminBadge" style="display:none;">👑 Admin</span>
-                </div>
+                <div class="user-name" id="userName">Loading... <span class="admin-badge" id="adminBadge" style="display:none;">👑 Admin</span></div>
                 <div class="user-id" id="userIdDisplay">ID: ---</div>
             </div>
         </div>
 
-        <!-- Balance -->
         <div class="balance-card">
             <div class="balance-label">💰 Available Balance</div>
             <div class="balance-amount" id="userBalance">0.00</div>
-            <div style="font-size: 13px; opacity: 0.8;">Taka (BDT)</div>
+            <div style="font-size:13px; opacity:0.8;">Taka (BDT)</div>
             <div class="balance-actions">
                 <button class="btn-withdraw" onclick="openWithdraw()">💳 Withdraw</button>
                 <button class="btn-history" onclick="switchPage('history')">📊 History</button>
             </div>
         </div>
 
-        <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-number" id="statSubmits">0</div>
-                <div class="stat-label">📝 Submits</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="statApproved" style="color:#28a745;">0</div>
-                <div class="stat-label">✅ Approved</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="statRejected" style="color:#dc3545;">0</div>
-                <div class="stat-label">❌ Rejected</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div>
-                <div class="stat-label">👥 Referrals</div>
-            </div>
+            <div class="stat-item"><div class="stat-number" id="statSubmits">0</div><div class="stat-label">📝 Submits</div></div>
+            <div class="stat-item"><div class="stat-number" id="statApproved" style="color:#28a745;">0</div><div class="stat-label">✅ Approved</div></div>
+            <div class="stat-item"><div class="stat-number" id="statRejected" style="color:#dc3545;">0</div><div class="stat-label">❌ Rejected</div></div>
+            <div class="stat-item"><div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div><div class="stat-label">👥 Referrals</div></div>
         </div>
 
-        <!-- User Menu -->
         <div class="menu-grid">
-            <div class="menu-item active" onclick="switchPage('submit')">
-                <span class="menu-icon">📤</span>
-                <span class="menu-label">Submit IDs</span>
-            </div>
-            <div class="menu-item" onclick="switchPage('history')">
-                <span class="menu-icon">📋</span>
-                <span class="menu-label">History</span>
-            </div>
-            <div class="menu-item" onclick="switchPage('referral')">
-                <span class="menu-icon">👥</span>
-                <span class="menu-label">Refer & Earn</span>
-            </div>
-            <div class="menu-item" onclick="switchPage('profile')">
-                <span class="menu-icon">👤</span>
-                <span class="menu-label">Profile</span>
-            </div>
-            <div class="menu-item" onclick="switchPage('support')">
-                <span class="menu-icon">📞</span>
-                <span class="menu-label">Support</span>
-            </div>
-            <div class="menu-item" onclick="closeApp()">
-                <span class="menu-icon">🚪</span>
-                <span class="menu-label">Close</span>
-            </div>
+            <div class="menu-item active" onclick="switchPage('submit')"><span class="menu-icon">📤</span><span class="menu-label">Submit IDs</span></div>
+            <div class="menu-item" onclick="switchPage('history')"><span class="menu-icon">📋</span><span class="menu-label">History</span></div>
+            <div class="menu-item" onclick="switchPage('referral')"><span class="menu-icon">👥</span><span class="menu-label">Refer & Earn</span></div>
+            <div class="menu-item" onclick="switchPage('profile')"><span class="menu-icon">👤</span><span class="menu-label">Profile</span></div>
+            <div class="menu-item" onclick="switchPage('support')"><span class="menu-icon">📞</span><span class="menu-label">Support</span></div>
+            <div class="menu-item" onclick="closeApp()"><span class="menu-icon">🚪</span><span class="menu-label">Close</span></div>
         </div>
 
-        <!-- Admin Menu (Hidden for non-admin) -->
         <div id="adminMenu" style="display:none;">
             <div style="font-weight:600; margin-bottom:8px;">👑 Admin Panel</div>
             <div class="admin-menu">
-                <div class="menu-item" onclick="switchPage('adminCategories')">
-                    <span class="menu-icon">📁</span>
-                    <span class="menu-label">Categories</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminUsers')">
-                    <span class="menu-icon">👥</span>
-                    <span class="menu-label">Users</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminBalance')">
-                    <span class="menu-icon">💰</span>
-                    <span class="menu-label">Balance</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminFiles')">
-                    <span class="menu-icon">📄</span>
-                    <span class="menu-label">Files</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminWithdraw')">
-                    <span class="menu-icon">💳</span>
-                    <span class="menu-label">Withdraw</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminSettings')">
-                    <span class="menu-icon">⚙️</span>
-                    <span class="menu-label">Settings</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminReport')">
-                    <span class="menu-icon">📊</span>
-                    <span class="menu-label">Report</span>
-                </div>
-                <div class="menu-item" onclick="switchPage('adminBackup')">
-                    <span class="menu-icon">💾</span>
-                    <span class="menu-label">Backup</span>
-                </div>
+                <div class="menu-item" onclick="switchPage('adminCategories')"><span class="menu-icon">📁</span><span class="menu-label">Categories</span></div>
+                <div class="menu-item" onclick="switchPage('adminUsers')"><span class="menu-icon">👥</span><span class="menu-label">Users</span></div>
+                <div class="menu-item" onclick="switchPage('adminBalance')"><span class="menu-icon">💰</span><span class="menu-label">Balance</span></div>
+                <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Files</span></div>
+                <div class="menu-item" onclick="switchPage('adminWithdraw')"><span class="menu-icon">💳</span><span class="menu-label">Withdraw</span></div>
+                <div class="menu-item" onclick="switchPage('adminReport')"><span class="menu-icon">📊</span><span class="menu-label">Report</span></div>
+                <div class="menu-item" onclick="switchPage('adminSettings')"><span class="menu-icon">⚙️</span><span class="menu-label">Settings</span></div>
+                <div class="menu-item" onclick="switchPage('adminBackup')"><span class="menu-icon">💾</span><span class="menu-label">Backup</span></div>
             </div>
         </div>
 
-        <!-- Recent Submissions -->
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- SUBMIT PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== SUBMIT ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 Submit IDs</h3>
         
-        <div class="category-grid" id="categoryGrid">
-            <div style="grid-column:1/-1; text-align:center; color:var(--tg-hint); padding:20px;">Loading...</div>
-        </div>
+        <div class="category-grid" id="categoryGrid"><div class="loading" style="grid-column:1/-1;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
 
         <div id="uploadSection" style="display:none;">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="uploadFile(this)">
                 <span class="icon">📁</span>
                 <p>Click to select Excel file</p>
-                <div class="sub-text" style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Supported: .xlsx, .xls</div>
+                <div style="font-size:12px; color:var(--tg-hint);">Supported: .xlsx, .xls</div>
             </div>
-            <div id="uploadProgress" class="loading">
-                <div class="spinner"></div>
-                <div style="margin-top:8px; color:var(--tg-hint);">Uploading...</div>
-            </div>
+            <div id="uploadProgress" class="loading" style="display:none;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading...</div></div>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- HISTORY PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== HISTORY ========== -->
     <div id="pageHistory" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
-        <div id="historyList"></div>
+        <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- REFERRAL PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== REFERRAL ========== -->
     <div id="pageReferral" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">👥 Refer & Earn</h3>
-        
         <div class="referral-box">
             <div style="font-weight:600; font-size:16px;">🔗 Your Referral Link</div>
-            <div class="ref-link">
-                <code id="referralLink">Loading...</code>
-                <button class="copy-btn" onclick="copyReferralLink()">Copy</button>
-            </div>
-            <div class="ref-stats" style="display:flex; justify-content:space-around; margin-top:10px;">
-                <div style="text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#333;" id="refCount">0</div>
-                    <div style="font-size:12px; color:#666;">Total Referrals</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#333;" id="refEarnings">0</div>
-                    <div style="font-size:12px; color:#666;">Earnings (Taka)</div>
-                </div>
+            <div class="ref-link"><code id="referralLink">Loading...</code><button class="copy-btn" onclick="copyReferralLink()">Copy</button></div>
+            <div style="display:flex; justify-content:space-around; margin-top:10px;">
+                <div style="text-align:center;"><div style="font-size:20px; font-weight:bold; color:#333;" id="refCount">0</div><div style="font-size:12px; color:#666;">Total Referrals</div></div>
+                <div style="text-align:center;"><div style="font-size:20px; font-weight:bold; color:#333;" id="refEarnings">0</div><div style="font-size:12px; color:#666;">Earnings (Taka)</div></div>
             </div>
         </div>
-
         <div style="background:#fff3cd; border-radius:12px; padding:16px; border-left:4px solid #ffc107;">
-            <p style="font-size:13px; color:#856404;">
-                💡 <strong>How it works:</strong><br>
-                Share your referral link with friends. When they join and get approved IDs, you earn bonus!
-            </p>
+            <p style="font-size:13px; color:#856404;">💡 Share your referral link. When they get approved, you earn bonus!</p>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- PROFILE PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== PROFILE ========== -->
     <div id="pageProfile" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">👤 My Profile</h3>
-        
         <div class="card">
             <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
                 <div style="width:60px; height:60px; background:var(--tg-button); border-radius:30px; display:flex; align-items:center; justify-content:center; font-size:28px; color:white;">👤</div>
-                <div>
-                    <div style="font-weight:600; font-size:18px;" id="profileName">User</div>
-                    <div style="font-size:12px; color:var(--tg-hint);">ID: <span id="profileUserId">---</span></div>
-                </div>
+                <div><div style="font-weight:600; font-size:18px;" id="profileName">User</div><div style="font-size:12px; color:var(--tg-hint);">ID: <span id="profileUserId">---</span></div></div>
             </div>
-            
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:var(--tg-text);" id="profileSubmits">0</div>
-                    <div style="font-size:11px; color:var(--tg-hint);">Total Submits</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#28a745;" id="profileApproved">0</div>
-                    <div style="font-size:11px; color:var(--tg-hint);">Approved</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#dc3545;" id="profileRejected">0</div>
-                    <div style="font-size:11px; color:var(--tg-hint);">Rejected</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#ffc107;" id="profileReferrals">0</div>
-                    <div style="font-size:11px; color:var(--tg-hint);">Referrals</div>
-                </div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;"><div style="font-size:20px; font-weight:bold;" id="profileSubmits">0</div><div style="font-size:11px; color:var(--tg-hint);">Submits</div></div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;"><div style="font-size:20px; font-weight:bold; color:#28a745;" id="profileApproved">0</div><div style="font-size:11px; color:var(--tg-hint);">Approved</div></div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;"><div style="font-size:20px; font-weight:bold; color:#dc3545;" id="profileRejected">0</div><div style="font-size:11px; color:var(--tg-hint);">Rejected</div></div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;"><div style="font-size:20px; font-weight:bold; color:#ffc107;" id="profileReferrals">0</div><div style="font-size:11px; color:var(--tg-hint);">Referrals</div></div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- SUPPORT PAGE -->
-    <!-- ============================================= -->
+    <!-- ========== SUPPORT ========== -->
     <div id="pageSupport" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📞 Support</h3>
-        
         <div class="card" style="text-align:center;">
             <div style="font-size:48px; margin-bottom:8px;">💬</div>
             <h4 style="font-size:16px;">Need Help?</h4>
-            <p style="font-size:14px; color:var(--tg-hint); margin:8px 0;">Contact our support team</p>
+            <p style="font-size:14px; color:var(--tg-hint);">Contact our support team</p>
             <div id="supportContacts"></div>
         </div>
-
-        <div class="card">
-            <h4 style="margin-bottom:8px;">📋 How to Use</h4>
-            <div id="howToUseVideo"></div>
-        </div>
-
-        <div class="card">
-            <h4 style="margin-bottom:8px;">📈 Price & Rules</h4>
-            <div id="priceRules"></div>
-        </div>
+        <div class="card"><h4 style="margin-bottom:8px;">📋 How to Use</h4><div id="howToUseVideo"></div></div>
+        <div class="card"><h4 style="margin-bottom:8px;">📈 Price & Rules</h4><div id="priceRules"></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: CATEGORIES -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: CATEGORIES ========== -->
     <div id="pageAdminCategories" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📁 Category Management</h3>
-        
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
-            <button class="btn-primary" onclick="openCategoryModal()" style="flex:1;">➕ Add Category</button>
-        </div>
-
-        <div id="adminCategoryList"></div>
+        <button class="btn-primary" onclick="openCategoryModal()" style="margin-bottom:16px;">➕ Add Category</button>
+        <div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: USERS -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: USERS ========== -->
     <div id="pageAdminUsers" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">👥 User Management</h3>
-        
-        <div class="form-group">
-            <label>🔍 Search User</label>
-            <input type="text" id="userSearch" placeholder="Enter User ID or Name" oninput="searchUsers()">
-        </div>
-        
-        <div id="userList"></div>
+        <div class="form-group"><input type="text" id="userSearch" placeholder="🔍 Search User..." oninput="searchUsers()"></div>
+        <div id="userList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: BALANCE -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: BALANCE ========== -->
     <div id="pageAdminBalance" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">💰 Balance Management</h3>
-        
         <div class="card">
-            <div class="form-group">
-                <label>👤 User ID</label>
-                <input type="text" id="balanceUserId" placeholder="Enter user ID">
-            </div>
-            <div class="form-group">
-                <label>💰 Amount (Taka)</label>
-                <input type="number" id="balanceAmount" placeholder="Enter amount (positive = add, negative = remove)">
-            </div>
-            <div class="form-group">
-                <label>📝 Reason</label>
-                <input type="text" id="balanceReason" placeholder="Reason for balance update">
-            </div>
+            <div class="form-group"><label>👤 User ID</label><input type="text" id="balanceUserId" placeholder="Enter user ID"></div>
+            <div class="form-group"><label>💰 Amount (Taka)</label><input type="number" id="balanceAmount" placeholder="+ add, - remove"></div>
+            <div class="form-group"><label>📝 Reason</label><input type="text" id="balanceReason" placeholder="Reason"></div>
             <button class="btn-primary" onclick="updateBalance()">💵 Update Balance</button>
         </div>
-
-        <div class="card">
-            <div class="card-title">📊 Balance Stats</div>
-            <div id="balanceStats">
-                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--tg-secondary);">
-                    <span>Total Balance</span>
-                    <span id="totalBalance">0.00</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:8px 0;">
-                    <span>Total Users</span>
-                    <span id="totalUsers">0</span>
-                </div>
-            </div>
+        <div class="card"><div class="card-title">📊 Balance Stats</div>
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--tg-secondary);"><span>Total Balance</span><span id="totalBalance">0.00</span></div>
+            <div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Users</span><span id="totalUsers">0</span></div>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: FILES -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: FILES ========== -->
     <div id="pageAdminFiles" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📄 File Management</h3>
-        
         <div class="tabs">
-            <button class="tab active" onclick="switchAdminTab('files', 'pending')">⏳ Pending</button>
-            <button class="tab" onclick="switchAdminTab('files', 'approved')">✅ Approved</button>
-            <button class="tab" onclick="switchAdminTab('files', 'rejected')">❌ Rejected</button>
+            <button class="tab active" onclick="switchFileTab('pending')">⏳ Pending</button>
+            <button class="tab" onclick="switchFileTab('approved')">✅ Approved</button>
+            <button class="tab" onclick="switchFileTab('rejected')">❌ Rejected</button>
         </div>
-        
-        <div id="adminFileList"></div>
+        <div id="adminFileList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: WITHDRAW -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: WITHDRAW ========== -->
     <div id="pageAdminWithdraw" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">💳 Withdraw Requests</h3>
-        
-        <div id="withdrawRequests"></div>
+        <div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: SETTINGS -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: REPORT ========== -->
+    <div id="pageAdminReport" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📊 Report System</h3>
+        
+        <div class="card">
+            <div class="card-title">📤 Send Report to Users</div>
+            <div class="form-group">
+                <label>📁 Category</label>
+                <select id="reportCategorySelect"><option value="">All Categories</option></select>
+            </div>
+            <div class="form-group">
+                <label>📝 Enter IDs (one per line)</label>
+                <textarea id="reportIdsInput" placeholder="Enter IDs line by line..."></textarea>
+            </div>
+            <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📥 Download Report</div>
+            <div class="form-group"><label>📅 Date</label><input type="date" id="reportDate"></div>
+            <div class="form-group"><label>📁 Category</label><select id="reportCategoryDownload"><option value="">All Categories</option></select></div>
+            <button class="btn-primary" onclick="downloadReport()">📥 Download CSV</button>
+        </div>
+    </div>
+
+    <!-- ========== ADMIN: SETTINGS ========== -->
     <div id="pageAdminSettings" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">⚙️ Settings</h3>
@@ -1029,162 +871,86 @@
         <div class="card">
             <div class="card-title">💰 Withdraw Methods</div>
             <div id="withdrawMethodsList"></div>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <input type="text" id="newMethodName" placeholder="Method name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
-                <input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <input type="text" id="newMethodName" placeholder="Method name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
+                <input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
                 <button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-title">📜 Price & Rules</div>
-            <div class="form-group">
-                <textarea id="priceRulesInput" placeholder="Enter price rules..."></textarea>
-            </div>
+            <div class="form-group"><textarea id="priceRulesInput" placeholder="Enter price rules..."></textarea></div>
             <button class="btn-primary" onclick="updatePriceRules()">💾 Save Rules</button>
         </div>
 
         <div class="card">
             <div class="card-title">📹 Tutorial Video</div>
-            <div class="form-group">
-                <input type="text" id="tutorialVideoUrl" placeholder="Enter video URL">
-            </div>
+            <div class="form-group"><input type="text" id="tutorialVideoUrl" placeholder="Enter video URL"></div>
             <button class="btn-primary" onclick="updateTutorialVideo()">💾 Save Video</button>
         </div>
 
         <div class="card">
             <div class="card-title">📞 Support Contacts</div>
             <div id="supportContactsList"></div>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
-                <input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
+                <input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
                 <button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button>
             </div>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ADMIN: REPORT -->
-    <!-- ============================================= -->
-    <div id="pageAdminReport" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📊 Generate Report</h3>
-        
-        <div class="card">
-            <div class="form-group">
-                <label>📅 Select Date</label>
-                <input type="date" id="reportDate">
-            </div>
-            <div class="form-group">
-                <label>📁 Select Category</label>
-                <select id="reportCategory"></select>
-            </div>
-            <button class="btn-primary" onclick="generateReport()">📊 Generate Report</button>
-        </div>
-    </div>
-
-    <!-- ============================================= -->
-    <!-- ADMIN: BACKUP -->
-    <!-- ============================================= -->
+    <!-- ========== ADMIN: BACKUP ========== -->
     <div id="pageAdminBackup" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">💾 Backup & Restore</h3>
-        
-        <div class="card">
-            <button class="btn-primary" onclick="downloadBackup()">📥 Download Backup</button>
-            <div style="margin-top:12px; text-align:center; color:var(--tg-hint);">Download full database backup as JSON</div>
-        </div>
-
+        <div class="card"><button class="btn-primary" onclick="downloadBackup()">📥 Download Backup</button><div style="margin-top:12px; text-align:center; color:var(--tg-hint);">Download full database as JSON</div></div>
         <div class="card">
             <div class="upload-area" onclick="document.getElementById('restoreInput').click()">
                 <input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)">
                 <span class="icon">📤</span>
                 <p>Click to restore backup</p>
-                <div class="sub-text" style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Upload JSON backup file</div>
+                <div style="font-size:12px; color:var(--tg-hint);">Upload JSON backup file</div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- WITHDRAW MODAL -->
-    <!-- ============================================= -->
+    <!-- ========== MODALS ========== -->
     <div class="modal-overlay" id="withdrawModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>💳 Withdraw</h3>
-                <button class="modal-close" onclick="closeModal('withdrawModal')">×</button>
-            </div>
-            <div class="form-group">
-                <label>Select Method</label>
-                <select id="withdrawMethod">
-                    <option value="">Select a method</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Account Number</label>
-                <input type="text" id="withdrawNumber" placeholder="Enter your account number">
-            </div>
-            <div class="form-group">
-                <label>Amount (Taka)</label>
-                <input type="number" id="withdrawAmount" placeholder="Enter amount">
-            </div>
-            <button class="btn-primary" onclick="submitWithdraw()">💳 Submit Withdraw</button>
+            <div class="modal-header"><h3>💳 Withdraw</h3><button class="modal-close" onclick="closeModal('withdrawModal')">×</button></div>
+            <div class="form-group"><label>Method</label><select id="withdrawMethod"><option value="">Select</option></select></div>
+            <div class="form-group"><label>Account Number</label><input type="text" id="withdrawNumber" placeholder="Enter number"></div>
+            <div class="form-group"><label>Amount (Taka)</label><input type="number" id="withdrawAmount" placeholder="Enter amount"></div>
+            <button class="btn-primary" onclick="submitWithdraw()">💳 Submit</button>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- CATEGORY MODAL -->
-    <!-- ============================================= -->
     <div class="modal-overlay" id="categoryModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="categoryModalTitle">📁 Add Category</h3>
-                <button class="modal-close" onclick="closeModal('categoryModal')">×</button>
-            </div>
-            <div class="form-group">
-                <label>Category Name</label>
-                <input type="text" id="categoryName" placeholder="Enter category name">
-            </div>
-            <div class="form-group">
-                <label>Icon</label>
-                <input type="text" id="categoryIcon" placeholder="Enter emoji icon">
-            </div>
-            <div class="form-group">
-                <label>Details</label>
-                <input type="text" id="categoryDetails" placeholder="Category details">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="categoryStatus">
-                    <option value="true">🟢 Active</option>
-                    <option value="false">🔴 Inactive</option>
-                </select>
-            </div>
-            <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save Category</button>
+            <div class="modal-header"><h3 id="categoryModalTitle">📁 Add Category</h3><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
+            <div class="form-group"><label>Name</label><input type="text" id="categoryName" placeholder="Category name"></div>
+            <div class="form-group"><label>Icon</label><input type="text" id="categoryIcon" placeholder="Emoji icon"></div>
+            <div class="form-group"><label>Details</label><input type="text" id="categoryDetails" placeholder="Details"></div>
+            <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
+            <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- USER DETAIL MODAL -->
-    <!-- ============================================= -->
     <div class="modal-overlay" id="userDetailModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>👤 User Details</h3>
-                <button class="modal-close" onclick="closeModal('userDetailModal')">×</button>
-            </div>
+            <div class="modal-header"><h3>👤 User Details</h3><button class="modal-close" onclick="closeModal('userDetailModal')">×</button></div>
             <div id="userDetailContent"></div>
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- ============================================= -->
-    <!-- FIREBASE CONFIG -->
-    <!-- ============================================= -->
     <script>
-        // Firebase Configuration
+        // =============================================
+        // FIREBASE CONFIG
+        // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
             authDomain: "payment-b60bf.firebaseapp.com",
@@ -1201,47 +967,34 @@
         const storage = firebase.storage();
 
         // =============================================
-        // TELEGRAM WEBAPP
+        // TELEGRAM
         // =============================================
         let tg = window.Telegram.WebApp;
         let tgUser = tg.initDataUnsafe?.user || {};
-        
-        // =============================================
-        // CONSTANTS
-        // =============================================
-        const ADMIN_ID = '6140196943';
+        let currentUserId = tgUser.id ? String(tgUser.id) : null;
+        let isAdmin = (currentUserId === '6140196943');
+        let selectedCategory = null;
+        let editingCategoryId = null;
+        let currentFileTab = 'pending';
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
-        let currentUserId = tgUser.id ? String(tgUser.id) : null;
-        let userData = null;
-        let selectedCategory = null;
-        let isAdmin = false;
-        let editingCategoryId = null;
-        let currentFileTab = 'pending';
-
         // =============================================
-        // INITIALIZE
+        // INIT
         // =============================================
         function init() {
-            // Check if user is admin
-            isAdmin = (currentUserId === ADMIN_ID);
-            
-            // Show admin badge
             if (isAdmin) {
                 document.getElementById('adminBadge').style.display = 'inline';
                 document.getElementById('adminMenu').style.display = 'block';
             }
 
-            // Show user info
             if (tgUser.id) {
                 document.getElementById('userName').textContent = tgUser.first_name || 'User';
                 document.getElementById('userIdDisplay').textContent = `ID: ${tgUser.id}`;
                 document.getElementById('profileName').textContent = tgUser.first_name || 'User';
                 document.getElementById('profileUserId').textContent = tgUser.id || '---';
-                
                 if (tgUser.photo_url) {
-                    document.querySelector('.user-avatar').innerHTML = `<img src="${tgUser.photo_url}" alt="avatar">`;
+                    document.querySelector('.user-avatar').innerHTML = `<img src="${tgUser.photo_url}">`;
                 }
             }
 
@@ -1254,12 +1007,11 @@
                 showToast('❌ Could not identify user', 'error');
             }
 
-            // Set default date for report
             document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
         }
 
         // =============================================
-        // USER AUTHENTICATION
+        // USER INIT
         // =============================================
         async function initUser() {
             try {
@@ -1275,48 +1027,45 @@
                         totalSubmits: 0,
                         approved: 0,
                         rejected: 0,
-                        referralCode: generateReferralCode(),
+                        referralCode: generateRefCode(),
                         referralCount: 0,
                         referralEarnings: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-
                     await db.collection('stats').doc('summary').update({
                         totalUsers: firebase.firestore.FieldValue.increment(1)
                     });
                 }
 
-                loadUserData();
-                loadDashboard();
-                loadCategories();
-                loadWithdrawMethods();
-                loadSupportContacts();
-                loadPriceRules();
-                loadTutorialVideo();
-                loadAdminCategories();
+                await loadUserData();
+                await loadDashboard();
+                await loadCategories();
+                await loadWithdrawMethods();
+                await loadSupportContacts();
+                await loadPriceRules();
+                await loadTutorialVideo();
 
-                // Load admin data if admin
                 if (isAdmin) {
-                    loadAllUsers();
-                    loadWithdrawRequests();
-                    loadFileList('pending');
-                    loadBalanceStats();
-                    loadWithdrawMethodsList();
-                    loadSupportContactsList();
+                    await loadAdminCategories();
+                    await loadAllUsers();
+                    await loadWithdrawRequests();
+                    await loadFileList('pending');
+                    await loadBalanceStats();
+                    await loadWithdrawMethodsList();
+                    await loadSupportContactsList();
+                    await loadReportCategories();
                 }
 
             } catch (error) {
                 console.error('Init error:', error);
-                showToast('❌ Error loading profile', 'error');
+                showToast('❌ Error: ' + error.message, 'error');
             }
         }
 
-        function generateReferralCode() {
+        function generateRefCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = '';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
+            for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
             return code;
         }
 
@@ -1327,80 +1076,50 @@
             try {
                 const doc = await db.collection('users').doc(currentUserId).get();
                 if (doc.exists) {
-                    userData = doc.data();
-                    
-                    document.getElementById('userBalance').textContent = userData.balance?.toFixed(2) || '0.00';
-                    document.getElementById('statSubmits').textContent = userData.totalSubmits || 0;
-                    document.getElementById('statApproved').textContent = userData.approved || 0;
-                    document.getElementById('statRejected').textContent = userData.rejected || 0;
-                    document.getElementById('statReferrals').textContent = userData.referralCount || 0;
-                    document.getElementById('profileSubmits').textContent = userData.totalSubmits || 0;
-                    document.getElementById('profileApproved').textContent = userData.approved || 0;
-                    document.getElementById('profileRejected').textContent = userData.rejected || 0;
-                    document.getElementById('profileReferrals').textContent = userData.referralCount || 0;
-                    document.getElementById('refCount').textContent = userData.referralCount || 0;
-                    document.getElementById('refEarnings').textContent = userData.referralEarnings?.toFixed(2) || '0.00';
-
-                    const botUsername = 'YourBotUsername';
-                    const refLink = `https://t.me/${botUsername}?start=ref_${userData.referralCode}`;
-                    document.getElementById('referralLink').textContent = refLink;
+                    const data = doc.data();
+                    document.getElementById('userBalance').textContent = data.balance?.toFixed(2) || '0.00';
+                    document.getElementById('statSubmits').textContent = data.totalSubmits || 0;
+                    document.getElementById('statApproved').textContent = data.approved || 0;
+                    document.getElementById('statRejected').textContent = data.rejected || 0;
+                    document.getElementById('statReferrals').textContent = data.referralCount || 0;
+                    document.getElementById('profileSubmits').textContent = data.totalSubmits || 0;
+                    document.getElementById('profileApproved').textContent = data.approved || 0;
+                    document.getElementById('profileRejected').textContent = data.rejected || 0;
+                    document.getElementById('profileReferrals').textContent = data.referralCount || 0;
+                    document.getElementById('refCount').textContent = data.referralCount || 0;
+                    document.getElementById('refEarnings').textContent = data.referralEarnings?.toFixed(2) || '0.00';
+                    document.getElementById('referralLink').textContent = `https://t.me/YourBot?start=ref_${data.referralCode}`;
                 }
-            } catch (error) {
-                console.error('Load user data error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         // Real-time balance
-        if (currentUserId) {
-            db.collection('users').doc(currentUserId).onSnapshot(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('userBalance').textContent = data.balance?.toFixed(2) || '0.00';
-                }
-            });
-        }
+        db.collection('users').doc(currentUserId).onSnapshot(doc => {
+            if (doc.exists) document.getElementById('userBalance').textContent = doc.data().balance?.toFixed(2) || '0.00';
+        });
 
         // =============================================
         // LOAD DASHBOARD
         // =============================================
         async function loadDashboard() {
             try {
-                const submissions = await db.collection('submissions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(5)
-                    .get();
-
+                const subs = await db.collection('submissions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(5).get();
                 const container = document.getElementById('recentSubmissions');
-                
-                if (submissions.empty) {
-                    container.innerHTML = `
-                        <div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">
-                            No submissions yet
-                        </div>
-                    `;
+                if (subs.empty) {
+                    container.innerHTML = `<div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">No submissions</div>`;
                     return;
                 }
-
                 let html = '<div style="margin-top:16px;">';
-                submissions.forEach(doc => {
-                    const data = doc.data();
-                    const statusClass = `status-${data.status || 'pending'}`;
-                    html += `
-                        <div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-weight:600; font-size:14px;">${data.fileName}</div>
-                                <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div>
-                            </div>
-                            <span class="status-badge ${statusClass}">${data.status || 'pending'}</span>
-                        </div>
-                    `;
+                subs.forEach(d => {
+                    const data = d.data();
+                    html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><div style="font-weight:600; font-size:14px;">${data.fileName}</div><div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div></div>
+                        <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
+                    </div>`;
                 });
                 html += '</div>';
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Load dashboard error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         // =============================================
@@ -1410,37 +1129,27 @@
             try {
                 const snapshot = await db.collection('categories').get();
                 const grid = document.getElementById('categoryGrid');
-
                 if (snapshot.empty) {
                     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--tg-hint); padding:20px;">No categories available</div>';
                     return;
                 }
-
                 grid.innerHTML = '';
                 snapshot.forEach(doc => {
                     const cat = doc.data();
-                    const statusText = cat.active ? '🟢 Online' : '🔴 Offline';
                     const statusClass = cat.active ? 'online' : 'offline';
-                    
                     grid.innerHTML += `
                         <div class="category-item" onclick="selectCategory('${doc.id}')" data-id="${doc.id}">
                             <div class="cat-icon">${cat.icon || '📁'}</div>
                             <div class="cat-name">${cat.name}</div>
-                            <div class="cat-status ${statusClass}">${statusText}</div>
+                            <div class="cat-status ${statusClass}">${cat.active ? '🟢 Online' : '🔴 Offline'}</div>
                         </div>
                     `;
                 });
-            } catch (error) {
-                console.error('Load categories error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function selectCategory(catId) {
-            const items = document.querySelectorAll('.category-item');
-            items.forEach(item => {
-                item.classList.toggle('selected', item.dataset.id === catId);
-            });
-            
+            document.querySelectorAll('.category-item').forEach(el => el.classList.toggle('selected', el.dataset.id === catId));
             selectedCategory = catId;
             document.getElementById('uploadSection').style.display = 'block';
             showToast('📁 Category selected!', 'info');
@@ -1451,59 +1160,36 @@
         // =============================================
         async function uploadFile(input) {
             const file = input.files[0];
-            if (!file) {
-                showToast('❌ Please select a file', 'error');
-                return;
-            }
-
-            if (!selectedCategory) {
-                showToast('❌ Please select a category first', 'error');
-                return;
-            }
+            if (!file) { showToast('❌ Select a file', 'error'); return; }
+            if (!selectedCategory) { showToast('❌ Select category first', 'error'); return; }
 
             document.getElementById('uploadProgress').style.display = 'block';
 
             try {
-                const storageRef = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
-                const uploadTask = await storageRef.put(file);
-                const downloadURL = await uploadTask.ref.getDownloadURL();
+                const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
+                const task = await ref.put(file);
+                const url = await task.ref.getDownloadURL();
 
                 await db.collection('submissions').add({
-                    userId: currentUserId,
-                    fileName: file.name,
-                    fileUrl: downloadURL,
-                    categoryId: selectedCategory,
-                    idCount: 0,
-                    status: 'pending',
+                    userId: currentUserId, fileName: file.name, fileUrl: url,
+                    categoryId: selectedCategory, idCount: 0, status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 await db.collection('users').doc(currentUserId).update({
                     totalSubmits: firebase.firestore.FieldValue.increment(1)
                 });
-
                 await db.collection('stats').doc('summary').update({
                     totalSubmissions: firebase.firestore.FieldValue.increment(1),
                     todaySubmissions: firebase.firestore.FieldValue.increment(1)
                 });
 
-                // Notify admin
-                sendTelegramMessage(
-                    ADMIN_CHAT_ID,
-                    `📤 <b>New Submission</b>\n\n` +
-                    `👤 User: ${tgUser.first_name || 'User'}\n` +
-                    `🆔 ID: <code>${currentUserId}</code>\n` +
-                    `📄 File: ${file.name}\n` +
-                    `📁 Category: ${selectedCategory}\n` +
-                    `⏳ Status: Pending`
-                );
-
-                showToast('✅ File uploaded successfully!', 'success');
+                sendTelegram(`📤 New submission from ${tgUser.first_name || 'User'}\n📄 ${file.name}\n🆔 ${currentUserId}`);
+                showToast('✅ File uploaded!', 'success');
                 loadDashboard();
-                
-            } catch (error) {
-                console.error('Upload error:', error);
-                showToast('❌ Upload failed: ' + error.message, 'error');
+            } catch (e) {
+                console.error(e);
+                showToast('❌ Upload failed', 'error');
             } finally {
                 document.getElementById('uploadProgress').style.display = 'none';
                 input.value = '';
@@ -1511,17 +1197,13 @@
         }
 
         // =============================================
-        // SEND TELEGRAM MESSAGE
+        // SEND TELEGRAM
         // =============================================
-        function sendTelegramMessage(chatId, text) {
+        function sendTelegram(text) {
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
+                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'HTML' })
             }).catch(console.error);
         }
 
@@ -1530,219 +1212,120 @@
         // =============================================
         async function loadWithdrawMethods() {
             try {
-                const snapshot = await db.collection('settings').doc('withdrawMethods').get();
+                const doc = await db.collection('settings').doc('withdrawMethods').get();
                 const select = document.getElementById('withdrawMethod');
-                
-                select.innerHTML = '<option value="">Select a method</option>';
-                
-                if (snapshot.exists) {
-                    const methods = snapshot.data().methods || [];
-                    methods.forEach(method => {
-                        select.innerHTML += `<option value="${method.name}">${method.name.toUpperCase()} (Min: ${method.minAmount} Taka)</option>`;
+                select.innerHTML = '<option value="">Select</option>';
+                if (doc.exists) {
+                    (doc.data().methods || []).forEach(m => {
+                        select.innerHTML += `<option value="${m.name}">${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</option>`;
                     });
                 }
-            } catch (error) {
-                console.error('Load withdraw methods error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function openWithdraw() {
-            const balance = parseFloat(document.getElementById('userBalance').textContent);
-            if (balance < 10) {
-                showToast('❌ Minimum balance 10 Taka required', 'error');
+            if (parseFloat(document.getElementById('userBalance').textContent) < 10) {
+                showToast('❌ Minimum 10 Taka required', 'error');
                 return;
             }
             document.getElementById('withdrawModal').classList.add('active');
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         async function submitWithdraw() {
             const method = document.getElementById('withdrawMethod').value;
             const number = document.getElementById('withdrawNumber').value;
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
 
-            if (!method) {
-                showToast('❌ Select a method', 'error');
-                return;
-            }
-
-            if (!number || number.length < 10) {
-                showToast('❌ Enter valid account number', 'error');
-                return;
-            }
-
-            if (!amount || amount < 10) {
-                showToast('❌ Minimum 10 Taka', 'error');
-                return;
-            }
+            if (!method) { showToast('❌ Select method', 'error'); return; }
+            if (!number || number.length < 10) { showToast('❌ Valid number', 'error'); return; }
+            if (!amount || amount < 10) { showToast('❌ Minimum 10 Taka', 'error'); return; }
 
             const balance = parseFloat(document.getElementById('userBalance').textContent);
-            if (amount > balance) {
-                showToast('❌ Insufficient balance', 'error');
-                return;
-            }
+            if (amount > balance) { showToast('❌ Insufficient balance', 'error'); return; }
 
             try {
                 await db.collection('withdrawals').add({
-                    userId: currentUserId,
-                    method: method,
-                    number: number,
-                    amount: amount,
-                    status: 'pending',
+                    userId: currentUserId, method, number, amount, status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
                 await db.collection('users').doc(currentUserId).update({
                     balance: firebase.firestore.FieldValue.increment(-amount)
                 });
-
                 await db.collection('stats').doc('summary').update({
                     totalBalance: firebase.firestore.FieldValue.increment(-amount)
                 });
 
-                // Notify admin
-                sendTelegramMessage(
-                    ADMIN_CHAT_ID,
-                    `💳 <b>New Withdraw Request</b>\n\n` +
-                    `👤 User: ${tgUser.first_name || 'User'}\n` +
-                    `🆔 ID: <code>${currentUserId}</code>\n` +
-                    `📱 Method: ${method}\n` +
-                    `📞 Number: ${number}\n` +
-                    `💰 Amount: ${amount} Taka\n` +
-                    `⏳ Status: Pending`
-                );
-
+                sendTelegram(`💳 Withdraw from ${tgUser.first_name || 'User'}\n📱 ${method}\n📞 ${number}\n💰 ${amount} Taka`);
                 closeModal('withdrawModal');
                 showToast('✅ Withdraw submitted!', 'success');
                 loadUserData();
-
                 document.getElementById('withdrawAmount').value = '';
                 document.getElementById('withdrawNumber').value = '';
-
-            } catch (error) {
-                console.error('Withdraw error:', error);
-                showToast('❌ Withdraw failed', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Failed', 'error'); }
         }
 
         // =============================================
-        // LOAD HISTORY
+        // HISTORY
         // =============================================
         async function loadHistory() {
             try {
-                const submissions = await db.collection('submissions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-
-                const transactions = await db.collection('transactions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-
+                const subs = await db.collection('submissions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(50).get();
+                const txs = await db.collection('transactions').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(50).get();
                 const container = document.getElementById('historyList');
                 let html = '';
 
-                // Transactions
-                transactions.forEach(doc => {
-                    const data = doc.data();
-                    const isPositive = data.amount > 0;
-                    html += `
-                        <div class="history-item">
-                            <div class="history-left">
-                                <div class="h-title">${data.reason || 'Transaction'}</div>
-                                <div class="h-date">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
-                            </div>
-                            <div class="history-amount ${isPositive ? 'positive' : 'negative'}">
-                                ${isPositive ? '+' : ''}${data.amount?.toFixed(2) || '0.00'}
-                            </div>
-                        </div>
-                    `;
+                txs.forEach(d => {
+                    const data = d.data();
+                    const pos = data.amount > 0;
+                    html += `<div class="history-item"><div class="history-left"><div class="h-title">${data.reason || 'Transaction'}</div><div class="h-date">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                        <div class="history-amount ${pos ? 'positive' : 'negative'}">${pos ? '+' : ''}${data.amount?.toFixed(2) || '0.00'}</div></div>`;
                 });
 
-                // Submissions
-                submissions.forEach(doc => {
-                    const data = doc.data();
-                    const statusClass = `status-${data.status || 'pending'}`;
-                    html += `
-                        <div class="history-item" style="border-left:4px solid ${data.status === 'approved' ? '#28a745' : data.status === 'rejected' ? '#dc3545' : '#ffc107'}">
-                            <div class="history-left">
-                                <div class="h-title">📄 ${data.fileName}</div>
-                                <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
-                            </div>
-                            <span class="status-badge ${statusClass}">${data.status || 'pending'}</span>
-                        </div>
-                    `;
+                subs.forEach(d => {
+                    const data = d.data();
+                    html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div><div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                        <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
                 });
 
-                if (!html) {
-                    html = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No history found</div>';
-                }
-
-                container.innerHTML = html;
-
-            } catch (error) {
-                console.error('Load history error:', error);
-            }
+                container.innerHTML = html || '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No history</div>';
+            } catch (e) { console.error(e); }
         }
 
         // =============================================
-        // LOAD SUPPORT, RULES, TUTORIAL
+        // SUPPORT, RULES, TUTORIAL
         // =============================================
         async function loadSupportContacts() {
             try {
-                const snapshot = await db.collection('settings').doc('support').get();
+                const doc = await db.collection('settings').doc('support').get();
                 const container = document.getElementById('supportContacts');
-                
-                if (snapshot.exists) {
-                    const supports = snapshot.data().contacts || [];
-                    if (supports.length > 0) {
-                        container.innerHTML = supports.map(s => 
-                            `<div style="padding:4px 0;"><a href="https://t.me/${s.username}" style="color:var(--tg-link); text-decoration:none; font-weight:600;">📞 ${s.name}</a></div>`
-                        ).join('');
-                    } else {
-                        container.innerHTML = '<div style="color:var(--tg-hint);">No support contacts</div>';
-                    }
+                if (doc.exists) {
+                    const contacts = doc.data().contacts || [];
+                    container.innerHTML = contacts.length ? contacts.map(s => `<div><a href="https://t.me/${s.username}" style="color:var(--tg-link);">📞 ${s.name}</a></div>`).join('') : '<div style="color:var(--tg-hint);">No contacts</div>';
                 }
-            } catch (error) {
-                console.error('Load support error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function loadPriceRules() {
             try {
-                const snapshot = await db.collection('settings').doc('priceRules').get();
-                const container = document.getElementById('priceRules');
-                
-                if (snapshot.exists) {
-                    container.innerHTML = `<div style="font-size:14px; white-space:pre-wrap;">${snapshot.data().rules || 'No rules set yet'}</div>`;
-                }
-            } catch (error) {
-                console.error('Load price rules error:', error);
-            }
+                const doc = await db.collection('settings').doc('priceRules').get();
+                document.getElementById('priceRules').innerHTML = doc.exists ? `<div style="white-space:pre-wrap;">${doc.data().rules || 'No rules'}</div>` : '<div style="color:var(--tg-hint);">No rules</div>';
+                document.getElementById('priceRulesInput').value = doc.exists ? doc.data().rules || '' : '';
+            } catch (e) { console.error(e); }
         }
 
         async function loadTutorialVideo() {
             try {
-                const snapshot = await db.collection('settings').doc('tutorial').get();
+                const doc = await db.collection('settings').doc('tutorial').get();
                 const container = document.getElementById('howToUseVideo');
-                
-                if (snapshot.exists && snapshot.data().videoUrl) {
-                    container.innerHTML = `
-                        <video controls style="width:100%; border-radius:10px; max-height:300px;">
-                            <source src="${snapshot.data().videoUrl}">
-                            Your browser doesn't support video.
-                        </video>
-                    `;
+                if (doc.exists && doc.data().videoUrl) {
+                    container.innerHTML = `<video controls style="width:100%; border-radius:10px; max-height:300px;"><source src="${doc.data().videoUrl}"></video>`;
+                    document.getElementById('tutorialVideoUrl').value = doc.data().videoUrl || '';
+                } else {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No video</div>';
                 }
-            } catch (error) {
-                console.error('Load tutorial error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         // =============================================
@@ -1750,44 +1333,32 @@
         // =============================================
         async function loadAdminCategories() {
             if (!isAdmin) return;
-            
             try {
                 const snapshot = await db.collection('categories').get();
                 const container = document.getElementById('adminCategoryList');
-                
                 if (snapshot.empty) {
                     container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No categories</div>';
                     return;
                 }
-
                 let html = '';
                 snapshot.forEach(doc => {
                     const cat = doc.data();
-                    const status = cat.active ? '🟢 Active' : '🔴 Inactive';
-                    html += `
-                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
-                                <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${status}</div>
-                            </div>
-                            <div style="display:flex; gap:4px;">
-                                <button onclick="editCategory('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:var(--tg-button); color:white; cursor:pointer;">✏️</button>
-                                <button onclick="deleteCategory('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer;">🗑️</button>
-                            </div>
+                    html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div><div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active ? '🟢 Active' : '🔴 Inactive'}</div></div>
+                        <div style="display:flex; gap:4px;">
+                            <button onclick="editCategory('${doc.id}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
+                            <button onclick="deleteCategory('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                         </div>
-                    `;
+                    </div>`;
                 });
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Load admin categories error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function openCategoryModal(catId = null) {
             editingCategoryId = catId;
             document.getElementById('categoryModalTitle').textContent = catId ? '✏️ Edit Category' : '📁 Add Category';
-            document.getElementById('categorySubmitBtn').textContent = catId ? '💾 Update Category' : '💾 Save Category';
-            
+            document.getElementById('categorySubmitBtn').textContent = catId ? '💾 Update' : '💾 Save';
             if (catId) {
                 db.collection('categories').doc(catId).get().then(doc => {
                     if (doc.exists) {
@@ -1804,58 +1375,41 @@
                 document.getElementById('categoryDetails').value = '';
                 document.getElementById('categoryStatus').value = 'true';
             }
-            
             document.getElementById('categoryModal').classList.add('active');
         }
 
-        function editCategory(catId) {
-            openCategoryModal(catId);
-        }
+        function editCategory(catId) { openCategoryModal(catId); }
 
         async function saveCategory() {
             const name = document.getElementById('categoryName').value.trim();
             const icon = document.getElementById('categoryIcon').value.trim() || '📁';
             const details = document.getElementById('categoryDetails').value.trim();
             const active = document.getElementById('categoryStatus').value === 'true';
-
-            if (!name) {
-                showToast('❌ Enter category name', 'error');
-                return;
-            }
+            if (!name) { showToast('❌ Enter name', 'error'); return; }
 
             try {
                 const data = { name, icon, details, active };
-                
                 if (editingCategoryId) {
                     await db.collection('categories').doc(editingCategoryId).update(data);
-                    showToast('✅ Category updated!', 'success');
+                    showToast('✅ Updated!', 'success');
                 } else {
                     await db.collection('categories').add(data);
-                    showToast('✅ Category added!', 'success');
+                    showToast('✅ Added!', 'success');
                 }
-
                 closeModal('categoryModal');
                 loadAdminCategories();
                 loadCategories();
-                
-            } catch (error) {
-                console.error('Save category error:', error);
-                showToast('❌ Error saving category', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function deleteCategory(catId) {
-            if (!confirm('Are you sure you want to delete this category?')) return;
-            
+            if (!confirm('Delete?')) return;
             try {
                 await db.collection('categories').doc(catId).delete();
-                showToast('✅ Category deleted!', 'success');
+                showToast('✅ Deleted!', 'success');
                 loadAdminCategories();
                 loadCategories();
-            } catch (error) {
-                console.error('Delete category error:', error);
-                showToast('❌ Error deleting category', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         // =============================================
@@ -1863,134 +1417,59 @@
         // =============================================
         async function loadAllUsers() {
             try {
-                const snapshot = await db.collection('users')
-                    .orderBy('createdAt', 'desc')
-                    .limit(50)
-                    .get();
-
+                const snapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(50).get();
                 const container = document.getElementById('userList');
-                
-                if (snapshot.empty) {
-                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>';
-                    return;
-                }
-
+                if (snapshot.empty) { container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>'; return; }
                 let html = '';
                 snapshot.forEach(doc => {
-                    const user = doc.data();
-                    html += `
-                        <div class="user-item">
-                            <div>
-                                <div class="user-name">${user.firstName || 'User'}</div>
-                                <div style="font-size:12px; color:var(--tg-hint);">ID: ${user.userId}</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-weight:600;">${user.balance?.toFixed(2) || '0.00'} Taka</div>
-                                <div style="font-size:11px; color:var(--tg-hint);">📝 ${user.totalSubmits || 0}</div>
-                            </div>
-                            <div class="user-actions">
-                                <button class="view-btn" onclick="viewUser('${user.userId}')">👤</button>
-                                <button class="delete-btn" onclick="deleteUser('${user.userId}')">🗑️</button>
-                            </div>
-                        </div>
-                    `;
+                    const u = doc.data();
+                    html += `<div class="user-item">
+                        <div><div class="user-name">${u.firstName || 'User'}</div><div style="font-size:12px; color:var(--tg-hint);">${u.userId}</div></div>
+                        <div style="text-align:right;"><div style="font-weight:600;">${u.balance?.toFixed(2) || '0.00'} Taka</div><div style="font-size:11px; color:var(--tg-hint);">📝 ${u.totalSubmits || 0}</div></div>
+                        <div><button onclick="viewUser('${u.userId}')" class="btn-sm" style="background:var(--tg-button); color:white;">👤</button>
+                        <button onclick="deleteUser('${u.userId}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button></div>
+                    </div>`;
                 });
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Load users error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function searchUsers() {
-            const search = document.getElementById('userSearch').value.toLowerCase();
-            const items = document.querySelectorAll('.user-item');
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(search) ? 'flex' : 'none';
+            const q = document.getElementById('userSearch').value.toLowerCase();
+            document.querySelectorAll('.user-item').forEach(el => {
+                el.style.display = el.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
             });
         }
 
         async function viewUser(userId) {
             try {
                 const doc = await db.collection('users').doc(userId).get();
-                if (!doc.exists) {
-                    showToast('❌ User not found', 'error');
-                    return;
-                }
-
-                const user = doc.data();
-                const submissions = await db.collection('submissions')
-                    .where('userId', '==', userId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(10)
-                    .get();
-
-                let html = `
-                    <div style="text-align:center; margin-bottom:16px;">
-                        <div style="font-size:48px;">👤</div>
-                        <div style="font-weight:600; font-size:18px;">${user.firstName || 'User'}</div>
-                        <div style="color:var(--tg-hint);">ID: ${user.userId}</div>
-                    </div>
+                if (!doc.exists) { showToast('❌ Not found', 'error'); return; }
+                const u = doc.data();
+                const subs = await db.collection('submissions').where('userId', '==', userId).orderBy('timestamp', 'desc').limit(10).get();
+                let html = `<div style="text-align:center; margin-bottom:16px;"><div style="font-size:48px;">👤</div><div style="font-weight:600; font-size:18px;">${u.firstName || 'User'}</div><div style="color:var(--tg-hint);">${u.userId}</div></div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
-                            <div style="font-weight:bold; font-size:18px;">${user.balance?.toFixed(2) || '0.00'}</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">Balance</div>
-                        </div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
-                            <div style="font-weight:bold; font-size:18px;">${user.totalSubmits || 0}</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">Submits</div>
-                        </div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
-                            <div style="font-weight:bold; font-size:18px; color:#28a745;">${user.approved || 0}</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">Approved</div>
-                        </div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
-                            <div style="font-weight:bold; font-size:18px; color:#dc3545;">${user.rejected || 0}</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">Rejected</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:12px;">
-                        <div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>
-                `;
-
-                if (submissions.empty) {
-                    html += '<div style="color:var(--tg-hint);">No submissions</div>';
-                } else {
-                    submissions.forEach(doc => {
-                        const data = doc.data();
-                        html += `
-                            <div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;">
-                                <span>${data.fileName}</span>
-                                <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
-                            </div>
-                        `;
-                    });
-                }
-
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${u.balance?.toFixed(2) || '0.00'}</div><div style="font-size:11px; color:var(--tg-hint);">Balance</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${u.totalSubmits || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Submits</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#28a745;">${u.approved || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Approved</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#dc3545;">${u.rejected || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Rejected</div></div>
+                    </div><div><div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>`;
+                if (subs.empty) html += '<div style="color:var(--tg-hint);">None</div>';
+                else subs.forEach(d => { const data = d.data(); html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}</span><span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`; });
                 html += '</div>';
                 document.getElementById('userDetailContent').innerHTML = html;
                 document.getElementById('userDetailModal').classList.add('active');
-
-            } catch (error) {
-                console.error('View user error:', error);
-                showToast('❌ Error loading user', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function deleteUser(userId) {
-            if (!confirm(`Are you sure you want to delete user ${userId}?`)) return;
-            
+            if (!confirm(`Delete ${userId}?`)) return;
             try {
                 await db.collection('users').doc(userId).delete();
-                await db.collection('stats').doc('summary').update({
-                    totalUsers: firebase.firestore.FieldValue.increment(-1)
-                });
-                showToast('✅ User deleted!', 'success');
+                await db.collection('stats').doc('summary').update({ totalUsers: firebase.firestore.FieldValue.increment(-1) });
+                showToast('✅ Deleted!', 'success');
                 loadAllUsers();
-            } catch (error) {
-                console.error('Delete user error:', error);
-                showToast('❌ Error deleting user', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         // =============================================
@@ -1999,338 +1478,292 @@
         async function updateBalance() {
             const userId = document.getElementById('balanceUserId').value.trim();
             const amount = parseFloat(document.getElementById('balanceAmount').value);
-            const reason = document.getElementById('balanceReason').value.trim() || 'Admin balance update';
-
-            if (!userId) {
-                showToast('❌ Enter user ID', 'error');
-                return;
-            }
-
-            if (isNaN(amount) || amount === 0) {
-                showToast('❌ Enter valid amount', 'error');
-                return;
-            }
+            const reason = document.getElementById('balanceReason').value.trim() || 'Admin update';
+            if (!userId) { showToast('❌ Enter user ID', 'error'); return; }
+            if (isNaN(amount) || amount === 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
-                const userRef = db.collection('users').doc(userId);
-                const doc = await userRef.get();
-                
-                if (!doc.exists) {
-                    showToast('❌ User not found', 'error');
-                    return;
-                }
-
-                await userRef.update({
-                    balance: firebase.firestore.FieldValue.increment(amount)
-                });
-
-                // Add transaction
-                await db.collection('transactions').add({
-                    userId: userId,
-                    amount: amount,
-                    reason: reason,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                await db.collection('stats').doc('summary').update({
-                    totalBalance: firebase.firestore.FieldValue.increment(amount)
-                });
-
-                const action = amount > 0 ? 'Added' : 'Removed';
-                showToast(`✅ ${action} ${Math.abs(amount)} Taka to user ${userId}`, 'success');
+                const doc = await db.collection('users').doc(userId).get();
+                if (!doc.exists) { showToast('❌ User not found', 'error'); return; }
+                await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
+                await db.collection('transactions').add({ userId, amount, reason, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                await db.collection('stats').doc('summary').update({ totalBalance: firebase.firestore.FieldValue.increment(amount) });
+                showToast(`✅ ${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} Taka`, 'success');
                 loadBalanceStats();
                 loadUserData();
-
-                // Notify user
-                sendTelegramMessage(
-                    userId,
-                    `💵 <b>Balance Updated</b>\n\n` +
-                    `${amount > 0 ? '➕' : '➖'} <b>${action}:</b> ${Math.abs(amount)} Taka\n` +
-                    `📝 <b>Reason:</b> ${reason}\n` +
-                    `💰 <b>New Balance:</b> Check in app`
-                );
-
+                sendTelegram(`💵 Balance ${amount > 0 ? 'Added' : 'Removed'}\n👤 ${userId}\n💰 ${Math.abs(amount)} Taka\n📝 ${reason}`);
                 document.getElementById('balanceAmount').value = '';
                 document.getElementById('balanceReason').value = '';
-
-            } catch (error) {
-                console.error('Update balance error:', error);
-                showToast('❌ Error updating balance', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function loadBalanceStats() {
             try {
-                const stats = await db.collection('stats').doc('summary').get();
-                if (stats.exists) {
-                    const data = stats.data();
-                    document.getElementById('totalBalance').textContent = data.totalBalance?.toFixed(2) || '0.00';
-                    document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                const doc = await db.collection('stats').doc('summary').get();
+                if (doc.exists) {
+                    document.getElementById('totalBalance').textContent = doc.data().totalBalance?.toFixed(2) || '0.00';
+                    document.getElementById('totalUsers').textContent = doc.data().totalUsers || 0;
                 }
-            } catch (error) {
-                console.error('Load balance stats error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         // =============================================
         // ADMIN: FILES
         // =============================================
-        function switchAdminTab(type, tab) {
-            if (type === 'files') {
-                currentFileTab = tab;
-                document.querySelectorAll('#pageAdminFiles .tab').forEach(t => t.classList.remove('active'));
-                event.target.classList.add('active');
-                loadFileList(tab);
-            }
+        function switchFileTab(tab) {
+            currentFileTab = tab;
+            document.querySelectorAll('#pageAdminFiles .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadFileList(tab);
         }
 
         async function loadFileList(status = 'pending') {
             try {
-                const snapshot = await db.collection('submissions')
-                    .where('status', '==', status)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-
+                const snapshot = await db.collection('submissions').where('status', '==', status).orderBy('timestamp', 'desc').limit(50).get();
                 const container = document.getElementById('adminFileList');
-
                 if (snapshot.empty) {
                     container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
                     return;
                 }
-
                 let html = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const statusClass = `status-${data.status}`;
-                    html += `
-                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:600;">📄 ${data.fileName}</div>
-                                    <div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId} • ${data.idCount || 0} IDs</div>
-                                    <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <span class="status-badge ${statusClass}">${data.status}</span>
-                                    <div style="margin-top:4px; display:flex; gap:4px;">
-                                        ${data.status === 'pending' ? `
-                                            <button onclick="approveFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#28a745; color:white; cursor:pointer; font-size:12px;">✅ Approve</button>
-                                            <button onclick="rejectFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">❌ Reject</button>
-                                        ` : ''}
-                                        <button onclick="downloadFile('${data.fileUrl}', '${data.fileName}')" style="padding:4px 12px; border:none; border-radius:6px; background:var(--tg-button); color:white; cursor:pointer; font-size:12px;">📥</button>
-                                        <button onclick="deleteFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">🗑️</button>
-                                    </div>
-                                </div>
+                    html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div><div style="font-weight:600;">📄 ${data.fileName}</div><div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId} • ${data.idCount || 0} IDs</div><div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                                <span class="status-badge status-${data.status}">${data.status}</span>
+                                ${data.status === 'pending' ? `<button onclick="approveFile('${doc.id}')" class="btn-sm" style="background:#28a745; color:white;">✅</button><button onclick="rejectFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">❌</button>` : ''}
+                                <button onclick="window.open('${data.fileUrl}','_blank')" class="btn-sm" style="background:var(--tg-button); color:white;">📥</button>
+                                <button onclick="deleteFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                             </div>
                         </div>
-                    `;
+                    </div>`;
                 });
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Load files error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function approveFile(fileId) {
             try {
-                const fileRef = db.collection('submissions').doc(fileId);
-                const doc = await fileRef.get();
+                const doc = await db.collection('submissions').doc(fileId).get();
                 const data = doc.data();
-
-                await fileRef.update({
-                    status: 'approved'
-                });
-
-                // Update user stats
-                await db.collection('users').doc(data.userId).update({
-                    approved: firebase.firestore.FieldValue.increment(1)
-                });
-
-                // Add balance for user
-                const pricePerId = 5; // Configurable
-                const earnings = (data.idCount || 0) * pricePerId;
-                
+                await doc.ref.update({ status: 'approved' });
+                await db.collection('users').doc(data.userId).update({ approved: firebase.firestore.FieldValue.increment(1) });
+                const earnings = (data.idCount || 0) * 5;
                 if (earnings > 0) {
-                    await db.collection('users').doc(data.userId).update({
-                        balance: firebase.firestore.FieldValue.increment(earnings)
-                    });
-
-                    await db.collection('transactions').add({
-                        userId: data.userId,
-                        amount: earnings,
-                        reason: `Approved ${data.idCount} IDs (${pricePerId} Taka/ID)`,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    // Notify user
-                    sendTelegramMessage(
-                        data.userId,
-                        `✅ <b>IDs Approved!</b>\n\n` +
-                        `📄 File: ${data.fileName}\n` +
-                        `✅ Approved: ${data.idCount || 0} IDs\n` +
-                        `💰 Earnings: ${earnings} Taka\n\n` +
-                        `Check your balance in the app.`
-                    );
+                    await db.collection('users').doc(data.userId).update({ balance: firebase.firestore.FieldValue.increment(earnings) });
+                    await db.collection('transactions').add({ userId: data.userId, amount: earnings, reason: `Approved ${data.idCount} IDs`, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                    sendTelegram(data.userId, `✅ Approved: ${data.idCount} IDs\n💰 Earnings: ${earnings} Taka`);
                 }
-
-                showToast('✅ File approved!', 'success');
+                showToast('✅ Approved!', 'success');
                 loadFileList(currentFileTab);
                 loadDashboard();
-
-            } catch (error) {
-                console.error('Approve file error:', error);
-                showToast('❌ Error approving file', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function rejectFile(fileId) {
             try {
-                const fileRef = db.collection('submissions').doc(fileId);
-                const doc = await fileRef.get();
+                const doc = await db.collection('submissions').doc(fileId).get();
                 const data = doc.data();
-
-                await fileRef.update({
-                    status: 'rejected'
-                });
-
-                await db.collection('users').doc(data.userId).update({
-                    rejected: firebase.firestore.FieldValue.increment(1)
-                });
-
-                // Notify user
-                sendTelegramMessage(
-                    data.userId,
-                    `❌ <b>IDs Rejected</b>\n\n` +
-                    `📄 File: ${data.fileName}\n` +
-                    `❌ Status: Rejected\n\n` +
-                    `Please check your file format and resubmit.`
-                );
-
-                showToast('✅ File rejected!', 'success');
+                await doc.ref.update({ status: 'rejected' });
+                await db.collection('users').doc(data.userId).update({ rejected: firebase.firestore.FieldValue.increment(1) });
+                sendTelegram(data.userId, `❌ Rejected: ${data.fileName}`);
+                showToast('✅ Rejected!', 'success');
                 loadFileList(currentFileTab);
-
-            } catch (error) {
-                console.error('Reject file error:', error);
-                showToast('❌ Error rejecting file', 'error');
-            }
-        }
-
-        function downloadFile(url, fileName) {
-            window.open(url, '_blank');
-            showToast('📥 Download started', 'info');
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function deleteFile(fileId) {
-            if (!confirm('Are you sure you want to delete this file?')) return;
-            
+            if (!confirm('Delete?')) return;
             try {
                 await db.collection('submissions').doc(fileId).delete();
-                showToast('✅ File deleted!', 'success');
+                showToast('✅ Deleted!', 'success');
                 loadFileList(currentFileTab);
-            } catch (error) {
-                console.error('Delete file error:', error);
-                showToast('❌ Error deleting file', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         // =============================================
-        // ADMIN: WITHDRAW REQUESTS
+        // ADMIN: WITHDRAW
         // =============================================
         async function loadWithdrawRequests() {
             try {
-                const snapshot = await db.collection('withdrawals')
-                    .where('status', '==', 'pending')
-                    .orderBy('timestamp', 'desc')
-                    .get();
-
+                const snapshot = await db.collection('withdrawals').where('status', '==', 'pending').orderBy('timestamp', 'desc').get();
                 const container = document.getElementById('withdrawRequests');
-
                 if (snapshot.empty) {
-                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending withdrawals</div>';
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending</div>';
                     return;
                 }
-
                 let html = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    html += `
-                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div>
-                                    <div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId}</div>
-                                    <div style="font-size:12px; color:var(--tg-hint);">Number: ${data.number}</div>
-                                    <div style="font-size:12px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-weight:bold; font-size:18px; color:#ffc107;">${data.amount} Taka</div>
-                                    <div style="margin-top:4px; display:flex; gap:4px;">
-                                        <button onclick="approveWithdraw('${doc.id}', '${data.userId}', ${data.amount})" style="padding:4px 12px; border:none; border-radius:6px; background:#28a745; color:white; cursor:pointer; font-size:12px;">✅ Approve</button>
-                                        <button onclick="rejectWithdraw('${doc.id}', '${data.userId}', ${data.amount})" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">❌ Reject</button>
-                                    </div>
-                                </div>
+                    html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div><div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div><div style="font-size:12px; color:var(--tg-hint);">${data.userId} • ${data.number}</div><div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <div style="font-weight:bold; color:#ffc107;">${data.amount} Taka</div>
+                                <button onclick="approveWithdraw('${doc.id}','${data.userId}',${data.amount})" class="btn-sm" style="background:#28a745; color:white;">✅</button>
+                                <button onclick="rejectWithdraw('${doc.id}','${data.userId}',${data.amount})" class="btn-sm" style="background:#dc3545; color:white;">❌</button>
                             </div>
                         </div>
-                    `;
+                    </div>`;
                 });
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Load withdraw requests error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function approveWithdraw(wdId, userId, amount) {
             try {
-                await db.collection('withdrawals').doc(wdId).update({
-                    status: 'approved'
-                });
-
-                // Notify user
-                sendTelegramMessage(
-                    userId,
-                    `✅ <b>Withdraw Approved!</b>\n\n` +
-                    `💰 Amount: ${amount} Taka\n` +
-                    `✅ Status: Approved\n\n` +
-                    `Your withdrawal has been processed.`
-                );
-
-                showToast('✅ Withdraw approved!', 'success');
+                await db.collection('withdrawals').doc(wdId).update({ status: 'approved' });
+                sendTelegram(userId, `✅ Withdraw Approved: ${amount} Taka`);
+                showToast('✅ Approved!', 'success');
                 loadWithdrawRequests();
-
-            } catch (error) {
-                console.error('Approve withdraw error:', error);
-                showToast('❌ Error approving withdraw', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function rejectWithdraw(wdId, userId, amount) {
             try {
-                await db.collection('withdrawals').doc(wdId).update({
-                    status: 'rejected'
-                });
-
-                // Refund balance
-                await db.collection('users').doc(userId).update({
-                    balance: firebase.firestore.FieldValue.increment(amount)
-                });
-
-                // Notify user
-                sendTelegramMessage(
-                    userId,
-                    `❌ <b>Withdraw Rejected</b>\n\n` +
-                    `💰 Amount: ${amount} Taka\n` +
-                    `❌ Status: Rejected\n\n` +
-                    `Amount has been refunded to your balance.`
-                );
-
-                showToast('❌ Withdraw rejected, refunded', 'success');
+                await db.collection('withdrawals').doc(wdId).update({ status: 'rejected' });
+                await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
+                sendTelegram(userId, `❌ Withdraw Rejected: ${amount} Taka refunded`);
+                showToast('✅ Rejected, refunded', 'success');
                 loadWithdrawRequests();
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+        }
 
-            } catch (error) {
-                console.error('Reject withdraw error:', error);
-                showToast('❌ Error rejecting withdraw', 'error');
+        // =============================================
+        // ADMIN: REPORT
+        // =============================================
+        async function loadReportCategories() {
+            try {
+                const snapshot = await db.collection('categories').get();
+                const selects = ['reportCategorySelect', 'reportCategoryDownload'];
+                selects.forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (sel) {
+                        sel.innerHTML = '<option value="">All Categories</option>';
+                        snapshot.forEach(doc => {
+                            const cat = doc.data();
+                            sel.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
+                        });
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function sendReport() {
+            const category = document.getElementById('reportCategorySelect').value;
+            const idsText = document.getElementById('reportIdsInput').value.trim();
+            
+            if (!idsText) { showToast('❌ Enter IDs', 'error'); return; }
+            
+            const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
+            if (ids.length === 0) { showToast('❌ No valid IDs', 'error'); return; }
+
+            showToast(`📤 Sending report to ${ids.length} users...`, 'info');
+
+            try {
+                let query = db.collection('users');
+                if (category) {
+                    // Get users who submitted in this category
+                    const subs = await db.collection('submissions').where('categoryId', '==', category).get();
+                    const userIds = new Set();
+                    subs.forEach(d => userIds.add(d.data().userId));
+                    // Filter users
+                    const allUsers = await db.collection('users').get();
+                    const users = [];
+                    allUsers.forEach(d => {
+                        if (userIds.has(d.id)) users.push({ id: d.id, ...d.data() });
+                    });
+                    // Process each user
+                    for (const user of users) {
+                        const userSubs = await db.collection('submissions').where('userId', '==', user.id).where('categoryId', '==', category).get();
+                        let approved = 0;
+                        userSubs.forEach(d => { if (d.data().status === 'approved') approved += d.data().idCount || 0; });
+                        const earnings = approved * 5;
+                        if (earnings > 0) {
+                            await db.collection('users').doc(user.id).update({
+                                balance: firebase.firestore.FieldValue.increment(earnings)
+                            });
+                            await db.collection('transactions').add({
+                                userId: user.id,
+                                amount: earnings,
+                                reason: `Report: ${approved} IDs approved`,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            sendTelegram(user.id, `📊 Report: ${approved} IDs approved\n💰 Earnings: ${earnings} Taka`);
+                        }
+                    }
+                    showToast(`✅ Report sent to ${users.length} users!`, 'success');
+                } else {
+                    // Send to specific IDs
+                    for (const id of ids) {
+                        const doc = await db.collection('users').doc(id).get();
+                        if (doc.exists) {
+                            const subs = await db.collection('submissions').where('userId', '==', id).where('status', '==', 'approved').get();
+                            let total = 0;
+                            subs.forEach(d => total += d.data().idCount || 0);
+                            const earnings = total * 5;
+                            if (earnings > 0) {
+                                await db.collection('users').doc(id).update({
+                                    balance: firebase.firestore.FieldValue.increment(earnings)
+                                });
+                                await db.collection('transactions').add({
+                                    userId: id,
+                                    amount: earnings,
+                                    reason: `Report: ${total} IDs approved`,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                sendTelegram(id, `📊 Report: ${total} IDs approved\n💰 Earnings: ${earnings} Taka`);
+                            }
+                        }
+                    }
+                    showToast(`✅ Report sent to ${ids.length} users!`, 'success');
+                }
+                loadUserData();
+                loadBalanceStats();
+                document.getElementById('reportIdsInput').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('❌ Error sending report', 'error');
             }
+        }
+
+        async function downloadReport() {
+            const date = document.getElementById('reportDate').value;
+            const category = document.getElementById('reportCategoryDownload').value;
+
+            showToast('📊 Generating report...', 'info');
+
+            try {
+                let query = db.collection('submissions').where('status', '==', 'approved').orderBy('timestamp', 'desc');
+                if (date) {
+                    const start = new Date(date); start.setHours(0,0,0,0);
+                    const end = new Date(date); end.setHours(23,59,59,999);
+                    query = query.where('timestamp', '>=', start).where('timestamp', '<=', end);
+                }
+                if (category) query = query.where('categoryId', '==', category);
+
+                const snapshot = await query.get();
+                if (snapshot.empty) { showToast('❌ No data', 'error'); return; }
+
+                let csv = 'User ID,File Name,ID Count,Status,Category,Date\n';
+                let total = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    csv += `${data.userId},${data.fileName},${data.idCount || 0},${data.status},${data.categoryId || ''},${new Date(data.timestamp?.toDate()).toLocaleDateString()}\n`;
+                    total += data.idCount || 0;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${date || 'all'}_${total}_ids.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast(`✅ Report downloaded! Total: ${total} IDs`, 'success');
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         // =============================================
@@ -2338,64 +1771,38 @@
         // =============================================
         async function loadWithdrawMethodsList() {
             try {
-                const snapshot = await db.collection('settings').doc('withdrawMethods').get();
+                const doc = await db.collection('settings').doc('withdrawMethods').get();
                 const container = document.getElementById('withdrawMethodsList');
-                
-                if (snapshot.exists) {
-                    const methods = snapshot.data().methods || [];
-                    if (methods.length > 0) {
-                        container.innerHTML = methods.map((m, i) => `
-                            <div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
-                                <span>${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</span>
-                                <button onclick="removeWithdrawMethod(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<div style="color:var(--tg-hint);">No methods</div>';
-                    }
+                if (doc.exists) {
+                    const methods = doc.data().methods || [];
+                    container.innerHTML = methods.length ? methods.map((m, i) =>
+                        `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
+                            <span>${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</span>
+                            <button onclick="removeWithdrawMethod(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
+                        </div>`
+                    ).join('') : '<div style="color:var(--tg-hint);">No methods</div>';
                 }
-            } catch (error) {
-                console.error('Load withdraw methods list error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function addWithdrawMethod() {
             const name = document.getElementById('newMethodName').value.trim().toLowerCase();
             const minAmount = parseFloat(document.getElementById('newMethodLimit').value);
-
-            if (!name) {
-                showToast('❌ Enter method name', 'error');
-                return;
-            }
-
-            if (!minAmount || minAmount <= 0) {
-                showToast('❌ Enter valid minimum amount', 'error');
-                return;
-            }
+            if (!name) { showToast('❌ Enter name', 'error'); return; }
+            if (!minAmount || minAmount <= 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
                 const doc = await db.collection('settings').doc('withdrawMethods').get();
                 let methods = doc.exists ? doc.data().methods || [] : [];
-                
-                if (methods.find(m => m.name === name)) {
-                    showToast('❌ Method already exists', 'error');
-                    return;
-                }
-
+                if (methods.find(m => m.name === name)) { showToast('❌ Exists', 'error'); return; }
                 methods.push({ name, minAmount });
                 await db.collection('settings').doc('withdrawMethods').set({ methods });
-
-                showToast('✅ Method added!', 'success');
+                showToast('✅ Added!', 'success');
                 loadWithdrawMethodsList();
                 loadWithdrawMethods();
-                
                 document.getElementById('newMethodName').value = '';
                 document.getElementById('newMethodLimit').value = '';
-
-            } catch (error) {
-                console.error('Add withdraw method error:', error);
-                showToast('❌ Error adding method', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function removeWithdrawMethod(index) {
@@ -2404,92 +1811,62 @@
                 let methods = doc.exists ? doc.data().methods || [] : [];
                 methods.splice(index, 1);
                 await db.collection('settings').doc('withdrawMethods').set({ methods });
-
-                showToast('✅ Method removed!', 'success');
+                showToast('✅ Removed!', 'success');
                 loadWithdrawMethodsList();
                 loadWithdrawMethods();
-
-            } catch (error) {
-                console.error('Remove withdraw method error:', error);
-                showToast('❌ Error removing method', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function updatePriceRules() {
             const rules = document.getElementById('priceRulesInput').value.trim();
-            
             try {
                 await db.collection('settings').doc('priceRules').set({ rules });
-                showToast('✅ Price rules updated!', 'success');
+                showToast('✅ Rules updated!', 'success');
                 loadPriceRules();
-            } catch (error) {
-                console.error('Update price rules error:', error);
-                showToast('❌ Error updating rules', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function updateTutorialVideo() {
             const videoUrl = document.getElementById('tutorialVideoUrl').value.trim();
-            
             try {
                 await db.collection('settings').doc('tutorial').set({ videoUrl });
-                showToast('✅ Tutorial video updated!', 'success');
+                showToast('✅ Video updated!', 'success');
                 loadTutorialVideo();
-            } catch (error) {
-                console.error('Update tutorial video error:', error);
-                showToast('❌ Error updating video', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function loadSupportContactsList() {
             try {
-                const snapshot = await db.collection('settings').doc('support').get();
+                const doc = await db.collection('settings').doc('support').get();
                 const container = document.getElementById('supportContactsList');
-                
-                if (snapshot.exists) {
-                    const contacts = snapshot.data().contacts || [];
-                    if (contacts.length > 0) {
-                        container.innerHTML = contacts.map((c, i) => `
-                            <div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
-                                <span>📞 ${c.name} (@${c.username})</span>
-                                <button onclick="removeSupportContact(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<div style="color:var(--tg-hint);">No contacts</div>';
-                    }
+                if (doc.exists) {
+                    const contacts = doc.data().contacts || [];
+                    container.innerHTML = contacts.length ? contacts.map((c, i) =>
+                        `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
+                            <span>📞 ${c.name} (@${c.username})</span>
+                            <button onclick="removeSupportContact(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
+                        </div>`
+                    ).join('') : '<div style="color:var(--tg-hint);">No contacts</div>';
                 }
-            } catch (error) {
-                console.error('Load support contacts list error:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function addSupportContact() {
             const name = document.getElementById('newSupportName').value.trim();
             const username = document.getElementById('newSupportUsername').value.trim().replace('@', '');
-
-            if (!name || !username) {
-                showToast('❌ Enter name and username', 'error');
-                return;
-            }
+            if (!name || !username) { showToast('❌ Enter all fields', 'error'); return; }
 
             try {
                 const doc = await db.collection('settings').doc('support').get();
                 let contacts = doc.exists ? doc.data().contacts || [] : [];
                 contacts.push({ name, username });
                 await db.collection('settings').doc('support').set({ contacts });
-
-                showToast('✅ Support contact added!', 'success');
+                showToast('✅ Contact added!', 'success');
                 loadSupportContactsList();
                 loadSupportContacts();
-                
                 document.getElementById('newSupportName').value = '';
                 document.getElementById('newSupportUsername').value = '';
-
-            } catch (error) {
-                console.error('Add support contact error:', error);
-                showToast('❌ Error adding contact', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function removeSupportContact(index) {
@@ -2498,74 +1875,10 @@
                 let contacts = doc.exists ? doc.data().contacts || [] : [];
                 contacts.splice(index, 1);
                 await db.collection('settings').doc('support').set({ contacts });
-
-                showToast('✅ Contact removed!', 'success');
+                showToast('✅ Removed!', 'success');
                 loadSupportContactsList();
                 loadSupportContacts();
-
-            } catch (error) {
-                console.error('Remove support contact error:', error);
-                showToast('❌ Error removing contact', 'error');
-            }
-        }
-
-        // =============================================
-        // ADMIN: REPORT
-        // =============================================
-        async function generateReport() {
-            const date = document.getElementById('reportDate').value;
-            const category = document.getElementById('reportCategory').value;
-
-            showToast('📊 Generating report...', 'info');
-
-            try {
-                let query = db.collection('submissions')
-                    .where('status', '==', 'approved')
-                    .orderBy('timestamp', 'desc');
-
-                if (date) {
-                    const startDate = new Date(date);
-                    startDate.setHours(0, 0, 0, 0);
-                    const endDate = new Date(date);
-                    endDate.setHours(23, 59, 59, 999);
-                    
-                    query = query.where('timestamp', '>=', startDate)
-                                 .where('timestamp', '<=', endDate);
-                }
-
-                if (category) {
-                    query = query.where('categoryId', '==', category);
-                }
-
-                const snapshot = await query.get();
-
-                if (snapshot.empty) {
-                    showToast('❌ No data found for report', 'error');
-                    return;
-                }
-
-                // Create CSV
-                let csv = 'User ID,File Name,ID Count,Status,Date\n';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    csv += `${data.userId},${data.fileName},${data.idCount || 0},${data.status},${new Date(data.timestamp?.toDate()).toLocaleDateString()}\n`;
-                });
-
-                // Download CSV
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `report_${date || 'all'}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-                showToast('✅ Report downloaded!', 'success');
-
-            } catch (error) {
-                console.error('Generate report error:', error);
-                showToast('❌ Error generating report', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         // =============================================
@@ -2573,68 +1886,42 @@
         // =============================================
         async function downloadBackup() {
             showToast('💾 Creating backup...', 'info');
-
             try {
                 const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats'];
                 const backup = {};
-
-                for (const collection of collections) {
-                    const snapshot = await db.collection(collection).get();
-                    backup[collection] = [];
-                    snapshot.forEach(doc => {
-                        backup[collection].push({
-                            id: doc.id,
-                            ...doc.data()
-                        });
-                    });
+                for (const c of collections) {
+                    const snapshot = await db.collection(c).get();
+                    backup[c] = [];
+                    snapshot.forEach(d => backup[c].push({ id: d.id, ...d.data() }));
                 }
-
-                const json = JSON.stringify(backup, null, 2);
-                const blob = new Blob([json], { type: 'application/json' });
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-
                 showToast('✅ Backup downloaded!', 'success');
-
-            } catch (error) {
-                console.error('Download backup error:', error);
-                showToast('❌ Error creating backup', 'error');
-            }
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
         async function restoreBackup(input) {
             const file = input.files[0];
             if (!file) return;
-
-            showToast('📤 Restoring backup...', 'info');
-
+            showToast('📤 Restoring...', 'info');
             try {
                 const text = await file.text();
                 const backup = JSON.parse(text);
-
                 for (const [collection, data] of Object.entries(backup)) {
-                    const batch = db.batch();
                     for (const item of data) {
-                        const ref = db.collection(collection).doc(item.id);
-                        batch.set(ref, item);
+                        await db.collection(collection).doc(item.id).set(item);
                     }
-                    await batch.commit();
                 }
-
-                showToast('✅ Backup restored!', 'success');
+                showToast('✅ Restored!', 'success');
                 loadAllUsers();
                 loadFileList('pending');
                 loadWithdrawRequests();
-
-            } catch (error) {
-                console.error('Restore backup error:', error);
-                showToast('❌ Error restoring backup', 'error');
-            }
-
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
             input.value = '';
         }
 
@@ -2645,56 +1932,36 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
             if (target) target.classList.add('active');
-            
             if (page === 'history') loadHistory();
             if (page === 'adminUsers') loadAllUsers();
             if (page === 'adminFiles') loadFileList(currentFileTab);
             if (page === 'adminWithdraw') loadWithdrawRequests();
             if (page === 'adminBalance') loadBalanceStats();
             if (page === 'adminCategories') loadAdminCategories();
-            
-            // Populate report category dropdown
-            if (page === 'adminReport') {
-                db.collection('categories').get().then(snapshot => {
-                    const select = document.getElementById('reportCategory');
-                    select.innerHTML = '<option value="">All Categories</option>';
-                    snapshot.forEach(doc => {
-                        const cat = doc.data();
-                        select.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
-                    });
-                });
-            }
+            if (page === 'adminReport') loadReportCategories();
         }
 
         // =============================================
-        // COPY FUNCTIONS
+        // COPY & CLOSE
         // =============================================
         function copyReferralLink() {
             const link = document.getElementById('referralLink').textContent;
             navigator.clipboard?.writeText(link);
-            showToast('✅ Referral link copied!', 'success');
+            showToast('✅ Copied!', 'success');
         }
 
-        // =============================================
-        // CLOSE APP
-        // =============================================
-        function closeApp() {
-            tg.close();
-        }
+        function closeApp() { tg.close(); }
 
         // =============================================
         // TOAST
         // =============================================
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.style.display = 'block';
-            
-            clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type}`;
+            t.style.display = 'block';
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.style.display = 'none', 3000);
         }
 
         // =============================================
@@ -2702,11 +1969,8 @@
         // =============================================
         document.addEventListener('DOMContentLoaded', init);
 
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
-            });
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
         });
     </script>
 </body>
