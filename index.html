@@ -19,7 +19,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
@@ -29,7 +29,6 @@
             padding: 12px;
         }
 
-        /* Telegram Theme Variables */
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #000000);
@@ -40,7 +39,7 @@
             --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
         }
 
-        /* Header with Telegram User Info */
+        /* Header */
         .header {
             background: var(--tg-secondary);
             border-radius: 16px;
@@ -61,20 +60,42 @@
             justify-content: center;
             font-size: 24px;
             color: white;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-info {
             flex: 1;
+            min-width: 0;
         }
 
         .user-name {
             font-size: 18px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-id {
             font-size: 12px;
             color: var(--tg-hint);
+        }
+
+        .admin-badge {
+            background: #ffc107;
+            color: #333;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
         }
 
         /* Balance Card */
@@ -154,7 +175,7 @@
             margin-top: 2px;
         }
 
-        /* Menu Grid */
+        /* Menu */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -191,6 +212,21 @@
             font-size: 11px;
             font-weight: 600;
             color: var(--tg-text);
+        }
+
+        /* Admin Menu */
+        .admin-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+            background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .admin-menu .menu-item {
+            background: var(--tg-bg);
         }
 
         /* Category Grid */
@@ -269,12 +305,6 @@
             color: var(--tg-hint);
         }
 
-        .upload-area .sub-text {
-            font-size: 12px;
-            color: var(--tg-hint);
-            margin-top: 4px;
-        }
-
         /* Pages */
         .page {
             display: none;
@@ -290,9 +320,23 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* History List */
-        .history-item {
+        /* Cards */
+        .card {
             background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        /* History Item */
+        .history-item {
+            background: var(--tg-bg);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 8px;
@@ -347,6 +391,72 @@
             color: #721c24;
         }
 
+        /* Form */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--tg-secondary);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--tg-button);
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
         /* Modal */
         .modal-overlay {
             display: none;
@@ -395,71 +505,19 @@
             color: var(--tg-hint);
         }
 
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid var(--tg-secondary);
-            border-radius: 10px;
-            font-size: 14px;
-            background: var(--tg-bg);
-            color: var(--tg-text);
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: var(--tg-button);
-            outline: none;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: var(--tg-button);
-            color: var(--tg-button-text);
+        /* Back Button */
+        .back-btn {
+            background: none;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            color: var(--tg-link);
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
-        /* Loading */
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid var(--tg-secondary);
-            border-top: 3px solid var(--tg-button);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
         }
 
         /* Toast */
@@ -491,6 +549,67 @@
             background: var(--tg-button);
         }
 
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid var(--tg-secondary);
+            border-top: 3px solid var(--tg-button);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* User List */
+        .user-item {
+            background: var(--tg-bg);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item .user-name {
+            font-weight: 600;
+        }
+
+        .user-item .user-balance {
+            color: var(--tg-hint);
+        }
+
+        .user-item .user-actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .user-item .user-actions .view-btn {
+            background: var(--tg-button);
+            color: white;
+        }
+
+        .user-item .user-actions .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
         /* Referral Box */
         .referral-box {
             background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
@@ -515,23 +634,6 @@
             color: #333;
         }
 
-        .referral-box .ref-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-        }
-
-        .referral-box .ref-stats .num {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .referral-box .ref-stats .label {
-            font-size: 12px;
-            color: #666;
-        }
-
         .copy-btn {
             background: #667eea;
             color: white;
@@ -546,19 +648,33 @@
             transform: scale(0.95);
         }
 
-        /* Back Button */
-        .back-btn {
-            background: none;
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
             border: none;
-            color: var(--tg-link);
-            font-size: 14px;
+            background: none;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 12px;
+            color: var(--tg-hint);
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -567,16 +683,19 @@
     <!-- HOME PAGE -->
     <!-- ============================================= -->
     <div id="pageHome" class="page active">
-        <!-- User Header -->
+        <!-- Header -->
         <div class="header">
             <div class="user-avatar" id="userAvatar">👤</div>
             <div class="user-info">
-                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-name" id="userName">
+                    Loading...
+                    <span class="admin-badge" id="adminBadge" style="display:none;">👑 Admin</span>
+                </div>
                 <div class="user-id" id="userIdDisplay">ID: ---</div>
             </div>
         </div>
 
-        <!-- Balance Card -->
+        <!-- Balance -->
         <div class="balance-card">
             <div class="balance-label">💰 Available Balance</div>
             <div class="balance-amount" id="userBalance">0.00</div>
@@ -594,20 +713,20 @@
                 <div class="stat-label">📝 Submits</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="statApproved" style="color: #28a745;">0</div>
+                <div class="stat-number" id="statApproved" style="color:#28a745;">0</div>
                 <div class="stat-label">✅ Approved</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="statRejected" style="color: #dc3545;">0</div>
+                <div class="stat-number" id="statRejected" style="color:#dc3545;">0</div>
                 <div class="stat-label">❌ Rejected</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="statReferrals" style="color: #ffc107;">0</div>
+                <div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div>
                 <div class="stat-label">👥 Referrals</div>
             </div>
         </div>
 
-        <!-- Menu -->
+        <!-- User Menu -->
         <div class="menu-grid">
             <div class="menu-item active" onclick="switchPage('submit')">
                 <span class="menu-icon">📤</span>
@@ -635,6 +754,45 @@
             </div>
         </div>
 
+        <!-- Admin Menu (Hidden for non-admin) -->
+        <div id="adminMenu" style="display:none;">
+            <div style="font-weight:600; margin-bottom:8px;">👑 Admin Panel</div>
+            <div class="admin-menu">
+                <div class="menu-item" onclick="switchPage('adminCategories')">
+                    <span class="menu-icon">📁</span>
+                    <span class="menu-label">Categories</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminUsers')">
+                    <span class="menu-icon">👥</span>
+                    <span class="menu-label">Users</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminBalance')">
+                    <span class="menu-icon">💰</span>
+                    <span class="menu-label">Balance</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminFiles')">
+                    <span class="menu-icon">📄</span>
+                    <span class="menu-label">Files</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminWithdraw')">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-label">Withdraw</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminSettings')">
+                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-label">Settings</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminReport')">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Report</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('adminBackup')">
+                    <span class="menu-icon">💾</span>
+                    <span class="menu-label">Backup</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Submissions -->
         <div id="recentSubmissions"></div>
     </div>
@@ -644,22 +802,22 @@
     <!-- ============================================= -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom: 12px;">📤 Submit IDs</h3>
+        <h3 style="margin-bottom:12px;">📤 Submit IDs</h3>
         
         <div class="category-grid" id="categoryGrid">
-            <div style="grid-column: 1/-1; text-align: center; color: var(--tg-hint); padding: 20px;">Loading categories...</div>
+            <div style="grid-column:1/-1; text-align:center; color:var(--tg-hint); padding:20px;">Loading...</div>
         </div>
 
-        <div id="uploadSection" style="display: none;">
+        <div id="uploadSection" style="display:none;">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="uploadFile(this)">
                 <span class="icon">📁</span>
                 <p>Click to select Excel file</p>
-                <div class="sub-text">Supported: .xlsx, .xls</div>
+                <div class="sub-text" style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Supported: .xlsx, .xls</div>
             </div>
             <div id="uploadProgress" class="loading">
                 <div class="spinner"></div>
-                <div style="margin-top: 8px; color: var(--tg-hint);">Uploading...</div>
+                <div style="margin-top:8px; color:var(--tg-hint);">Uploading...</div>
             </div>
         </div>
     </div>
@@ -669,10 +827,8 @@
     <!-- ============================================= -->
     <div id="pageHistory" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom: 12px;">📋 Transaction History</h3>
-        <div id="historyList">
-            <div style="text-align: center; color: var(--tg-hint); padding: 20px;">No transactions yet</div>
-        </div>
+        <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
+        <div id="historyList"></div>
     </div>
 
     <!-- ============================================= -->
@@ -680,28 +836,28 @@
     <!-- ============================================= -->
     <div id="pageReferral" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom: 12px;">👥 Refer & Earn</h3>
+        <h3 style="margin-bottom:12px;">👥 Refer & Earn</h3>
         
         <div class="referral-box">
-            <div style="font-weight: 600; font-size: 16px;">🔗 Your Referral Link</div>
+            <div style="font-weight:600; font-size:16px;">🔗 Your Referral Link</div>
             <div class="ref-link">
                 <code id="referralLink">Loading...</code>
                 <button class="copy-btn" onclick="copyReferralLink()">Copy</button>
             </div>
-            <div class="ref-stats">
-                <div>
-                    <div class="num" id="refCount">0</div>
-                    <div class="label">Total Referrals</div>
+            <div class="ref-stats" style="display:flex; justify-content:space-around; margin-top:10px;">
+                <div style="text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#333;" id="refCount">0</div>
+                    <div style="font-size:12px; color:#666;">Total Referrals</div>
                 </div>
-                <div>
-                    <div class="num" id="refEarnings">0</div>
-                    <div class="label">Earnings (Taka)</div>
+                <div style="text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#333;" id="refEarnings">0</div>
+                    <div style="font-size:12px; color:#666;">Earnings (Taka)</div>
                 </div>
             </div>
         </div>
 
-        <div style="background: #fff3cd; border-radius: 12px; padding: 16px; border-left: 4px solid #ffc107;">
-            <p style="font-size: 13px; color: #856404;">
+        <div style="background:#fff3cd; border-radius:12px; padding:16px; border-left:4px solid #ffc107;">
+            <p style="font-size:13px; color:#856404;">
                 💡 <strong>How it works:</strong><br>
                 Share your referral link with friends. When they join and get approved IDs, you earn bonus!
             </p>
@@ -713,33 +869,33 @@
     <!-- ============================================= -->
     <div id="pageProfile" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom: 12px;">👤 My Profile</h3>
+        <h3 style="margin-bottom:12px;">👤 My Profile</h3>
         
-        <div style="background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
-            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-                <div style="width: 60px; height: 60px; background: var(--tg-button); border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;">👤</div>
+        <div class="card">
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+                <div style="width:60px; height:60px; background:var(--tg-button); border-radius:30px; display:flex; align-items:center; justify-content:center; font-size:28px; color:white;">👤</div>
                 <div>
-                    <div style="font-weight: 600; font-size: 18px;" id="profileName">User</div>
-                    <div style="font-size: 12px; color: var(--tg-hint);">ID: <span id="profileUserId">---</span></div>
+                    <div style="font-weight:600; font-size:18px;" id="profileName">User</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">ID: <span id="profileUserId">---</span></div>
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 20px; font-weight: bold; color: var(--tg-text);" id="profileSubmits">0</div>
-                    <div style="font-size: 11px; color: var(--tg-hint);">Total Submits</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:var(--tg-text);" id="profileSubmits">0</div>
+                    <div style="font-size:11px; color:var(--tg-hint);">Total Submits</div>
                 </div>
-                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 20px; font-weight: bold; color: #28a745;" id="profileApproved">0</div>
-                    <div style="font-size: 11px; color: var(--tg-hint);">Approved</div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#28a745;" id="profileApproved">0</div>
+                    <div style="font-size:11px; color:var(--tg-hint);">Approved</div>
                 </div>
-                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 20px; font-weight: bold; color: #dc3545;" id="profileRejected">0</div>
-                    <div style="font-size: 11px; color: var(--tg-hint);">Rejected</div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#dc3545;" id="profileRejected">0</div>
+                    <div style="font-size:11px; color:var(--tg-hint);">Rejected</div>
                 </div>
-                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 20px; font-weight: bold; color: #ffc107;" id="profileReferrals">0</div>
-                    <div style="font-size: 11px; color: var(--tg-hint);">Referrals</div>
+                <div style="background:var(--tg-bg); padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#ffc107;" id="profileReferrals">0</div>
+                    <div style="font-size:11px; color:var(--tg-hint);">Referrals</div>
                 </div>
             </div>
         </div>
@@ -750,23 +906,202 @@
     <!-- ============================================= -->
     <div id="pageSupport" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom: 12px;">📞 Support</h3>
+        <h3 style="margin-bottom:12px;">📞 Support</h3>
         
-        <div style="background: var(--tg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 8px;">💬</div>
-            <h4 style="font-size: 16px;">Need Help?</h4>
-            <p style="font-size: 14px; color: var(--tg-hint); margin: 8px 0;">Contact our support team</p>
+        <div class="card" style="text-align:center;">
+            <div style="font-size:48px; margin-bottom:8px;">💬</div>
+            <h4 style="font-size:16px;">Need Help?</h4>
+            <p style="font-size:14px; color:var(--tg-hint); margin:8px 0;">Contact our support team</p>
             <div id="supportContacts"></div>
         </div>
 
-        <div style="margin-top: 16px; background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
-            <h4 style="margin-bottom: 8px;">📋 How to Use</h4>
+        <div class="card">
+            <h4 style="margin-bottom:8px;">📋 How to Use</h4>
             <div id="howToUseVideo"></div>
         </div>
 
-        <div style="margin-top: 16px; background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
-            <h4 style="margin-bottom: 8px;">📈 Price & Rules</h4>
+        <div class="card">
+            <h4 style="margin-bottom:8px;">📈 Price & Rules</h4>
             <div id="priceRules"></div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: CATEGORIES -->
+    <!-- ============================================= -->
+    <div id="pageAdminCategories" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📁 Category Management</h3>
+        
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button class="btn-primary" onclick="openCategoryModal()" style="flex:1;">➕ Add Category</button>
+        </div>
+
+        <div id="adminCategoryList"></div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: USERS -->
+    <!-- ============================================= -->
+    <div id="pageAdminUsers" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">👥 User Management</h3>
+        
+        <div class="form-group">
+            <label>🔍 Search User</label>
+            <input type="text" id="userSearch" placeholder="Enter User ID or Name" oninput="searchUsers()">
+        </div>
+        
+        <div id="userList"></div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: BALANCE -->
+    <!-- ============================================= -->
+    <div id="pageAdminBalance" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">💰 Balance Management</h3>
+        
+        <div class="card">
+            <div class="form-group">
+                <label>👤 User ID</label>
+                <input type="text" id="balanceUserId" placeholder="Enter user ID">
+            </div>
+            <div class="form-group">
+                <label>💰 Amount (Taka)</label>
+                <input type="number" id="balanceAmount" placeholder="Enter amount (positive = add, negative = remove)">
+            </div>
+            <div class="form-group">
+                <label>📝 Reason</label>
+                <input type="text" id="balanceReason" placeholder="Reason for balance update">
+            </div>
+            <button class="btn-primary" onclick="updateBalance()">💵 Update Balance</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📊 Balance Stats</div>
+            <div id="balanceStats">
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--tg-secondary);">
+                    <span>Total Balance</span>
+                    <span id="totalBalance">0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0;">
+                    <span>Total Users</span>
+                    <span id="totalUsers">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: FILES -->
+    <!-- ============================================= -->
+    <div id="pageAdminFiles" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📄 File Management</h3>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchAdminTab('files', 'pending')">⏳ Pending</button>
+            <button class="tab" onclick="switchAdminTab('files', 'approved')">✅ Approved</button>
+            <button class="tab" onclick="switchAdminTab('files', 'rejected')">❌ Rejected</button>
+        </div>
+        
+        <div id="adminFileList"></div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: WITHDRAW -->
+    <!-- ============================================= -->
+    <div id="pageAdminWithdraw" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">💳 Withdraw Requests</h3>
+        
+        <div id="withdrawRequests"></div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: SETTINGS -->
+    <!-- ============================================= -->
+    <div id="pageAdminSettings" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">⚙️ Settings</h3>
+        
+        <div class="card">
+            <div class="card-title">💰 Withdraw Methods</div>
+            <div id="withdrawMethodsList"></div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="newMethodName" placeholder="Method name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                <input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                <button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📜 Price & Rules</div>
+            <div class="form-group">
+                <textarea id="priceRulesInput" placeholder="Enter price rules..."></textarea>
+            </div>
+            <button class="btn-primary" onclick="updatePriceRules()">💾 Save Rules</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📹 Tutorial Video</div>
+            <div class="form-group">
+                <input type="text" id="tutorialVideoUrl" placeholder="Enter video URL">
+            </div>
+            <button class="btn-primary" onclick="updateTutorialVideo()">💾 Save Video</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📞 Support Contacts</div>
+            <div id="supportContactsList"></div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                <input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                <button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: REPORT -->
+    <!-- ============================================= -->
+    <div id="pageAdminReport" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📊 Generate Report</h3>
+        
+        <div class="card">
+            <div class="form-group">
+                <label>📅 Select Date</label>
+                <input type="date" id="reportDate">
+            </div>
+            <div class="form-group">
+                <label>📁 Select Category</label>
+                <select id="reportCategory"></select>
+            </div>
+            <button class="btn-primary" onclick="generateReport()">📊 Generate Report</button>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- ADMIN: BACKUP -->
+    <!-- ============================================= -->
+    <div id="pageAdminBackup" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">💾 Backup & Restore</h3>
+        
+        <div class="card">
+            <button class="btn-primary" onclick="downloadBackup()">📥 Download Backup</button>
+            <div style="margin-top:12px; text-align:center; color:var(--tg-hint);">Download full database backup as JSON</div>
+        </div>
+
+        <div class="card">
+            <div class="upload-area" onclick="document.getElementById('restoreInput').click()">
+                <input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)">
+                <span class="icon">📤</span>
+                <p>Click to restore backup</p>
+                <div class="sub-text" style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Upload JSON backup file</div>
+            </div>
         </div>
     </div>
 
@@ -797,6 +1132,51 @@
         </div>
     </div>
 
+    <!-- ============================================= -->
+    <!-- CATEGORY MODAL -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="categoryModalTitle">📁 Add Category</h3>
+                <button class="modal-close" onclick="closeModal('categoryModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Category Name</label>
+                <input type="text" id="categoryName" placeholder="Enter category name">
+            </div>
+            <div class="form-group">
+                <label>Icon</label>
+                <input type="text" id="categoryIcon" placeholder="Enter emoji icon">
+            </div>
+            <div class="form-group">
+                <label>Details</label>
+                <input type="text" id="categoryDetails" placeholder="Category details">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="categoryStatus">
+                    <option value="true">🟢 Active</option>
+                    <option value="false">🔴 Inactive</option>
+                </select>
+            </div>
+            <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save Category</button>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- USER DETAIL MODAL -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="userDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👤 User Details</h3>
+                <button class="modal-close" onclick="closeModal('userDetailModal')">×</button>
+            </div>
+            <div id="userDetailContent"></div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
@@ -819,7 +1199,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
-        const auth = firebase.auth();
 
         // =============================================
         // TELEGRAM WEBAPP
@@ -828,18 +1207,33 @@
         let tgUser = tg.initDataUnsafe?.user || {};
         
         // =============================================
-        // GLOBAL VARIABLES
+        // CONSTANTS
         // =============================================
+        const ADMIN_ID = '6140196943';
+        const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
+        const ADMIN_CHAT_ID = '6140196943';
+
         let currentUserId = tgUser.id ? String(tgUser.id) : null;
         let userData = null;
         let selectedCategory = null;
-        let adminChatId = "6140196943"; // Admin ID
+        let isAdmin = false;
+        let editingCategoryId = null;
+        let currentFileTab = 'pending';
 
         // =============================================
         // INITIALIZE
         // =============================================
         function init() {
-            // Show Telegram user info
+            // Check if user is admin
+            isAdmin = (currentUserId === ADMIN_ID);
+            
+            // Show admin badge
+            if (isAdmin) {
+                document.getElementById('adminBadge').style.display = 'inline';
+                document.getElementById('adminMenu').style.display = 'block';
+            }
+
+            // Show user info
             if (tgUser.id) {
                 document.getElementById('userName').textContent = tgUser.first_name || 'User';
                 document.getElementById('userIdDisplay').textContent = `ID: ${tgUser.id}`;
@@ -847,25 +1241,21 @@
                 document.getElementById('profileUserId').textContent = tgUser.id || '---';
                 
                 if (tgUser.photo_url) {
-                    document.querySelector('.user-avatar').style.backgroundImage = `url(${tgUser.photo_url})`;
-                    document.querySelector('.user-avatar').style.backgroundSize = 'cover';
-                    document.querySelector('.user-avatar').textContent = '';
+                    document.querySelector('.user-avatar').innerHTML = `<img src="${tgUser.photo_url}" alt="avatar">`;
                 }
             }
 
-            // Expand the app
             tg.expand();
             tg.ready();
 
-            // Initialize user
             if (currentUserId) {
                 initUser();
             } else {
                 showToast('❌ Could not identify user', 'error');
             }
 
-            // Close button
-            document.getElementById('closeApp')?.addEventListener('click', () => tg.close());
+            // Set default date for report
+            document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
         }
 
         // =============================================
@@ -877,7 +1267,6 @@
                 const doc = await userRef.get();
 
                 if (!doc.exists) {
-                    // Create new user
                     await userRef.set({
                         userId: currentUserId,
                         firstName: tgUser.first_name || 'User',
@@ -892,15 +1281,11 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Update stats
                     await db.collection('stats').doc('summary').update({
                         totalUsers: firebase.firestore.FieldValue.increment(1)
                     });
-
-                    showToast('✅ Welcome! Account created', 'success');
                 }
 
-                // Load data
                 loadUserData();
                 loadDashboard();
                 loadCategories();
@@ -908,6 +1293,17 @@
                 loadSupportContacts();
                 loadPriceRules();
                 loadTutorialVideo();
+                loadAdminCategories();
+
+                // Load admin data if admin
+                if (isAdmin) {
+                    loadAllUsers();
+                    loadWithdrawRequests();
+                    loadFileList('pending');
+                    loadBalanceStats();
+                    loadWithdrawMethodsList();
+                    loadSupportContactsList();
+                }
 
             } catch (error) {
                 console.error('Init error:', error);
@@ -933,7 +1329,6 @@
                 if (doc.exists) {
                     userData = doc.data();
                     
-                    // Update UI
                     document.getElementById('userBalance').textContent = userData.balance?.toFixed(2) || '0.00';
                     document.getElementById('statSubmits').textContent = userData.totalSubmits || 0;
                     document.getElementById('statApproved').textContent = userData.approved || 0;
@@ -946,8 +1341,7 @@
                     document.getElementById('refCount').textContent = userData.referralCount || 0;
                     document.getElementById('refEarnings').textContent = userData.referralEarnings?.toFixed(2) || '0.00';
 
-                    // Referral link
-                    const botUsername = 'YOUR_BOT_USERNAME'; // Replace with your bot username
+                    const botUsername = 'YourBotUsername';
                     const refLink = `https://t.me/${botUsername}?start=ref_${userData.referralCode}`;
                     document.getElementById('referralLink').textContent = refLink;
                 }
@@ -956,7 +1350,7 @@
             }
         }
 
-        // Real-time balance updates
+        // Real-time balance
         if (currentUserId) {
             db.collection('users').doc(currentUserId).onSnapshot(doc => {
                 if (doc.exists) {
@@ -981,25 +1375,24 @@
                 
                 if (submissions.empty) {
                     container.innerHTML = `
-                        <div style="background: var(--tg-secondary); border-radius: 12px; padding: 20px; text-align: center; color: var(--tg-hint);">
+                        <div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">
                             No submissions yet
                         </div>
                     `;
                     return;
                 }
 
-                let html = '<div style="margin-top: 16px;">';
+                let html = '<div style="margin-top:16px;">';
                 submissions.forEach(doc => {
                     const data = doc.data();
                     const statusClass = `status-${data.status || 'pending'}`;
-                    const statusText = data.status || 'pending';
                     html += `
-                        <div style="background: var(--tg-secondary); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <div style="font-weight: 600; font-size: 14px;">${data.fileName}</div>
-                                <div style="font-size: 11px; color: var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div>
+                                <div style="font-weight:600; font-size:14px;">${data.fileName}</div>
+                                <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div>
                             </div>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
+                            <span class="status-badge ${statusClass}">${data.status || 'pending'}</span>
                         </div>
                     `;
                 });
@@ -1011,7 +1404,7 @@
         }
 
         // =============================================
-        // LOAD CATEGORIES
+        // LOAD CATEGORIES (User)
         // =============================================
         async function loadCategories() {
             try {
@@ -1019,7 +1412,7 @@
                 const grid = document.getElementById('categoryGrid');
 
                 if (snapshot.empty) {
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--tg-hint); padding: 20px;">No categories available</div>';
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--tg-hint); padding:20px;">No categories available</div>';
                     return;
                 }
 
@@ -1071,12 +1464,10 @@
             document.getElementById('uploadProgress').style.display = 'block';
 
             try {
-                // Upload to Firebase Storage
                 const storageRef = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
                 const uploadTask = await storageRef.put(file);
                 const downloadURL = await uploadTask.ref.getDownloadURL();
 
-                // Save to Firestore
                 await db.collection('submissions').add({
                     userId: currentUserId,
                     fileName: file.name,
@@ -1087,19 +1478,25 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Update user stats
                 await db.collection('users').doc(currentUserId).update({
                     totalSubmits: firebase.firestore.FieldValue.increment(1)
                 });
 
-                // Update global stats
                 await db.collection('stats').doc('summary').update({
                     totalSubmissions: firebase.firestore.FieldValue.increment(1),
                     todaySubmissions: firebase.firestore.FieldValue.increment(1)
                 });
 
                 // Notify admin
-                notifyAdmin(`📤 New submission from ${tgUser.first_name || 'User'}\n📄 File: ${file.name}\n🆔 User: ${currentUserId}`);
+                sendTelegramMessage(
+                    ADMIN_CHAT_ID,
+                    `📤 <b>New Submission</b>\n\n` +
+                    `👤 User: ${tgUser.first_name || 'User'}\n` +
+                    `🆔 ID: <code>${currentUserId}</code>\n` +
+                    `📄 File: ${file.name}\n` +
+                    `📁 Category: ${selectedCategory}\n` +
+                    `⏳ Status: Pending`
+                );
 
                 showToast('✅ File uploaded successfully!', 'success');
                 loadDashboard();
@@ -1114,25 +1511,22 @@
         }
 
         // =============================================
-        // NOTIFY ADMIN
+        // SEND TELEGRAM MESSAGE
         // =============================================
-        function notifyAdmin(message) {
-            const botToken = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
-            const adminId = '6140196943';
-            
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        function sendTelegramMessage(chatId, text) {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: adminId,
-                    text: message,
+                    chat_id: chatId,
+                    text: text,
                     parse_mode: 'HTML'
                 })
             }).catch(console.error);
         }
 
         // =============================================
-        // LOAD WITHDRAW METHODS
+        // WITHDRAW
         // =============================================
         async function loadWithdrawMethods() {
             try {
@@ -1146,17 +1540,12 @@
                     methods.forEach(method => {
                         select.innerHTML += `<option value="${method.name}">${method.name.toUpperCase()} (Min: ${method.minAmount} Taka)</option>`;
                     });
-                } else {
-                    select.innerHTML += '<option value="bkash">Bkash</option><option value="nagad">Nagad</option><option value="rocket">Rocket</option>';
                 }
             } catch (error) {
                 console.error('Load withdraw methods error:', error);
             }
         }
 
-        // =============================================
-        // WITHDRAW
-        // =============================================
         function openWithdraw() {
             const balance = parseFloat(document.getElementById('userBalance').textContent);
             if (balance < 10) {
@@ -1215,13 +1604,15 @@
                 });
 
                 // Notify admin
-                notifyAdmin(
-                    `💳 New Withdraw Request\n\n` +
+                sendTelegramMessage(
+                    ADMIN_CHAT_ID,
+                    `💳 <b>New Withdraw Request</b>\n\n` +
                     `👤 User: ${tgUser.first_name || 'User'}\n` +
-                    `🆔 ID: ${currentUserId}\n` +
+                    `🆔 ID: <code>${currentUserId}</code>\n` +
                     `📱 Method: ${method}\n` +
                     `📞 Number: ${number}\n` +
-                    `💰 Amount: ${amount} Taka`
+                    `💰 Amount: ${amount} Taka\n` +
+                    `⏳ Status: Pending`
                 );
 
                 closeModal('withdrawModal');
@@ -1279,7 +1670,7 @@
                     const data = doc.data();
                     const statusClass = `status-${data.status || 'pending'}`;
                     html += `
-                        <div class="history-item" style="border-left: 4px solid ${data.status === 'approved' ? '#28a745' : data.status === 'rejected' ? '#dc3545' : '#ffc107'}">
+                        <div class="history-item" style="border-left:4px solid ${data.status === 'approved' ? '#28a745' : data.status === 'rejected' ? '#dc3545' : '#ffc107'}">
                             <div class="history-left">
                                 <div class="h-title">📄 ${data.fileName}</div>
                                 <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
@@ -1290,7 +1681,7 @@
                 });
 
                 if (!html) {
-                    html = '<div style="text-align: center; color: var(--tg-hint); padding: 20px;">No history found</div>';
+                    html = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No history found</div>';
                 }
 
                 container.innerHTML = html;
@@ -1312,13 +1703,11 @@
                     const supports = snapshot.data().contacts || [];
                     if (supports.length > 0) {
                         container.innerHTML = supports.map(s => 
-                            `<div style="padding: 4px 0;"><a href="https://t.me/${s.username}" style="color: var(--tg-link); text-decoration: none; font-weight: 600;">📞 ${s.name}</a></div>`
+                            `<div style="padding:4px 0;"><a href="https://t.me/${s.username}" style="color:var(--tg-link); text-decoration:none; font-weight:600;">📞 ${s.name}</a></div>`
                         ).join('');
                     } else {
-                        container.innerHTML = '<div style="color: var(--tg-hint);">No support contacts</div>';
+                        container.innerHTML = '<div style="color:var(--tg-hint);">No support contacts</div>';
                     }
-                } else {
-                    container.innerHTML = '<div style="color: var(--tg-hint);">No support contacts</div>';
                 }
             } catch (error) {
                 console.error('Load support error:', error);
@@ -1331,9 +1720,7 @@
                 const container = document.getElementById('priceRules');
                 
                 if (snapshot.exists) {
-                    container.innerHTML = `<div style="font-size: 14px; white-space: pre-wrap;">${snapshot.data().rules || 'No rules set yet'}</div>`;
-                } else {
-                    container.innerHTML = '<div style="color: var(--tg-hint);">No rules set yet</div>';
+                    container.innerHTML = `<div style="font-size:14px; white-space:pre-wrap;">${snapshot.data().rules || 'No rules set yet'}</div>`;
                 }
             } catch (error) {
                 console.error('Load price rules error:', error);
@@ -1347,17 +1734,908 @@
                 
                 if (snapshot.exists && snapshot.data().videoUrl) {
                     container.innerHTML = `
-                        <video controls style="width: 100%; border-radius: 10px; max-height: 300px;">
-                            <source src="${snapshot.data().videoUrl}" type="video/mp4">
+                        <video controls style="width:100%; border-radius:10px; max-height:300px;">
+                            <source src="${snapshot.data().videoUrl}">
                             Your browser doesn't support video.
                         </video>
                     `;
-                } else {
-                    container.innerHTML = '<div style="color: var(--tg-hint);">No tutorial video</div>';
                 }
             } catch (error) {
                 console.error('Load tutorial error:', error);
             }
+        }
+
+        // =============================================
+        // ADMIN: CATEGORIES
+        // =============================================
+        async function loadAdminCategories() {
+            if (!isAdmin) return;
+            
+            try {
+                const snapshot = await db.collection('categories').get();
+                const container = document.getElementById('adminCategoryList');
+                
+                if (snapshot.empty) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No categories</div>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const cat = doc.data();
+                    const status = cat.active ? '🟢 Active' : '🔴 Inactive';
+                    html += `
+                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
+                                <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${status}</div>
+                            </div>
+                            <div style="display:flex; gap:4px;">
+                                <button onclick="editCategory('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:var(--tg-button); color:white; cursor:pointer;">✏️</button>
+                                <button onclick="deleteCategory('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer;">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Load admin categories error:', error);
+            }
+        }
+
+        function openCategoryModal(catId = null) {
+            editingCategoryId = catId;
+            document.getElementById('categoryModalTitle').textContent = catId ? '✏️ Edit Category' : '📁 Add Category';
+            document.getElementById('categorySubmitBtn').textContent = catId ? '💾 Update Category' : '💾 Save Category';
+            
+            if (catId) {
+                db.collection('categories').doc(catId).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        document.getElementById('categoryName').value = data.name || '';
+                        document.getElementById('categoryIcon').value = data.icon || '';
+                        document.getElementById('categoryDetails').value = data.details || '';
+                        document.getElementById('categoryStatus').value = String(data.active !== false);
+                    }
+                });
+            } else {
+                document.getElementById('categoryName').value = '';
+                document.getElementById('categoryIcon').value = '';
+                document.getElementById('categoryDetails').value = '';
+                document.getElementById('categoryStatus').value = 'true';
+            }
+            
+            document.getElementById('categoryModal').classList.add('active');
+        }
+
+        function editCategory(catId) {
+            openCategoryModal(catId);
+        }
+
+        async function saveCategory() {
+            const name = document.getElementById('categoryName').value.trim();
+            const icon = document.getElementById('categoryIcon').value.trim() || '📁';
+            const details = document.getElementById('categoryDetails').value.trim();
+            const active = document.getElementById('categoryStatus').value === 'true';
+
+            if (!name) {
+                showToast('❌ Enter category name', 'error');
+                return;
+            }
+
+            try {
+                const data = { name, icon, details, active };
+                
+                if (editingCategoryId) {
+                    await db.collection('categories').doc(editingCategoryId).update(data);
+                    showToast('✅ Category updated!', 'success');
+                } else {
+                    await db.collection('categories').add(data);
+                    showToast('✅ Category added!', 'success');
+                }
+
+                closeModal('categoryModal');
+                loadAdminCategories();
+                loadCategories();
+                
+            } catch (error) {
+                console.error('Save category error:', error);
+                showToast('❌ Error saving category', 'error');
+            }
+        }
+
+        async function deleteCategory(catId) {
+            if (!confirm('Are you sure you want to delete this category?')) return;
+            
+            try {
+                await db.collection('categories').doc(catId).delete();
+                showToast('✅ Category deleted!', 'success');
+                loadAdminCategories();
+                loadCategories();
+            } catch (error) {
+                console.error('Delete category error:', error);
+                showToast('❌ Error deleting category', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: USERS
+        // =============================================
+        async function loadAllUsers() {
+            try {
+                const snapshot = await db.collection('users')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+
+                const container = document.getElementById('userList');
+                
+                if (snapshot.empty) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    html += `
+                        <div class="user-item">
+                            <div>
+                                <div class="user-name">${user.firstName || 'User'}</div>
+                                <div style="font-size:12px; color:var(--tg-hint);">ID: ${user.userId}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:600;">${user.balance?.toFixed(2) || '0.00'} Taka</div>
+                                <div style="font-size:11px; color:var(--tg-hint);">📝 ${user.totalSubmits || 0}</div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="view-btn" onclick="viewUser('${user.userId}')">👤</button>
+                                <button class="delete-btn" onclick="deleteUser('${user.userId}')">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Load users error:', error);
+            }
+        }
+
+        function searchUsers() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const items = document.querySelectorAll('.user-item');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(search) ? 'flex' : 'none';
+            });
+        }
+
+        async function viewUser(userId) {
+            try {
+                const doc = await db.collection('users').doc(userId).get();
+                if (!doc.exists) {
+                    showToast('❌ User not found', 'error');
+                    return;
+                }
+
+                const user = doc.data();
+                const submissions = await db.collection('submissions')
+                    .where('userId', '==', userId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(10)
+                    .get();
+
+                let html = `
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="font-size:48px;">👤</div>
+                        <div style="font-weight:600; font-size:18px;">${user.firstName || 'User'}</div>
+                        <div style="color:var(--tg-hint);">ID: ${user.userId}</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
+                            <div style="font-weight:bold; font-size:18px;">${user.balance?.toFixed(2) || '0.00'}</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">Balance</div>
+                        </div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
+                            <div style="font-weight:bold; font-size:18px;">${user.totalSubmits || 0}</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">Submits</div>
+                        </div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
+                            <div style="font-weight:bold; font-size:18px; color:#28a745;">${user.approved || 0}</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">Approved</div>
+                        </div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;">
+                            <div style="font-weight:bold; font-size:18px; color:#dc3545;">${user.rejected || 0}</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">Rejected</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>
+                `;
+
+                if (submissions.empty) {
+                    html += '<div style="color:var(--tg-hint);">No submissions</div>';
+                } else {
+                    submissions.forEach(doc => {
+                        const data = doc.data();
+                        html += `
+                            <div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;">
+                                <span>${data.fileName}</span>
+                                <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += '</div>';
+                document.getElementById('userDetailContent').innerHTML = html;
+                document.getElementById('userDetailModal').classList.add('active');
+
+            } catch (error) {
+                console.error('View user error:', error);
+                showToast('❌ Error loading user', 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm(`Are you sure you want to delete user ${userId}?`)) return;
+            
+            try {
+                await db.collection('users').doc(userId).delete();
+                await db.collection('stats').doc('summary').update({
+                    totalUsers: firebase.firestore.FieldValue.increment(-1)
+                });
+                showToast('✅ User deleted!', 'success');
+                loadAllUsers();
+            } catch (error) {
+                console.error('Delete user error:', error);
+                showToast('❌ Error deleting user', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: BALANCE
+        // =============================================
+        async function updateBalance() {
+            const userId = document.getElementById('balanceUserId').value.trim();
+            const amount = parseFloat(document.getElementById('balanceAmount').value);
+            const reason = document.getElementById('balanceReason').value.trim() || 'Admin balance update';
+
+            if (!userId) {
+                showToast('❌ Enter user ID', 'error');
+                return;
+            }
+
+            if (isNaN(amount) || amount === 0) {
+                showToast('❌ Enter valid amount', 'error');
+                return;
+            }
+
+            try {
+                const userRef = db.collection('users').doc(userId);
+                const doc = await userRef.get();
+                
+                if (!doc.exists) {
+                    showToast('❌ User not found', 'error');
+                    return;
+                }
+
+                await userRef.update({
+                    balance: firebase.firestore.FieldValue.increment(amount)
+                });
+
+                // Add transaction
+                await db.collection('transactions').add({
+                    userId: userId,
+                    amount: amount,
+                    reason: reason,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('stats').doc('summary').update({
+                    totalBalance: firebase.firestore.FieldValue.increment(amount)
+                });
+
+                const action = amount > 0 ? 'Added' : 'Removed';
+                showToast(`✅ ${action} ${Math.abs(amount)} Taka to user ${userId}`, 'success');
+                loadBalanceStats();
+                loadUserData();
+
+                // Notify user
+                sendTelegramMessage(
+                    userId,
+                    `💵 <b>Balance Updated</b>\n\n` +
+                    `${amount > 0 ? '➕' : '➖'} <b>${action}:</b> ${Math.abs(amount)} Taka\n` +
+                    `📝 <b>Reason:</b> ${reason}\n` +
+                    `💰 <b>New Balance:</b> Check in app`
+                );
+
+                document.getElementById('balanceAmount').value = '';
+                document.getElementById('balanceReason').value = '';
+
+            } catch (error) {
+                console.error('Update balance error:', error);
+                showToast('❌ Error updating balance', 'error');
+            }
+        }
+
+        async function loadBalanceStats() {
+            try {
+                const stats = await db.collection('stats').doc('summary').get();
+                if (stats.exists) {
+                    const data = stats.data();
+                    document.getElementById('totalBalance').textContent = data.totalBalance?.toFixed(2) || '0.00';
+                    document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                }
+            } catch (error) {
+                console.error('Load balance stats error:', error);
+            }
+        }
+
+        // =============================================
+        // ADMIN: FILES
+        // =============================================
+        function switchAdminTab(type, tab) {
+            if (type === 'files') {
+                currentFileTab = tab;
+                document.querySelectorAll('#pageAdminFiles .tab').forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+                loadFileList(tab);
+            }
+        }
+
+        async function loadFileList(status = 'pending') {
+            try {
+                const snapshot = await db.collection('submissions')
+                    .where('status', '==', status)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+
+                const container = document.getElementById('adminFileList');
+
+                if (snapshot.empty) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const statusClass = `status-${data.status}`;
+                    html += `
+                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-weight:600;">📄 ${data.fileName}</div>
+                                    <div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId} • ${data.idCount || 0} IDs</div>
+                                    <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <span class="status-badge ${statusClass}">${data.status}</span>
+                                    <div style="margin-top:4px; display:flex; gap:4px;">
+                                        ${data.status === 'pending' ? `
+                                            <button onclick="approveFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#28a745; color:white; cursor:pointer; font-size:12px;">✅ Approve</button>
+                                            <button onclick="rejectFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">❌ Reject</button>
+                                        ` : ''}
+                                        <button onclick="downloadFile('${data.fileUrl}', '${data.fileName}')" style="padding:4px 12px; border:none; border-radius:6px; background:var(--tg-button); color:white; cursor:pointer; font-size:12px;">📥</button>
+                                        <button onclick="deleteFile('${doc.id}')" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">🗑️</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Load files error:', error);
+            }
+        }
+
+        async function approveFile(fileId) {
+            try {
+                const fileRef = db.collection('submissions').doc(fileId);
+                const doc = await fileRef.get();
+                const data = doc.data();
+
+                await fileRef.update({
+                    status: 'approved'
+                });
+
+                // Update user stats
+                await db.collection('users').doc(data.userId).update({
+                    approved: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Add balance for user
+                const pricePerId = 5; // Configurable
+                const earnings = (data.idCount || 0) * pricePerId;
+                
+                if (earnings > 0) {
+                    await db.collection('users').doc(data.userId).update({
+                        balance: firebase.firestore.FieldValue.increment(earnings)
+                    });
+
+                    await db.collection('transactions').add({
+                        userId: data.userId,
+                        amount: earnings,
+                        reason: `Approved ${data.idCount} IDs (${pricePerId} Taka/ID)`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Notify user
+                    sendTelegramMessage(
+                        data.userId,
+                        `✅ <b>IDs Approved!</b>\n\n` +
+                        `📄 File: ${data.fileName}\n` +
+                        `✅ Approved: ${data.idCount || 0} IDs\n` +
+                        `💰 Earnings: ${earnings} Taka\n\n` +
+                        `Check your balance in the app.`
+                    );
+                }
+
+                showToast('✅ File approved!', 'success');
+                loadFileList(currentFileTab);
+                loadDashboard();
+
+            } catch (error) {
+                console.error('Approve file error:', error);
+                showToast('❌ Error approving file', 'error');
+            }
+        }
+
+        async function rejectFile(fileId) {
+            try {
+                const fileRef = db.collection('submissions').doc(fileId);
+                const doc = await fileRef.get();
+                const data = doc.data();
+
+                await fileRef.update({
+                    status: 'rejected'
+                });
+
+                await db.collection('users').doc(data.userId).update({
+                    rejected: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Notify user
+                sendTelegramMessage(
+                    data.userId,
+                    `❌ <b>IDs Rejected</b>\n\n` +
+                    `📄 File: ${data.fileName}\n` +
+                    `❌ Status: Rejected\n\n` +
+                    `Please check your file format and resubmit.`
+                );
+
+                showToast('✅ File rejected!', 'success');
+                loadFileList(currentFileTab);
+
+            } catch (error) {
+                console.error('Reject file error:', error);
+                showToast('❌ Error rejecting file', 'error');
+            }
+        }
+
+        function downloadFile(url, fileName) {
+            window.open(url, '_blank');
+            showToast('📥 Download started', 'info');
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            
+            try {
+                await db.collection('submissions').doc(fileId).delete();
+                showToast('✅ File deleted!', 'success');
+                loadFileList(currentFileTab);
+            } catch (error) {
+                console.error('Delete file error:', error);
+                showToast('❌ Error deleting file', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: WITHDRAW REQUESTS
+        // =============================================
+        async function loadWithdrawRequests() {
+            try {
+                const snapshot = await db.collection('withdrawals')
+                    .where('status', '==', 'pending')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+
+                const container = document.getElementById('withdrawRequests');
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending withdrawals</div>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `
+                        <div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div>
+                                    <div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId}</div>
+                                    <div style="font-size:12px; color:var(--tg-hint);">Number: ${data.number}</div>
+                                    <div style="font-size:12px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:bold; font-size:18px; color:#ffc107;">${data.amount} Taka</div>
+                                    <div style="margin-top:4px; display:flex; gap:4px;">
+                                        <button onclick="approveWithdraw('${doc.id}', '${data.userId}', ${data.amount})" style="padding:4px 12px; border:none; border-radius:6px; background:#28a745; color:white; cursor:pointer; font-size:12px;">✅ Approve</button>
+                                        <button onclick="rejectWithdraw('${doc.id}', '${data.userId}', ${data.amount})" style="padding:4px 12px; border:none; border-radius:6px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">❌ Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Load withdraw requests error:', error);
+            }
+        }
+
+        async function approveWithdraw(wdId, userId, amount) {
+            try {
+                await db.collection('withdrawals').doc(wdId).update({
+                    status: 'approved'
+                });
+
+                // Notify user
+                sendTelegramMessage(
+                    userId,
+                    `✅ <b>Withdraw Approved!</b>\n\n` +
+                    `💰 Amount: ${amount} Taka\n` +
+                    `✅ Status: Approved\n\n` +
+                    `Your withdrawal has been processed.`
+                );
+
+                showToast('✅ Withdraw approved!', 'success');
+                loadWithdrawRequests();
+
+            } catch (error) {
+                console.error('Approve withdraw error:', error);
+                showToast('❌ Error approving withdraw', 'error');
+            }
+        }
+
+        async function rejectWithdraw(wdId, userId, amount) {
+            try {
+                await db.collection('withdrawals').doc(wdId).update({
+                    status: 'rejected'
+                });
+
+                // Refund balance
+                await db.collection('users').doc(userId).update({
+                    balance: firebase.firestore.FieldValue.increment(amount)
+                });
+
+                // Notify user
+                sendTelegramMessage(
+                    userId,
+                    `❌ <b>Withdraw Rejected</b>\n\n` +
+                    `💰 Amount: ${amount} Taka\n` +
+                    `❌ Status: Rejected\n\n` +
+                    `Amount has been refunded to your balance.`
+                );
+
+                showToast('❌ Withdraw rejected, refunded', 'success');
+                loadWithdrawRequests();
+
+            } catch (error) {
+                console.error('Reject withdraw error:', error);
+                showToast('❌ Error rejecting withdraw', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: SETTINGS
+        // =============================================
+        async function loadWithdrawMethodsList() {
+            try {
+                const snapshot = await db.collection('settings').doc('withdrawMethods').get();
+                const container = document.getElementById('withdrawMethodsList');
+                
+                if (snapshot.exists) {
+                    const methods = snapshot.data().methods || [];
+                    if (methods.length > 0) {
+                        container.innerHTML = methods.map((m, i) => `
+                            <div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
+                                <span>${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</span>
+                                <button onclick="removeWithdrawMethod(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div style="color:var(--tg-hint);">No methods</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Load withdraw methods list error:', error);
+            }
+        }
+
+        async function addWithdrawMethod() {
+            const name = document.getElementById('newMethodName').value.trim().toLowerCase();
+            const minAmount = parseFloat(document.getElementById('newMethodLimit').value);
+
+            if (!name) {
+                showToast('❌ Enter method name', 'error');
+                return;
+            }
+
+            if (!minAmount || minAmount <= 0) {
+                showToast('❌ Enter valid minimum amount', 'error');
+                return;
+            }
+
+            try {
+                const doc = await db.collection('settings').doc('withdrawMethods').get();
+                let methods = doc.exists ? doc.data().methods || [] : [];
+                
+                if (methods.find(m => m.name === name)) {
+                    showToast('❌ Method already exists', 'error');
+                    return;
+                }
+
+                methods.push({ name, minAmount });
+                await db.collection('settings').doc('withdrawMethods').set({ methods });
+
+                showToast('✅ Method added!', 'success');
+                loadWithdrawMethodsList();
+                loadWithdrawMethods();
+                
+                document.getElementById('newMethodName').value = '';
+                document.getElementById('newMethodLimit').value = '';
+
+            } catch (error) {
+                console.error('Add withdraw method error:', error);
+                showToast('❌ Error adding method', 'error');
+            }
+        }
+
+        async function removeWithdrawMethod(index) {
+            try {
+                const doc = await db.collection('settings').doc('withdrawMethods').get();
+                let methods = doc.exists ? doc.data().methods || [] : [];
+                methods.splice(index, 1);
+                await db.collection('settings').doc('withdrawMethods').set({ methods });
+
+                showToast('✅ Method removed!', 'success');
+                loadWithdrawMethodsList();
+                loadWithdrawMethods();
+
+            } catch (error) {
+                console.error('Remove withdraw method error:', error);
+                showToast('❌ Error removing method', 'error');
+            }
+        }
+
+        async function updatePriceRules() {
+            const rules = document.getElementById('priceRulesInput').value.trim();
+            
+            try {
+                await db.collection('settings').doc('priceRules').set({ rules });
+                showToast('✅ Price rules updated!', 'success');
+                loadPriceRules();
+            } catch (error) {
+                console.error('Update price rules error:', error);
+                showToast('❌ Error updating rules', 'error');
+            }
+        }
+
+        async function updateTutorialVideo() {
+            const videoUrl = document.getElementById('tutorialVideoUrl').value.trim();
+            
+            try {
+                await db.collection('settings').doc('tutorial').set({ videoUrl });
+                showToast('✅ Tutorial video updated!', 'success');
+                loadTutorialVideo();
+            } catch (error) {
+                console.error('Update tutorial video error:', error);
+                showToast('❌ Error updating video', 'error');
+            }
+        }
+
+        async function loadSupportContactsList() {
+            try {
+                const snapshot = await db.collection('settings').doc('support').get();
+                const container = document.getElementById('supportContactsList');
+                
+                if (snapshot.exists) {
+                    const contacts = snapshot.data().contacts || [];
+                    if (contacts.length > 0) {
+                        container.innerHTML = contacts.map((c, i) => `
+                            <div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
+                                <span>📞 ${c.name} (@${c.username})</span>
+                                <button onclick="removeSupportContact(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div style="color:var(--tg-hint);">No contacts</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Load support contacts list error:', error);
+            }
+        }
+
+        async function addSupportContact() {
+            const name = document.getElementById('newSupportName').value.trim();
+            const username = document.getElementById('newSupportUsername').value.trim().replace('@', '');
+
+            if (!name || !username) {
+                showToast('❌ Enter name and username', 'error');
+                return;
+            }
+
+            try {
+                const doc = await db.collection('settings').doc('support').get();
+                let contacts = doc.exists ? doc.data().contacts || [] : [];
+                contacts.push({ name, username });
+                await db.collection('settings').doc('support').set({ contacts });
+
+                showToast('✅ Support contact added!', 'success');
+                loadSupportContactsList();
+                loadSupportContacts();
+                
+                document.getElementById('newSupportName').value = '';
+                document.getElementById('newSupportUsername').value = '';
+
+            } catch (error) {
+                console.error('Add support contact error:', error);
+                showToast('❌ Error adding contact', 'error');
+            }
+        }
+
+        async function removeSupportContact(index) {
+            try {
+                const doc = await db.collection('settings').doc('support').get();
+                let contacts = doc.exists ? doc.data().contacts || [] : [];
+                contacts.splice(index, 1);
+                await db.collection('settings').doc('support').set({ contacts });
+
+                showToast('✅ Contact removed!', 'success');
+                loadSupportContactsList();
+                loadSupportContacts();
+
+            } catch (error) {
+                console.error('Remove support contact error:', error);
+                showToast('❌ Error removing contact', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: REPORT
+        // =============================================
+        async function generateReport() {
+            const date = document.getElementById('reportDate').value;
+            const category = document.getElementById('reportCategory').value;
+
+            showToast('📊 Generating report...', 'info');
+
+            try {
+                let query = db.collection('submissions')
+                    .where('status', '==', 'approved')
+                    .orderBy('timestamp', 'desc');
+
+                if (date) {
+                    const startDate = new Date(date);
+                    startDate.setHours(0, 0, 0, 0);
+                    const endDate = new Date(date);
+                    endDate.setHours(23, 59, 59, 999);
+                    
+                    query = query.where('timestamp', '>=', startDate)
+                                 .where('timestamp', '<=', endDate);
+                }
+
+                if (category) {
+                    query = query.where('categoryId', '==', category);
+                }
+
+                const snapshot = await query.get();
+
+                if (snapshot.empty) {
+                    showToast('❌ No data found for report', 'error');
+                    return;
+                }
+
+                // Create CSV
+                let csv = 'User ID,File Name,ID Count,Status,Date\n';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    csv += `${data.userId},${data.fileName},${data.idCount || 0},${data.status},${new Date(data.timestamp?.toDate()).toLocaleDateString()}\n`;
+                });
+
+                // Download CSV
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${date || 'all'}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast('✅ Report downloaded!', 'success');
+
+            } catch (error) {
+                console.error('Generate report error:', error);
+                showToast('❌ Error generating report', 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: BACKUP
+        // =============================================
+        async function downloadBackup() {
+            showToast('💾 Creating backup...', 'info');
+
+            try {
+                const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats'];
+                const backup = {};
+
+                for (const collection of collections) {
+                    const snapshot = await db.collection(collection).get();
+                    backup[collection] = [];
+                    snapshot.forEach(doc => {
+                        backup[collection].push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                }
+
+                const json = JSON.stringify(backup, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast('✅ Backup downloaded!', 'success');
+
+            } catch (error) {
+                console.error('Download backup error:', error);
+                showToast('❌ Error creating backup', 'error');
+            }
+        }
+
+        async function restoreBackup(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            showToast('📤 Restoring backup...', 'info');
+
+            try {
+                const text = await file.text();
+                const backup = JSON.parse(text);
+
+                for (const [collection, data] of Object.entries(backup)) {
+                    const batch = db.batch();
+                    for (const item of data) {
+                        const ref = db.collection(collection).doc(item.id);
+                        batch.set(ref, item);
+                    }
+                    await batch.commit();
+                }
+
+                showToast('✅ Backup restored!', 'success');
+                loadAllUsers();
+                loadFileList('pending');
+                loadWithdrawRequests();
+
+            } catch (error) {
+                console.error('Restore backup error:', error);
+                showToast('❌ Error restoring backup', 'error');
+            }
+
+            input.value = '';
         }
 
         // =============================================
@@ -1368,12 +2646,24 @@
             const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
             if (target) target.classList.add('active');
             
-            if (page === 'history') {
-                loadHistory();
-            }
+            if (page === 'history') loadHistory();
+            if (page === 'adminUsers') loadAllUsers();
+            if (page === 'adminFiles') loadFileList(currentFileTab);
+            if (page === 'adminWithdraw') loadWithdrawRequests();
+            if (page === 'adminBalance') loadBalanceStats();
+            if (page === 'adminCategories') loadAdminCategories();
             
-            // Update menu items
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            // Populate report category dropdown
+            if (page === 'adminReport') {
+                db.collection('categories').get().then(snapshot => {
+                    const select = document.getElementById('reportCategory');
+                    select.innerHTML = '<option value="">All Categories</option>';
+                    snapshot.forEach(doc => {
+                        const cat = doc.data();
+                        select.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                });
+            }
         }
 
         // =============================================
@@ -1413,9 +2703,11 @@
         document.addEventListener('DOMContentLoaded', init);
 
         // Close modal on overlay click
-        document.getElementById('withdrawModal').addEventListener('click', function(e) {
-            if (e.target === this) this.classList.remove('active');
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
         });
     </script>
 </body>
-              </html>
+</html>
