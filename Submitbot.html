@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ID Submit System</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        /* Telegram Theme Variables */
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-text: var(--tg-theme-text-color, #000000);
+            --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-link: var(--tg-theme-link-color, #2481cc);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+
+        /* Header with Telegram User Info */
+        .header {
+            background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: var(--tg-button);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            font-size: 12px;
+            color: var(--tg-hint);
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 4px 0;
+        }
+
+        .balance-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .balance-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .balance-actions button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-withdraw {
+            background: white;
+            color: #764ba2;
+        }
+
+        .btn-history {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--tg-text);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--tg-hint);
+            margin-top: 2px;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .menu-item {
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .menu-item:active {
+            transform: scale(0.95);
+        }
+
+        .menu-item.active {
+            border-color: var(--tg-button);
+            background: var(--tg-bg);
+        }
+
+        .menu-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .menu-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--tg-text);
+        }
+
+        /* Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .category-item {
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .category-item:active {
+            transform: scale(0.95);
+        }
+
+        .category-item.selected {
+            border-color: var(--tg-button);
+            background: var(--tg-bg);
+        }
+
+        .category-item .cat-icon {
+            font-size: 28px;
+        }
+
+        .category-item .cat-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .category-item .cat-status {
+            font-size: 11px;
+            color: var(--tg-hint);
+        }
+
+        .category-item .cat-status.online {
+            color: #28a745;
+        }
+
+        .category-item .cat-status.offline {
+            color: #dc3545;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--tg-hint);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+
+        .upload-area:active {
+            transform: scale(0.98);
+        }
+
+        .upload-area .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: var(--tg-hint);
+        }
+
+        .upload-area .sub-text {
+            font-size: 12px;
+            color: var(--tg-hint);
+            margin-top: 4px;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* History List */
+        .history-item {
+            background: var(--tg-secondary);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-left .h-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .history-left .h-date {
+            font-size: 11px;
+            color: var(--tg-hint);
+        }
+
+        .history-amount {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .history-amount.positive {
+            color: #28a745;
+        }
+
+        .history-amount.negative {
+            color: #dc3545;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--tg-bg);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--tg-hint);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--tg-secondary);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--tg-button);
+            outline: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid var(--tg-secondary);
+            border-top: 3px solid var(--tg-button);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+            display: none;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.info {
+            background: var(--tg-button);
+        }
+
+        /* Referral Box */
+        .referral-box {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .referral-box .ref-link {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .referral-box .ref-link code {
+            font-size: 12px;
+            word-break: break-all;
+            color: #333;
+        }
+
+        .referral-box .ref-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .referral-box .ref-stats .num {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .referral-box .ref-stats .label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Back Button */
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--tg-link);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================= -->
+    <!-- HOME PAGE -->
+    <!-- ============================================= -->
+    <div id="pageHome" class="page active">
+        <!-- User Header -->
+        <div class="header">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-id" id="userIdDisplay">ID: ---</div>
+            </div>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="balance-label">💰 Available Balance</div>
+            <div class="balance-amount" id="userBalance">0.00</div>
+            <div style="font-size: 13px; opacity: 0.8;">Taka (BDT)</div>
+            <div class="balance-actions">
+                <button class="btn-withdraw" onclick="openWithdraw()">💳 Withdraw</button>
+                <button class="btn-history" onclick="switchPage('history')">📊 History</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="statSubmits">0</div>
+                <div class="stat-label">📝 Submits</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statApproved" style="color: #28a745;">0</div>
+                <div class="stat-label">✅ Approved</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statRejected" style="color: #dc3545;">0</div>
+                <div class="stat-label">❌ Rejected</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statReferrals" style="color: #ffc107;">0</div>
+                <div class="stat-label">👥 Referrals</div>
+            </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="menu-grid">
+            <div class="menu-item active" onclick="switchPage('submit')">
+                <span class="menu-icon">📤</span>
+                <span class="menu-label">Submit IDs</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('history')">
+                <span class="menu-icon">📋</span>
+                <span class="menu-label">History</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('referral')">
+                <span class="menu-icon">👥</span>
+                <span class="menu-label">Refer & Earn</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('profile')">
+                <span class="menu-icon">👤</span>
+                <span class="menu-label">Profile</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('support')">
+                <span class="menu-icon">📞</span>
+                <span class="menu-label">Support</span>
+            </div>
+            <div class="menu-item" onclick="closeApp()">
+                <span class="menu-icon">🚪</span>
+                <span class="menu-label">Close</span>
+            </div>
+        </div>
+
+        <!-- Recent Submissions -->
+        <div id="recentSubmissions"></div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- SUBMIT PAGE -->
+    <!-- ============================================= -->
+    <div id="pageSubmit" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom: 12px;">📤 Submit IDs</h3>
+        
+        <div class="category-grid" id="categoryGrid">
+            <div style="grid-column: 1/-1; text-align: center; color: var(--tg-hint); padding: 20px;">Loading categories...</div>
+        </div>
+
+        <div id="uploadSection" style="display: none;">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="uploadFile(this)">
+                <span class="icon">📁</span>
+                <p>Click to select Excel file</p>
+                <div class="sub-text">Supported: .xlsx, .xls</div>
+            </div>
+            <div id="uploadProgress" class="loading">
+                <div class="spinner"></div>
+                <div style="margin-top: 8px; color: var(--tg-hint);">Uploading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- HISTORY PAGE -->
+    <!-- ============================================= -->
+    <div id="pageHistory" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom: 12px;">📋 Transaction History</h3>
+        <div id="historyList">
+            <div style="text-align: center; color: var(--tg-hint); padding: 20px;">No transactions yet</div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- REFERRAL PAGE -->
+    <!-- ============================================= -->
+    <div id="pageReferral" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom: 12px;">👥 Refer & Earn</h3>
+        
+        <div class="referral-box">
+            <div style="font-weight: 600; font-size: 16px;">🔗 Your Referral Link</div>
+            <div class="ref-link">
+                <code id="referralLink">Loading...</code>
+                <button class="copy-btn" onclick="copyReferralLink()">Copy</button>
+            </div>
+            <div class="ref-stats">
+                <div>
+                    <div class="num" id="refCount">0</div>
+                    <div class="label">Total Referrals</div>
+                </div>
+                <div>
+                    <div class="num" id="refEarnings">0</div>
+                    <div class="label">Earnings (Taka)</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fff3cd; border-radius: 12px; padding: 16px; border-left: 4px solid #ffc107;">
+            <p style="font-size: 13px; color: #856404;">
+                💡 <strong>How it works:</strong><br>
+                Share your referral link with friends. When they join and get approved IDs, you earn bonus!
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- PROFILE PAGE -->
+    <!-- ============================================= -->
+    <div id="pageProfile" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom: 12px;">👤 My Profile</h3>
+        
+        <div style="background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                <div style="width: 60px; height: 60px; background: var(--tg-button); border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;">👤</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 18px;" id="profileName">User</div>
+                    <div style="font-size: 12px; color: var(--tg-hint);">ID: <span id="profileUserId">---</span></div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; color: var(--tg-text);" id="profileSubmits">0</div>
+                    <div style="font-size: 11px; color: var(--tg-hint);">Total Submits</div>
+                </div>
+                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; color: #28a745;" id="profileApproved">0</div>
+                    <div style="font-size: 11px; color: var(--tg-hint);">Approved</div>
+                </div>
+                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; color: #dc3545;" id="profileRejected">0</div>
+                    <div style="font-size: 11px; color: var(--tg-hint);">Rejected</div>
+                </div>
+                <div style="background: var(--tg-bg); padding: 12px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; color: #ffc107;" id="profileReferrals">0</div>
+                    <div style="font-size: 11px; color: var(--tg-hint);">Referrals</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- SUPPORT PAGE -->
+    <!-- ============================================= -->
+    <div id="pageSupport" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom: 12px;">📞 Support</h3>
+        
+        <div style="background: var(--tg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 8px;">💬</div>
+            <h4 style="font-size: 16px;">Need Help?</h4>
+            <p style="font-size: 14px; color: var(--tg-hint); margin: 8px 0;">Contact our support team</p>
+            <div id="supportContacts"></div>
+        </div>
+
+        <div style="margin-top: 16px; background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
+            <h4 style="margin-bottom: 8px;">📋 How to Use</h4>
+            <div id="howToUseVideo"></div>
+        </div>
+
+        <div style="margin-top: 16px; background: var(--tg-secondary); border-radius: 16px; padding: 20px;">
+            <h4 style="margin-bottom: 8px;">📈 Price & Rules</h4>
+            <div id="priceRules"></div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- WITHDRAW MODAL -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💳 Withdraw</h3>
+                <button class="modal-close" onclick="closeModal('withdrawModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Select Method</label>
+                <select id="withdrawMethod">
+                    <option value="">Select a method</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Account Number</label>
+                <input type="text" id="withdrawNumber" placeholder="Enter your account number">
+            </div>
+            <div class="form-group">
+                <label>Amount (Taka)</label>
+                <input type="number" id="withdrawAmount" placeholder="Enter amount">
+            </div>
+            <button class="btn-primary" onclick="submitWithdraw()">💳 Submit Withdraw</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ============================================= -->
+    <!-- FIREBASE CONFIG -->
+    <!-- ============================================= -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
+            authDomain: "payment-b60bf.firebaseapp.com",
+            databaseURL: "https://payment-b60bf-default-rtdb.firebaseio.com",
+            projectId: "payment-b60bf",
+            storageBucket: "payment-b60bf.firebasestorage.app",
+            messagingSenderId: "549975396642",
+            appId: "1:549975396642:web:c2a09d1c876f7dc7e9d57b",
+            measurementId: "G-09Q5HBQQS4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const auth = firebase.auth();
+
+        // =============================================
+        // TELEGRAM WEBAPP
+        // =============================================
+        let tg = window.Telegram.WebApp;
+        let tgUser = tg.initDataUnsafe?.user || {};
+        
+        // =============================================
+        // GLOBAL VARIABLES
+        // =============================================
+        let currentUserId = tgUser.id ? String(tgUser.id) : null;
+        let userData = null;
+        let selectedCategory = null;
+        let adminChatId = "6140196943"; // Admin ID
+
+        // =============================================
+        // INITIALIZE
+        // =============================================
+        function init() {
+            // Show Telegram user info
+            if (tgUser.id) {
+                document.getElementById('userName').textContent = tgUser.first_name || 'User';
+                document.getElementById('userIdDisplay').textContent = `ID: ${tgUser.id}`;
+                document.getElementById('profileName').textContent = tgUser.first_name || 'User';
+                document.getElementById('profileUserId').textContent = tgUser.id || '---';
+                
+                if (tgUser.photo_url) {
+                    document.querySelector('.user-avatar').style.backgroundImage = `url(${tgUser.photo_url})`;
+                    document.querySelector('.user-avatar').style.backgroundSize = 'cover';
+                    document.querySelector('.user-avatar').textContent = '';
+                }
+            }
+
+            // Expand the app
+            tg.expand();
+            tg.ready();
+
+            // Initialize user
+            if (currentUserId) {
+                initUser();
+            } else {
+                showToast('❌ Could not identify user', 'error');
+            }
+
+            // Close button
+            document.getElementById('closeApp')?.addEventListener('click', () => tg.close());
+        }
+
+        // =============================================
+        // USER AUTHENTICATION
+        // =============================================
+        async function initUser() {
+            try {
+                const userRef = db.collection('users').doc(currentUserId);
+                const doc = await userRef.get();
+
+                if (!doc.exists) {
+                    // Create new user
+                    await userRef.set({
+                        userId: currentUserId,
+                        firstName: tgUser.first_name || 'User',
+                        username: tgUser.username || '',
+                        balance: 0,
+                        totalSubmits: 0,
+                        approved: 0,
+                        rejected: 0,
+                        referralCode: generateReferralCode(),
+                        referralCount: 0,
+                        referralEarnings: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Update stats
+                    await db.collection('stats').doc('summary').update({
+                        totalUsers: firebase.firestore.FieldValue.increment(1)
+                    });
+
+                    showToast('✅ Welcome! Account created', 'success');
+                }
+
+                // Load data
+                loadUserData();
+                loadDashboard();
+                loadCategories();
+                loadWithdrawMethods();
+                loadSupportContacts();
+                loadPriceRules();
+                loadTutorialVideo();
+
+            } catch (error) {
+                console.error('Init error:', error);
+                showToast('❌ Error loading profile', 'error');
+            }
+        }
+
+        function generateReferralCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        // =============================================
+        // LOAD USER DATA
+        // =============================================
+        async function loadUserData() {
+            try {
+                const doc = await db.collection('users').doc(currentUserId).get();
+                if (doc.exists) {
+                    userData = doc.data();
+                    
+                    // Update UI
+                    document.getElementById('userBalance').textContent = userData.balance?.toFixed(2) || '0.00';
+                    document.getElementById('statSubmits').textContent = userData.totalSubmits || 0;
+                    document.getElementById('statApproved').textContent = userData.approved || 0;
+                    document.getElementById('statRejected').textContent = userData.rejected || 0;
+                    document.getElementById('statReferrals').textContent = userData.referralCount || 0;
+                    document.getElementById('profileSubmits').textContent = userData.totalSubmits || 0;
+                    document.getElementById('profileApproved').textContent = userData.approved || 0;
+                    document.getElementById('profileRejected').textContent = userData.rejected || 0;
+                    document.getElementById('profileReferrals').textContent = userData.referralCount || 0;
+                    document.getElementById('refCount').textContent = userData.referralCount || 0;
+                    document.getElementById('refEarnings').textContent = userData.referralEarnings?.toFixed(2) || '0.00';
+
+                    // Referral link
+                    const botUsername = 'YOUR_BOT_USERNAME'; // Replace with your bot username
+                    const refLink = `https://t.me/${botUsername}?start=ref_${userData.referralCode}`;
+                    document.getElementById('referralLink').textContent = refLink;
+                }
+            } catch (error) {
+                console.error('Load user data error:', error);
+            }
+        }
+
+        // Real-time balance updates
+        if (currentUserId) {
+            db.collection('users').doc(currentUserId).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('userBalance').textContent = data.balance?.toFixed(2) || '0.00';
+                }
+            });
+        }
+
+        // =============================================
+        // LOAD DASHBOARD
+        // =============================================
+        async function loadDashboard() {
+            try {
+                const submissions = await db.collection('submissions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(5)
+                    .get();
+
+                const container = document.getElementById('recentSubmissions');
+                
+                if (submissions.empty) {
+                    container.innerHTML = `
+                        <div style="background: var(--tg-secondary); border-radius: 12px; padding: 20px; text-align: center; color: var(--tg-hint);">
+                            No submissions yet
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '<div style="margin-top: 16px;">';
+                submissions.forEach(doc => {
+                    const data = doc.data();
+                    const statusClass = `status-${data.status || 'pending'}`;
+                    const statusText = data.status || 'pending';
+                    html += `
+                        <div style="background: var(--tg-secondary); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 14px;">${data.fileName}</div>
+                                <div style="font-size: 11px; color: var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Load dashboard error:', error);
+            }
+        }
+
+        // =============================================
+        // LOAD CATEGORIES
+        // =============================================
+        async function loadCategories() {
+            try {
+                const snapshot = await db.collection('categories').get();
+                const grid = document.getElementById('categoryGrid');
+
+                if (snapshot.empty) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--tg-hint); padding: 20px;">No categories available</div>';
+                    return;
+                }
+
+                grid.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const cat = doc.data();
+                    const statusText = cat.active ? '🟢 Online' : '🔴 Offline';
+                    const statusClass = cat.active ? 'online' : 'offline';
+                    
+                    grid.innerHTML += `
+                        <div class="category-item" onclick="selectCategory('${doc.id}')" data-id="${doc.id}">
+                            <div class="cat-icon">${cat.icon || '📁'}</div>
+                            <div class="cat-name">${cat.name}</div>
+                            <div class="cat-status ${statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Load categories error:', error);
+            }
+        }
+
+        function selectCategory(catId) {
+            const items = document.querySelectorAll('.category-item');
+            items.forEach(item => {
+                item.classList.toggle('selected', item.dataset.id === catId);
+            });
+            
+            selectedCategory = catId;
+            document.getElementById('uploadSection').style.display = 'block';
+            showToast('📁 Category selected!', 'info');
+        }
+
+        // =============================================
+        // FILE UPLOAD
+        // =============================================
+        async function uploadFile(input) {
+            const file = input.files[0];
+            if (!file) {
+                showToast('❌ Please select a file', 'error');
+                return;
+            }
+
+            if (!selectedCategory) {
+                showToast('❌ Please select a category first', 'error');
+                return;
+            }
+
+            document.getElementById('uploadProgress').style.display = 'block';
+
+            try {
+                // Upload to Firebase Storage
+                const storageRef = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
+                const uploadTask = await storageRef.put(file);
+                const downloadURL = await uploadTask.ref.getDownloadURL();
+
+                // Save to Firestore
+                await db.collection('submissions').add({
+                    userId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: downloadURL,
+                    categoryId: selectedCategory,
+                    idCount: 0,
+                    status: 'pending',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Update user stats
+                await db.collection('users').doc(currentUserId).update({
+                    totalSubmits: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Update global stats
+                await db.collection('stats').doc('summary').update({
+                    totalSubmissions: firebase.firestore.FieldValue.increment(1),
+                    todaySubmissions: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Notify admin
+                notifyAdmin(`📤 New submission from ${tgUser.first_name || 'User'}\n📄 File: ${file.name}\n🆔 User: ${currentUserId}`);
+
+                showToast('✅ File uploaded successfully!', 'success');
+                loadDashboard();
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('❌ Upload failed: ' + error.message, 'error');
+            } finally {
+                document.getElementById('uploadProgress').style.display = 'none';
+                input.value = '';
+            }
+        }
+
+        // =============================================
+        // NOTIFY ADMIN
+        // =============================================
+        function notifyAdmin(message) {
+            const botToken = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
+            const adminId = '6140196943';
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: adminId,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            }).catch(console.error);
+        }
+
+        // =============================================
+        // LOAD WITHDRAW METHODS
+        // =============================================
+        async function loadWithdrawMethods() {
+            try {
+                const snapshot = await db.collection('settings').doc('withdrawMethods').get();
+                const select = document.getElementById('withdrawMethod');
+                
+                select.innerHTML = '<option value="">Select a method</option>';
+                
+                if (snapshot.exists) {
+                    const methods = snapshot.data().methods || [];
+                    methods.forEach(method => {
+                        select.innerHTML += `<option value="${method.name}">${method.name.toUpperCase()} (Min: ${method.minAmount} Taka)</option>`;
+                    });
+                } else {
+                    select.innerHTML += '<option value="bkash">Bkash</option><option value="nagad">Nagad</option><option value="rocket">Rocket</option>';
+                }
+            } catch (error) {
+                console.error('Load withdraw methods error:', error);
+            }
+        }
+
+        // =============================================
+        // WITHDRAW
+        // =============================================
+        function openWithdraw() {
+            const balance = parseFloat(document.getElementById('userBalance').textContent);
+            if (balance < 10) {
+                showToast('❌ Minimum balance 10 Taka required', 'error');
+                return;
+            }
+            document.getElementById('withdrawModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        async function submitWithdraw() {
+            const method = document.getElementById('withdrawMethod').value;
+            const number = document.getElementById('withdrawNumber').value;
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+            if (!method) {
+                showToast('❌ Select a method', 'error');
+                return;
+            }
+
+            if (!number || number.length < 10) {
+                showToast('❌ Enter valid account number', 'error');
+                return;
+            }
+
+            if (!amount || amount < 10) {
+                showToast('❌ Minimum 10 Taka', 'error');
+                return;
+            }
+
+            const balance = parseFloat(document.getElementById('userBalance').textContent);
+            if (amount > balance) {
+                showToast('❌ Insufficient balance', 'error');
+                return;
+            }
+
+            try {
+                await db.collection('withdrawals').add({
+                    userId: currentUserId,
+                    method: method,
+                    number: number,
+                    amount: amount,
+                    status: 'pending',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('users').doc(currentUserId).update({
+                    balance: firebase.firestore.FieldValue.increment(-amount)
+                });
+
+                await db.collection('stats').doc('summary').update({
+                    totalBalance: firebase.firestore.FieldValue.increment(-amount)
+                });
+
+                // Notify admin
+                notifyAdmin(
+                    `💳 New Withdraw Request\n\n` +
+                    `👤 User: ${tgUser.first_name || 'User'}\n` +
+                    `🆔 ID: ${currentUserId}\n` +
+                    `📱 Method: ${method}\n` +
+                    `📞 Number: ${number}\n` +
+                    `💰 Amount: ${amount} Taka`
+                );
+
+                closeModal('withdrawModal');
+                showToast('✅ Withdraw submitted!', 'success');
+                loadUserData();
+
+                document.getElementById('withdrawAmount').value = '';
+                document.getElementById('withdrawNumber').value = '';
+
+            } catch (error) {
+                console.error('Withdraw error:', error);
+                showToast('❌ Withdraw failed', 'error');
+            }
+        }
+
+        // =============================================
+        // LOAD HISTORY
+        // =============================================
+        async function loadHistory() {
+            try {
+                const submissions = await db.collection('submissions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+
+                const transactions = await db.collection('transactions')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+
+                const container = document.getElementById('historyList');
+                let html = '';
+
+                // Transactions
+                transactions.forEach(doc => {
+                    const data = doc.data();
+                    const isPositive = data.amount > 0;
+                    html += `
+                        <div class="history-item">
+                            <div class="history-left">
+                                <div class="h-title">${data.reason || 'Transaction'}</div>
+                                <div class="h-date">${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
+                            </div>
+                            <div class="history-amount ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '+' : ''}${data.amount?.toFixed(2) || '0.00'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Submissions
+                submissions.forEach(doc => {
+                    const data = doc.data();
+                    const statusClass = `status-${data.status || 'pending'}`;
+                    html += `
+                        <div class="history-item" style="border-left: 4px solid ${data.status === 'approved' ? '#28a745' : data.status === 'rejected' ? '#dc3545' : '#ffc107'}">
+                            <div class="history-left">
+                                <div class="h-title">📄 ${data.fileName}</div>
+                                <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${data.status || 'pending'}</span>
+                        </div>
+                    `;
+                });
+
+                if (!html) {
+                    html = '<div style="text-align: center; color: var(--tg-hint); padding: 20px;">No history found</div>';
+                }
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Load history error:', error);
+            }
+        }
+
+        // =============================================
+        // LOAD SUPPORT, RULES, TUTORIAL
+        // =============================================
+        async function loadSupportContacts() {
+            try {
+                const snapshot = await db.collection('settings').doc('support').get();
+                const container = document.getElementById('supportContacts');
+                
+                if (snapshot.exists) {
+                    const supports = snapshot.data().contacts || [];
+                    if (supports.length > 0) {
+                        container.innerHTML = supports.map(s => 
+                            `<div style="padding: 4px 0;"><a href="https://t.me/${s.username}" style="color: var(--tg-link); text-decoration: none; font-weight: 600;">📞 ${s.name}</a></div>`
+                        ).join('');
+                    } else {
+                        container.innerHTML = '<div style="color: var(--tg-hint);">No support contacts</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div style="color: var(--tg-hint);">No support contacts</div>';
+                }
+            } catch (error) {
+                console.error('Load support error:', error);
+            }
+        }
+
+        async function loadPriceRules() {
+            try {
+                const snapshot = await db.collection('settings').doc('priceRules').get();
+                const container = document.getElementById('priceRules');
+                
+                if (snapshot.exists) {
+                    container.innerHTML = `<div style="font-size: 14px; white-space: pre-wrap;">${snapshot.data().rules || 'No rules set yet'}</div>`;
+                } else {
+                    container.innerHTML = '<div style="color: var(--tg-hint);">No rules set yet</div>';
+                }
+            } catch (error) {
+                console.error('Load price rules error:', error);
+            }
+        }
+
+        async function loadTutorialVideo() {
+            try {
+                const snapshot = await db.collection('settings').doc('tutorial').get();
+                const container = document.getElementById('howToUseVideo');
+                
+                if (snapshot.exists && snapshot.data().videoUrl) {
+                    container.innerHTML = `
+                        <video controls style="width: 100%; border-radius: 10px; max-height: 300px;">
+                            <source src="${snapshot.data().videoUrl}" type="video/mp4">
+                            Your browser doesn't support video.
+                        </video>
+                    `;
+                } else {
+                    container.innerHTML = '<div style="color: var(--tg-hint);">No tutorial video</div>';
+                }
+            } catch (error) {
+                console.error('Load tutorial error:', error);
+            }
+        }
+
+        // =============================================
+        // PAGE NAVIGATION
+        // =============================================
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+            if (target) target.classList.add('active');
+            
+            if (page === 'history') {
+                loadHistory();
+            }
+            
+            // Update menu items
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+        }
+
+        // =============================================
+        // COPY FUNCTIONS
+        // =============================================
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').textContent;
+            navigator.clipboard?.writeText(link);
+            showToast('✅ Referral link copied!', 'success');
+        }
+
+        // =============================================
+        // CLOSE APP
+        // =============================================
+        function closeApp() {
+            tg.close();
+        }
+
+        // =============================================
+        // TOAST
+        // =============================================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // =============================================
+        // INIT
+        // =============================================
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Close modal on overlay click
+        document.getElementById('withdrawModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+    </script>
+</body>
+              </html>
