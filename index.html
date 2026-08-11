@@ -155,6 +155,11 @@
         
         .confirm-buttons { display: flex; gap: 10px; margin-top: 12px; }
         .confirm-buttons .btn-primary { flex: 1; }
+        
+        .history-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .history-stats .hs-item { background: var(--tg-bg); padding: 10px; border-radius: 10px; text-align: center; }
+        .history-stats .hs-item .hs-num { font-size: 18px; font-weight: bold; }
+        .history-stats .hs-item .hs-label { font-size: 10px; color: var(--tg-hint); }
     </style>
 </head>
 <body>
@@ -187,6 +192,7 @@
             <div class="stat-item"><div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div><div class="stat-label">👥 Referrals</div></div>
         </div>
 
+        <!-- Main Menu - 3 items per row -->
         <div class="menu-grid">
             <div class="menu-item active" onclick="switchPage('submit')"><span class="menu-icon">📤</span><span class="menu-label">Submit IDs</span></div>
             <div class="menu-item" onclick="switchPage('history')"><span class="menu-icon">📋</span><span class="menu-label">History</span></div>
@@ -206,6 +212,7 @@
                 <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Files</span></div>
                 <div class="menu-item" onclick="switchPage('adminWithdraw')"><span class="menu-icon">💳</span><span class="menu-label">Withdraw</span></div>
                 <div class="menu-item" onclick="switchPage('adminReport')"><span class="menu-icon">📊</span><span class="menu-label">Report</span></div>
+                <div class="menu-item" onclick="switchPage('adminDelete')"><span class="menu-icon">🗑️</span><span class="menu-label">Delete</span></div>
                 <div class="menu-item" onclick="switchPage('adminBroadcast')"><span class="menu-icon">📢</span><span class="menu-label">Broadcast</span></div>
                 <div class="menu-item" onclick="switchPage('adminPaymentHistory')"><span class="menu-icon">💰</span><span class="menu-label">Payment History</span></div>
                 <div class="menu-item" onclick="switchPage('adminSettings')"><span class="menu-icon">⚙️</span><span class="menu-label">Settings</span></div>
@@ -248,6 +255,17 @@
     <div id="pageHistory" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
+        
+        <!-- History Stats -->
+        <div class="history-stats" id="historyStats">
+            <div class="hs-item"><div class="hs-num" id="hsTotal" style="color:#667eea;">0</div><div class="hs-label">📊 Total</div></div>
+            <div class="hs-item"><div class="hs-num" id="hsPending" style="color:#ffc107;">0</div><div class="hs-label">⏳ Pending</div></div>
+            <div class="hs-item"><div class="hs-num" id="hsApproved" style="color:#28a745;">0</div><div class="hs-label">✅ Approved</div></div>
+            <div class="hs-item"><div class="hs-num" id="hsRejected" style="color:#dc3545;">0</div><div class="hs-label">❌ Rejected</div></div>
+            <div class="hs-item"><div class="hs-num" id="hsWithdraw" style="color:#667eea;">0</div><div class="hs-label">💳 Withdraw</div></div>
+            <div class="hs-item"><div class="hs-num" id="hsBalance" style="color:#28a745;">0</div><div class="hs-label">💰 Balance</div></div>
+        </div>
+        
         <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
@@ -371,6 +389,18 @@
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">💳 Withdraw Requests</h3>
         <div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- ========== ADMIN: DELETE ========== -->
+    <div id="pageAdminDelete" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">🗑️ Delete Submissions</h3>
+        <div class="card">
+            <div class="form-group"><label>📅 Date</label><input type="date" id="deleteDate"></div>
+            <div class="form-group"><label>📁 Category</label><select id="deleteCategorySelect"><option value="">All Categories</option></select></div>
+            <button class="btn-primary btn-danger" onclick="deleteSubmissions()">🗑️ Delete Submissions</button>
+            <div id="deleteResult" style="margin-top:12px;"></div>
+        </div>
     </div>
 
     <!-- ========== ADMIN: BROADCAST ========== -->
@@ -548,13 +578,14 @@
         let currentUserId = tgUser.id ? String(tgUser.id) : null;
         let isAdmin = (currentUserId === '6140196943');
         let selectedCategory = null;
-        let selectedCategoryData = null;
         let editingCategoryId = null;
         let currentFileTab = 'pending';
         let selectedFile = null;
         let selectedFileName = null;
         let fileIdCount = 0;
         let fileData = [];
+        let duplicateIds = [];
+        let validIds = [];
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
@@ -649,6 +680,7 @@
                 }
 
                 document.getElementById('downloadDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('deleteDate').value = new Date().toISOString().split('T')[0];
             } catch (error) {
                 console.error('Init error:', error);
                 showToast('❌ Error: ' + error.message, 'error');
@@ -705,6 +737,7 @@
                     await loadReportCategories();
                     await loadCommissionCategories();
                     await loadDownloadCategories();
+                    await loadDeleteCategories();
                     await loadPaymentHistory();
                 }
 
@@ -773,10 +806,13 @@
 
                 let html = '<div style="margin-top:16px;">';
                 userSubs.forEach(([key, data]) => {
+                    const statusText = data.status || 'pending';
+                    const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
                     html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><div style="font-weight:600; font-size:14px;">${data.fileName}</div>
-                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div></div>
-                        <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
+                        <div><div style="font-weight:600; font-size:14px;">📄 ${data.fileName}</div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div>
+                        ${data.duplicateCount > 0 ? `<div style="font-size:10px; color:#dc3545;">⚠️ ${data.duplicateCount} duplicates removed</div>` : ''}</div>
+                        <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span>
                     </div>`;
                 });
                 html += '</div>';
@@ -825,11 +861,13 @@
             document.getElementById('fileInput').value = '';
             selectedFile = null;
             fileData = [];
+            validIds = [];
+            duplicateIds = [];
             showToast('📁 Category selected! Upload your file.', 'info');
         }
 
         // =============================================
-        // FILE PREVIEW - Parse Excel Data
+        // FILE PREVIEW - Parse Excel Data with Duplicate Check
         // =============================================
         function previewFile(input) {
             const file = input.files[0];
@@ -842,53 +880,98 @@
             document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Reading file data...</div>';
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                     
-                    // Extract all rows with data
-                    fileData = [];
-                    let count = 0;
+                    // Extract all IDs from first column
+                    const allIds = [];
                     jsonData.forEach(row => {
                         if (row && row.length > 0 && row[0] && row[0].toString().trim()) {
-                            // Store the entire row data
-                            fileData.push(row);
-                            count++;
+                            allIds.push(row[0].toString().trim());
                         }
                     });
                     
-                    fileIdCount = count;
+                    fileIdCount = allIds.length;
+                    fileData = allIds;
+                    
+                    // =============================================
+                    // GLOBAL DUPLICATE CHECK
+                    // =============================================
+                    const allSubmissions = await getData('submissions');
+                    const existingIds = new Set();
+                    
+                    if (allSubmissions) {
+                        Object.values(allSubmissions).forEach(sub => {
+                            if (sub.fileData && Array.isArray(sub.fileData)) {
+                                sub.fileData.forEach(id => {
+                                    if (id) existingIds.add(id.toString().trim());
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Check duplicates
+                    validIds = [];
+                    duplicateIds = [];
+                    const seenInFile = new Set();
+                    
+                    allIds.forEach(id => {
+                        const cleanId = id.toString().trim();
+                        if (existingIds.has(cleanId) || seenInFile.has(cleanId)) {
+                            duplicateIds.push(cleanId);
+                        } else {
+                            seenInFile.add(cleanId);
+                            validIds.push(cleanId);
+                        }
+                    });
                     
                     // Show preview
                     const preview = document.getElementById('filePreview');
                     preview.style.display = 'block';
+                    
+                    let statusHtml = '';
+                    if (duplicateIds.length > 0) {
+                        statusHtml = `<div style="font-size:11px; color:#dc3545; margin-top:2px;">⚠️ ${duplicateIds.length} duplicate IDs found (will be removed)</div>`;
+                    }
+                    if (validIds.length === 0) {
+                        statusHtml = `<div style="font-size:11px; color:#dc3545; margin-top:2px;">❌ All IDs are duplicates! Cannot submit.</div>`;
+                    } else {
+                        statusHtml += `<div style="font-size:11px; color:#28a745; margin-top:2px;">✅ ${validIds.length} new IDs ready to submit</div>`;
+                    }
+                    
                     preview.innerHTML = `
                         <div class="file-preview">
                             <div class="file-info">
                                 <span class="icon">📄</span>
                                 <div class="details">
                                     <div class="name">${file.name}</div>
-                                    <div class="size">📊 ${count} IDs found • ${(file.size / 1024).toFixed(1)} KB</div>
-                                    ${count > 0 ? `<div style="font-size:11px; color:#28a745; margin-top:2px;">✅ ${count} rows of data ready</div>` : `<div style="font-size:11px; color:#dc3545; margin-top:2px;">⚠️ No valid data found</div>`}
+                                    <div class="size">📊 ${fileIdCount} IDs found • ${(file.size / 1024).toFixed(1)} KB</div>
+                                    ${statusHtml}
                                 </div>
                             </div>
-                            <span style="color:#28a745;">✅ Ready</span>
+                            <span style="color:${validIds.length > 0 ? '#28a745' : '#dc3545'};">${validIds.length > 0 ? '✅ Ready' : '❌ Blocked'}</span>
                         </div>
                     `;
                     
                     document.getElementById('uploadProgress').style.display = 'none';
-                    document.getElementById('confirmButtons').style.display = 'flex';
                     
-                    if (count === 0) {
-                        showToast('⚠️ No valid IDs found in file', 'error');
+                    if (validIds.length > 0) {
+                        document.getElementById('confirmButtons').style.display = 'flex';
+                    } else {
+                        document.getElementById('confirmButtons').style.display = 'none';
+                        showToast('❌ All IDs are duplicates!', 'error');
                     }
+                    
                 } catch (err) {
                     console.error('File parse error:', err);
                     fileIdCount = 0;
                     fileData = [];
+                    validIds = [];
+                    duplicateIds = [];
                     document.getElementById('uploadProgress').style.display = 'none';
                     document.getElementById('filePreview').style.display = 'block';
                     document.getElementById('filePreview').innerHTML = `
@@ -915,6 +998,8 @@
             document.getElementById('uploadProgress').style.display = 'none';
             selectedFile = null;
             fileData = [];
+            validIds = [];
+            duplicateIds = [];
             fileIdCount = 0;
             showToast('❌ Submission cancelled', 'info');
         }
@@ -925,7 +1010,7 @@
         async function uploadFile() {
             if (!selectedFile) { showToast('❌ No file selected', 'error'); return; }
             if (!selectedCategory) { showToast('❌ Select category first', 'error'); return; }
-            if (fileIdCount === 0) { showToast('❌ No valid IDs found in file', 'error'); return; }
+            if (validIds.length === 0) { showToast('❌ No valid IDs to submit', 'error'); return; }
 
             document.getElementById('uploadProgress').style.display = 'block';
             document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading to server...</div>';
@@ -956,8 +1041,10 @@
                     fileUrl: downloadURL,
                     categoryId: selectedCategory,
                     categoryName: catName,
-                    idCount: fileIdCount,
-                    fileData: fileData, // Full Excel data
+                    idCount: validIds.length,
+                    fileData: validIds,
+                    duplicateCount: duplicateIds.length,
+                    duplicateIds: duplicateIds,
                     status: 'pending',
                     timestamp: new Date().toISOString()
                 };
@@ -981,19 +1068,29 @@
                 // =============================================
                 // SEND CONFIRMATION TO USER
                 // =============================================
-                sendTelegramMessage(currentUserId,
+                let userMsg = 
                     `✅ <b>File Submitted Successfully!</b>\n\n` +
                     `📁 <b>Category:</b> ${catName}\n` +
                     `📄 <b>File:</b> ${selectedFile.name}\n` +
-                    `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
-                    `⏳ <b>Status:</b> Pending Review\n\n` +
-                    `📌 <b>Next Step:</b> Wait for admin approval. You will get report when approved.`
-                );
+                    `📊 <b>Total IDs Found:</b> ${fileIdCount}\n` +
+                    `✅ <b>Valid New IDs:</b> ${validIds.length}\n`;
+                
+                if (duplicateIds.length > 0) {
+                    userMsg += `⚠️ <b>Duplicate IDs Removed:</b> ${duplicateIds.length}\n`;
+                    if (duplicateIds.length <= 10) {
+                        userMsg += `📌 Duplicate IDs: ${duplicateIds.join(', ')}\n`;
+                    }
+                }
+                
+                userMsg += `\n⏳ <b>Status:</b> Pending Review\n\n` +
+                    `📌 <b>Next Step:</b> Wait for admin approval. You will get report when approved.`;
+
+                sendTelegramMessage(currentUserId, userMsg);
 
                 // =============================================
                 // SEND FILE TO ADMIN WITH DETAILS
                 // =============================================
-                const adminMsg = 
+                let adminMsg = 
                     `📤 <b>New File Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
@@ -1001,6 +1098,8 @@
                     `📁 <b>Category:</b> ${catName}\n` +
                     `📄 <b>File:</b> ${selectedFile.name}\n` +
                     `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
+                    `✅ <b>New IDs:</b> ${validIds.length}\n` +
+                    `⚠️ <b>Duplicates Removed:</b> ${duplicateIds.length}\n` +
                     `⏳ <b>Status:</b> Pending Review\n\n` +
                     `📌 <b>Action Required:</b> Please review and approve/reject.`;
 
@@ -1018,6 +1117,8 @@
                 document.getElementById('uploadSection').style.display = 'none';
                 selectedFile = null;
                 fileData = [];
+                validIds = [];
+                duplicateIds = [];
                 fileIdCount = 0;
                 
             } catch (e) {
@@ -1156,7 +1257,7 @@
         }
 
         // =============================================
-        // LOAD HISTORY (with Withdraw Status)
+        // LOAD HISTORY (with Withdraw Status & Stats)
         // =============================================
         async function loadHistory() {
             try {
@@ -1165,6 +1266,42 @@
                 const withdrawals = await getData('withdrawals');
                 const container = document.getElementById('historyList');
                 let html = '';
+
+                // Calculate stats
+                let totalSubs = 0, pending = 0, approved = 0, rejected = 0, withdrawTotal = 0, balance = 0;
+
+                // Submissions stats
+                if (submissions) {
+                    Object.values(submissions).forEach(data => {
+                        if (data.userId === currentUserId) {
+                            totalSubs++;
+                            if (data.status === 'pending') pending++;
+                            else if (data.status === 'approved') approved++;
+                            else if (data.status === 'rejected') rejected++;
+                        }
+                    });
+                }
+
+                // Withdraw stats
+                if (withdrawals) {
+                    Object.values(withdrawals).forEach(data => {
+                        if (data.userId === currentUserId && data.status === 'approved') {
+                            withdrawTotal += data.amount || 0;
+                        }
+                    });
+                }
+
+                // Balance
+                const userData = await getData(`users/${currentUserId}`);
+                if (userData) balance = userData.balance || 0;
+
+                // Update stats UI
+                document.getElementById('hsTotal').textContent = totalSubs;
+                document.getElementById('hsPending').textContent = pending;
+                document.getElementById('hsApproved').textContent = approved;
+                document.getElementById('hsRejected').textContent = rejected;
+                document.getElementById('hsWithdraw').textContent = withdrawTotal.toFixed(2);
+                document.getElementById('hsBalance').textContent = balance.toFixed(2);
 
                 // Withdrawals
                 if (withdrawals) {
@@ -1215,8 +1352,15 @@
                         .slice(0, 50);
 
                     userSubs.forEach(([key, data]) => {
-                        html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div><div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}</div></div>
-                            <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
+                        const statusText = data.status || 'pending';
+                        const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
+                        let dupText = '';
+                        if (data.duplicateCount > 0) {
+                            dupText = ` ⚠️ ${data.duplicateCount} duplicates removed`;
+                        }
+                        html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div>
+                            <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}${dupText}</div></div>
+                            <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                     });
                 }
 
@@ -1346,6 +1490,7 @@
                 await loadCommissionCategories();
                 await loadReportCategories();
                 await loadDownloadCategories();
+                await loadDeleteCategories();
             } catch (e) { 
                 console.error('Save category error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1362,6 +1507,7 @@
                 await loadCommissionCategories();
                 await loadReportCategories();
                 await loadDownloadCategories();
+                await loadDeleteCategories();
             } catch (e) { 
                 console.error('Delete category error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1525,7 +1671,13 @@
                         html += '<div style="color:var(--tg-hint);">None</div>';
                     } else {
                         userSubs.forEach(([key, data]) => {
-                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}</span><span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
+                            const statusText = data.status || 'pending';
+                            const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
+                            let dupText = '';
+                            if (data.duplicateCount > 0) {
+                                dupText = ` ⚠️ ${data.duplicateCount} dup removed`;
+                            }
+                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}${dupText}</span><span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                         });
                     }
                 }
@@ -1674,9 +1826,10 @@
 
                 let html = '';
                 filtered.forEach(([key, data]) => {
+                    const dupText = data.duplicateCount > 0 ? ` ⚠️ ${data.duplicateCount} duplicates` : '';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div><div style="font-weight:600;">📄 ${data.fileName}</div>
+                            <div><div style="font-weight:600;">📄 ${data.fileName}${dupText}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
                             <div style="font-size:11px; color:var(--tg-hint);">📁 ${data.categoryName || 'Unknown'} • ${new Date(data.timestamp).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
@@ -1810,15 +1963,15 @@
                 if (submissions) {
                     Object.entries(submissions).forEach(([key, data]) => {
                         if (data.userId === userId && data.categoryId === categoryId && data.status === 'approved') {
-                            if (data.fileData) {
-                                data.fileData.forEach(row => {
-                                    if (row && row.length > 0 && row[0] && row[0].toString().trim()) {
-                                        approvedIds.push(row);
+                            if (data.fileData && Array.isArray(data.fileData)) {
+                                data.fileData.forEach(id => {
+                                    if (id && id.toString().trim()) {
+                                        approvedIds.push(id.toString().trim());
                                     }
                                 });
                             } else if (data.idCount) {
                                 for (let i = 0; i < data.idCount; i++) {
-                                    approvedIds.push([`ID_${data.userId}_${i+1}`]);
+                                    approvedIds.push(`ID_${data.userId}_${i+1}`);
                                 }
                             }
                         }
@@ -1829,10 +1982,7 @@
                 const wbApproved = XLSX.utils.book_new();
                 const approvedData = [
                     ['SL', 'ID', 'Status', 'Rate', 'Earnings'],
-                    ...approvedIds.map((row, i) => {
-                        const id = row[0] || `ID_${i+1}`;
-                        return [i+1, id, 'Approved', ratePerId, ratePerId];
-                    })
+                    ...approvedIds.map((id, i) => [i+1, id, 'Approved', ratePerId, ratePerId])
                 ];
                 if (approvedIds.length === 0) approvedData.push(['No approved IDs found']);
                 const wsApproved = XLSX.utils.aoa_to_sheet(approvedData);
@@ -1847,8 +1997,7 @@
                 if (rejectedIds.length === 0) {
                     rejectedData.push(['No rejected IDs']);
                 } else {
-                    rejectedIds.forEach((row, i) => {
-                        const id = row[0] || `ID_${i+1}`;
+                    rejectedIds.forEach((id, i) => {
                         rejectedData.push([i+1, id, 'Rejected', 'Invalid format']);
                     });
                 }
@@ -1976,7 +2125,82 @@
         }
 
         // =============================================
-        // ADMIN: BROADCAST
+        // ADMIN: DELETE SUBMISSIONS
+        // =============================================
+        async function loadDeleteCategories() {
+            try {
+                const categories = await getData('categories');
+                const sel = document.getElementById('deleteCategorySelect');
+                sel.innerHTML = '<option value="">All Categories</option>';
+                if (categories) {
+                    Object.entries(categories).forEach(([key, cat]) => {
+                        sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteSubmissions() {
+            const date = document.getElementById('deleteDate').value;
+            const category = document.getElementById('deleteCategorySelect').value;
+
+            if (!date) {
+                showToast('❌ Select a date', 'error');
+                return;
+            }
+
+            if (!confirm(`Delete submissions for ${date}${category ? ' in category' : ''}? This cannot be undone!`)) return;
+
+            showToast('🗑️ Deleting submissions...', 'info');
+
+            try {
+                const submissions = await getData('submissions');
+                if (!submissions) {
+                    showToast('❌ No submissions found', 'error');
+                    return;
+                }
+
+                let deleted = 0;
+                let totalDeleted = 0;
+
+                for (const [key, data] of Object.entries(submissions)) {
+                    const itemDate = new Date(data.timestamp).toISOString().split('T')[0];
+                    if (itemDate === date) {
+                        if (category && data.categoryId !== category) continue;
+                        await deleteData(`submissions/${key}`);
+                        deleted++;
+                        totalDeleted += data.idCount || 0;
+                    }
+                }
+
+                // Update stats
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    await updateData('stats/summary', {
+                        totalSubmissions: Math.max(0, (stats.totalSubmissions || 0) - totalDeleted),
+                        todaySubmissions: Math.max(0, (stats.todaySubmissions || 0) - totalDeleted)
+                    });
+                }
+
+                document.getElementById('deleteResult').innerHTML = `
+                    <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
+                        <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Deletion Complete</div>
+                        <div>🗑️ ${deleted} files deleted</div>
+                        <div>📊 ${totalDeleted} IDs removed</div>
+                    </div>
+                `;
+
+                showToast(`✅ ${deleted} files deleted!`, 'success');
+                await loadFileList('pending');
+
+            } catch (e) {
+                console.error('Delete error:', e);
+                showToast('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // =============================================
+        // ADMIN: BROADCAST (With Inline Button)
         // =============================================
         async function sendBroadcast() {
             const message = document.getElementById('broadcastMessage').value.trim();
@@ -2002,23 +2226,32 @@
                 let sent = 0;
                 let failed = 0;
 
-                // Build message with button if provided
-                let finalMessage = message;
+                // Build inline keyboard
+                let replyMarkup = null;
                 if (buttonText && buttonUrl) {
-                    finalMessage += `\n\n<a href="${buttonUrl}">${buttonText}</a>`;
+                    replyMarkup = {
+                        inline_keyboard: [[
+                            { text: buttonText, url: buttonUrl }
+                        ]]
+                    };
                 }
 
                 for (const uid of userIds) {
                     try {
+                        const payload = {
+                            chat_id: uid,
+                            text: message,
+                            parse_mode: 'HTML',
+                            disable_web_page_preview: true
+                        };
+                        if (replyMarkup) {
+                            payload.reply_markup = replyMarkup;
+                        }
+
                         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                chat_id: uid, 
-                                text: finalMessage, 
-                                parse_mode: 'HTML',
-                                disable_web_page_preview: true
-                            })
+                            body: JSON.stringify(payload)
                         });
                         sent++;
                         await new Promise(resolve => setTimeout(resolve, 50));
@@ -2033,6 +2266,7 @@
                         <div style="font-size:18px; font-weight:bold; color:${failed > 0 ? '#856404' : '#155724'};">✅ Broadcast Complete</div>
                         <div>📤 Sent: ${sent} users</div>
                         ${failed > 0 ? `<div>❌ Failed: ${failed} users</div>` : ''}
+                        ${buttonText && buttonUrl ? `<div>🔗 Button: ${buttonText} → ${buttonUrl}</div>` : ''}
                     </div>
                 `;
 
@@ -2167,9 +2401,10 @@
                         const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
                         if (itemDate !== date) return;
                     }
+                    const dupText = item.duplicateCount > 0 ? ` (${item.duplicateCount} dup removed)` : '';
                     data.push([
                         item.userName || item.userId,
-                        item.fileName,
+                        item.fileName + dupText,
                         item.idCount || 0,
                         item.status || 'pending',
                         item.categoryName || 'Unknown',
@@ -2396,6 +2631,7 @@
             if (page === 'adminReport') loadReportCategories();
             if (page === 'adminDownload') { loadDownloadCategories(); }
             if (page === 'adminPaymentHistory') loadPaymentHistory();
+            if (page === 'adminDelete') { loadDeleteCategories(); }
         }
 
         // =============================================
