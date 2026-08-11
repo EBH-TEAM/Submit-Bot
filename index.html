@@ -38,6 +38,26 @@
         .stat-number { font-size: 18px; font-weight: bold; color: var(--tg-text); }
         .stat-label { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
+        .submit-main-btn {
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+            border: none;
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .submit-main-btn:active { transform: scale(0.97); }
+        .submit-main-btn .icon { font-size: 28px; }
+        
         .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
         .menu-item { background: var(--tg-secondary); border-radius: 12px; padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .menu-item:active { transform: scale(0.95); }
@@ -160,6 +180,8 @@
         .history-stats .hs-item { background: var(--tg-bg); padding: 10px; border-radius: 10px; text-align: center; }
         .history-stats .hs-item .hs-num { font-size: 18px; font-weight: bold; }
         .history-stats .hs-item .hs-label { font-size: 10px; color: var(--tg-hint); }
+        
+        .history-page-content { padding-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -192,12 +214,15 @@
             <div class="stat-item"><div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div><div class="stat-label">👥 Referrals</div></div>
         </div>
 
-        <!-- Main Menu - 3 items per row -->
+        <!-- ONE BIG SUBMIT BUTTON -->
+        <button class="submit-main-btn" onclick="switchPage('submit')">
+            <span class="icon">📤</span>
+            FB & IG ID FILE SUBMIT
+        </button>
+
+        <!-- Menu - Only 4 items -->
         <div class="menu-grid">
-            <div class="menu-item active" onclick="switchPage('submit')"><span class="menu-icon">📤</span><span class="menu-label">Submit IDs</span></div>
-            <div class="menu-item" onclick="switchPage('history')"><span class="menu-icon">📋</span><span class="menu-label">History</span></div>
             <div class="menu-item" onclick="switchPage('referral')"><span class="menu-icon">👥</span><span class="menu-label">Refer & Earn</span></div>
-            <div class="menu-item" onclick="switchPage('profile')"><span class="menu-icon">👤</span><span class="menu-label">Profile</span></div>
             <div class="menu-item" onclick="switchPage('support')"><span class="menu-icon">📞</span><span class="menu-label">Support</span></div>
             <div class="menu-item" onclick="closeApp()"><span class="menu-icon">🚪</span><span class="menu-label">Close</span></div>
         </div>
@@ -227,7 +252,7 @@
     <!-- ========== SUBMIT ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📤 Submit IDs</h3>
+        <h3 style="margin-bottom:12px;">📤 FB & IG ID FILE SUBMIT</h3>
         
         <div class="category-grid" id="categoryGrid"><div class="loading"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
         
@@ -254,19 +279,20 @@
     <!-- ========== HISTORY ========== -->
     <div id="pageHistory" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
-        
-        <!-- History Stats -->
-        <div class="history-stats" id="historyStats">
-            <div class="hs-item"><div class="hs-num" id="hsTotal" style="color:#667eea;">0</div><div class="hs-label">📊 Total</div></div>
-            <div class="hs-item"><div class="hs-num" id="hsPending" style="color:#ffc107;">0</div><div class="hs-label">⏳ Pending</div></div>
-            <div class="hs-item"><div class="hs-num" id="hsApproved" style="color:#28a745;">0</div><div class="hs-label">✅ Approved</div></div>
-            <div class="hs-item"><div class="hs-num" id="hsRejected" style="color:#dc3545;">0</div><div class="hs-label">❌ Rejected</div></div>
-            <div class="hs-item"><div class="hs-num" id="hsWithdraw" style="color:#667eea;">0</div><div class="hs-label">💳 Withdraw</div></div>
-            <div class="hs-item"><div class="hs-num" id="hsBalance" style="color:#28a745;">0</div><div class="hs-label">💰 Balance</div></div>
+        <div class="history-page-content">
+            <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
+            
+            <div class="history-stats" id="historyStats">
+                <div class="hs-item"><div class="hs-num" id="hsTotal" style="color:#667eea;">0</div><div class="hs-label">📊 Total</div></div>
+                <div class="hs-item"><div class="hs-num" id="hsPending" style="color:#ffc107;">0</div><div class="hs-label">⏳ Pending</div></div>
+                <div class="hs-item"><div class="hs-num" id="hsApproved" style="color:#28a745;">0</div><div class="hs-label">✅ Approved</div></div>
+                <div class="hs-item"><div class="hs-num" id="hsRejected" style="color:#dc3545;">0</div><div class="hs-label">❌ Rejected</div></div>
+                <div class="hs-item"><div class="hs-num" id="hsWithdraw" style="color:#667eea;">0</div><div class="hs-label">💳 Withdraw</div></div>
+                <div class="hs-item"><div class="hs-num" id="hsBalance" style="color:#28a745;">0</div><div class="hs-label">💰 Balance</div></div>
+            </div>
+            
+            <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
-        
-        <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
     <!-- ========== REFERRAL ========== -->
@@ -318,207 +344,20 @@
         <div class="card"><h4 style="margin-bottom:8px;">📈 Price & Rules</h4><div id="priceRules"></div></div>
     </div>
 
-    <!-- ========== ADMIN: CATEGORIES ========== -->
-    <div id="pageAdminCategories" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📁 Category Management</h3>
-        <button class="btn-primary" onclick="openCategoryModal()" style="margin-bottom:16px;">➕ Add Category</button>
-        <div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
-
-    <!-- ========== ADMIN: COMMISSION ========== -->
-    <div id="pageAdminCommission" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">💰 Category Commission</h3>
-        <div class="card">
-            <div class="card-title">📁 Select Category</div>
-            <select id="commissionCategorySelect" class="form-group" style="width:100%; padding:10px 14px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);" onchange="loadCommissionRules()"></select>
-        </div>
-        <div class="card">
-            <div class="card-title">📊 Commission Rules</div>
-            <div id="commissionRulesList"><div style="color:var(--tg-hint);">Select a category</div></div>
-            <div style="margin-top:12px; border-top:1px solid var(--tg-secondary); padding-top:12px;">
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <input type="number" id="commissionMinIds" placeholder="Min IDs (100, 200, 300)" style="flex:1; min-width:100px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
-                    <input type="number" id="commissionBonus" placeholder="Bonus per ID" style="flex:1; min-width:100px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
-                    <button class="btn-primary" onclick="addCommissionRule()" style="flex:0.5; min-width:80px; padding:10px;">Add</button>
-                </div>
-                <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Example: Min IDs = 100, Bonus = 2 (means 2 Taka extra per ID for 100+ IDs)</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: USERS ========== -->
-    <div id="pageAdminUsers" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">👥 User Management</h3>
-        <div class="form-group"><input type="text" id="userSearch" placeholder="🔍 Search User..." oninput="searchUsers()"></div>
-        <div id="userList"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
-
-    <!-- ========== ADMIN: BALANCE ========== -->
-    <div id="pageAdminBalance" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">💰 Balance Management</h3>
-        <div class="card">
-            <div class="form-group"><label>👤 User ID</label><input type="text" id="balanceUserId" placeholder="Enter user ID"></div>
-            <div class="form-group"><label>💰 Amount (Taka)</label><input type="number" id="balanceAmount" placeholder="+ add, - remove"></div>
-            <div class="form-group"><label>📝 Reason</label><input type="text" id="balanceReason" placeholder="Reason"></div>
-            <button class="btn-primary" onclick="updateBalance()">💵 Update Balance</button>
-        </div>
-        <div class="card"><div class="card-title">📊 Balance Stats</div>
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--tg-secondary);"><span>Total Balance</span><span id="totalBalance">0.00</span></div>
-            <div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Users</span><span id="totalUsers">0</span></div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: FILES ========== -->
-    <div id="pageAdminFiles" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📄 File Management</h3>
-        <div class="tabs">
-            <button class="tab active" onclick="switchFileTab('pending')">⏳ Pending</button>
-            <button class="tab" onclick="switchFileTab('approved')">✅ Approved</button>
-            <button class="tab" onclick="switchFileTab('rejected')">❌ Rejected</button>
-        </div>
-        <div id="adminFileList"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
-
-    <!-- ========== ADMIN: WITHDRAW ========== -->
-    <div id="pageAdminWithdraw" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">💳 Withdraw Requests</h3>
-        <div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
-
-    <!-- ========== ADMIN: DELETE ========== -->
-    <div id="pageAdminDelete" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">🗑️ Delete Submissions</h3>
-        <div class="card">
-            <div class="form-group"><label>📅 Date</label><input type="date" id="deleteDate"></div>
-            <div class="form-group"><label>📁 Category</label><select id="deleteCategorySelect"><option value="">All Categories</option></select></div>
-            <button class="btn-primary btn-danger" onclick="deleteSubmissions()">🗑️ Delete Submissions</button>
-            <div id="deleteResult" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: BROADCAST ========== -->
-    <div id="pageAdminBroadcast" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📢 Broadcast Message</h3>
-        <div class="card">
-            <div class="form-group">
-                <label>📝 Message</label>
-                <textarea id="broadcastMessage" placeholder="Enter your broadcast message..." style="min-height:100px;"></textarea>
-            </div>
-            <div class="form-group">
-                <label>🔗 Button Text (Optional)</label>
-                <input type="text" id="broadcastButtonText" placeholder="Button text (e.g. Visit Website)">
-            </div>
-            <div class="form-group">
-                <label>🔗 Button URL (Optional)</label>
-                <input type="url" id="broadcastButtonUrl" placeholder="Button URL (e.g. https://example.com)">
-            </div>
-            <button class="btn-primary" onclick="sendBroadcast()">📢 Send Broadcast</button>
-            <div id="broadcastProgress" style="display:none; text-align:center; padding:10px;">
-                <div class="spinner"></div>
-                <div style="margin-top:8px; color:var(--tg-hint);">Sending broadcast...</div>
-            </div>
-            <div id="broadcastResult" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: PAYMENT HISTORY ========== -->
-    <div id="pageAdminPaymentHistory" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">💰 Payment History</h3>
-        <div class="card">
-            <div class="card-title">📊 Summary</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
-                    <div style="font-size:24px; font-weight:bold; color:#28a745;" id="totalApprovedAmount">0.00</div>
-                    <div style="font-size:12px; color:var(--tg-hint);">Total Approved</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
-                    <div style="font-size:24px; font-weight:bold; color:#ffc107;" id="totalPendingAmount">0.00</div>
-                    <div style="font-size:12px; color:var(--tg-hint);">Total Pending</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
-                    <div style="font-size:24px; font-weight:bold; color:#dc3545;" id="totalRejectedAmount">0.00</div>
-                    <div style="font-size:12px; color:var(--tg-hint);">Total Rejected</div>
-                </div>
-                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
-                    <div style="font-size:24px; font-weight:bold; color:#667eea;" id="totalWithdrawAmount">0.00</div>
-                    <div style="font-size:12px; color:var(--tg-hint);">Total Withdraw</div>
-                </div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-title">📋 Payment Transactions</div>
-            <div id="paymentTransactionList"><div class="loading"><div class="spinner"></div></div></div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: DOWNLOAD ========== -->
-    <div id="pageAdminDownload" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📥 Download Files</h3>
-        <div class="card">
-            <div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div>
-            <div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All Categories</option></select></div>
-            <button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: SETTINGS ========== -->
-    <div id="pageAdminSettings" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">⚙️ Settings</h3>
-        <div class="card">
-            <div class="card-title">💰 Withdraw Methods</div>
-            <div id="withdrawMethodsList"></div>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-                <input type="text" id="newMethodName" placeholder="Method name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
-                <input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
-                <button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-title">📜 Price & Rules</div>
-            <div class="form-group"><textarea id="priceRulesInput" placeholder="Enter price rules..."></textarea></div>
-            <button class="btn-primary" onclick="updatePriceRules()">💾 Save Rules</button>
-        </div>
-        <div class="card">
-            <div class="card-title">📹 Tutorial Video</div>
-            <div class="form-group"><input type="text" id="tutorialVideoUrl" placeholder="Enter video URL"></div>
-            <button class="btn-primary" onclick="updateTutorialVideo()">💾 Save Video</button>
-        </div>
-        <div class="card">
-            <div class="card-title">📞 Support Contacts</div>
-            <div id="supportContactsList"></div>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-                <input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
-                <input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text); min-width:100px;">
-                <button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== ADMIN: BACKUP ========== -->
-    <div id="pageAdminBackup" class="page">
-        <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">💾 Backup & Restore</h3>
-        <div class="card"><button class="btn-primary" onclick="downloadBackup()">📥 Download Backup</button><div style="margin-top:12px; text-align:center; color:var(--tg-hint);">Download full database as JSON</div></div>
-        <div class="card">
-            <div class="upload-area" onclick="document.getElementById('restoreInput').click()">
-                <input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)">
-                <span class="icon">📤</span>
-                <p>Click to restore backup</p>
-                <div style="font-size:12px; color:var(--tg-hint);">Upload JSON backup file</div>
-            </div>
-        </div>
-    </div>
+    <!-- ========== ADMIN PANELS ========== -->
+    <div id="pageAdminCategories" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📁 Category Management</h3><button class="btn-primary" onclick="openCategoryModal()" style="margin-bottom:16px;">➕ Add Category</button><div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div id="pageAdminCommission" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Category Commission</h3><div class="card"><div class="card-title">📁 Select Category</div><select id="commissionCategorySelect" class="form-group" onchange="loadCommissionRules()"></select></div><div class="card"><div class="card-title">📊 Commission Rules</div><div id="commissionRulesList"></div><div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><input type="number" id="commissionMinIds" placeholder="Min IDs" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="commissionBonus" placeholder="Bonus/ID" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addCommissionRule()" style="flex:0.5; padding:10px;">Add</button></div></div></div>
+    <div id="pageAdminUsers" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>👥 User Management</h3><div class="form-group"><input type="text" id="userSearch" placeholder="🔍 Search User..." oninput="searchUsers()"></div><div id="userList"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div id="pageAdminBalance" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Balance Management</h3><div class="card"><div class="form-group"><label>👤 User ID</label><input type="text" id="balanceUserId"></div><div class="form-group"><label>💰 Amount</label><input type="number" id="balanceAmount" placeholder="+ add, - remove"></div><div class="form-group"><label>📝 Reason</label><input type="text" id="balanceReason"></div><button class="btn-primary" onclick="updateBalance()">💵 Update</button></div><div class="card"><div class="card-title">📊 Stats</div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Balance</span><span id="totalBalance">0.00</span></div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Users</span><span id="totalUsers">0</span></div></div></div>
+    <div id="pageAdminFiles" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📄 File Management</h3><div class="tabs"><button class="tab active" onclick="switchFileTab('pending')">⏳ Pending</button><button class="tab" onclick="switchFileTab('approved')">✅ Approved</button><button class="tab" onclick="switchFileTab('rejected')">❌ Rejected</button></div><div id="adminFileList"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div id="pageAdminWithdraw" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💳 Withdraw Requests</h3><div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div id="pageAdminReport" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📊 Report System</h3><div class="card"><div class="card-title">📤 Send Report</div><div class="form-group"><label>📁 Category</label><select id="reportCategorySelect"><option value="">All</option></select></div><div class="form-group"><label>📝 IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter IDs..."></textarea></div><div class="form-group"><label>💰 Rate/ID</label><input type="number" id="reportRate" value="5"></div><button class="btn-primary" onclick="sendReport()">📤 Send</button></div></div>
+    <div id="pageAdminDelete" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>🗑️ Delete Submissions</h3><div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="deleteDate"></div><div class="form-group"><label>📁 Category</label><select id="deleteCategorySelect"><option value="">All</option></select></div><button class="btn-primary btn-danger" onclick="deleteSubmissions()">🗑️ Delete</button><div id="deleteResult"></div></div></div>
+    <div id="pageAdminBroadcast" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📢 Broadcast</h3><div class="card"><div class="form-group"><label>📝 Message</label><textarea id="broadcastMessage" style="min-height:100px;"></textarea></div><div class="form-group"><label>🔗 Button Text</label><input type="text" id="broadcastButtonText" placeholder="Button text"></div><div class="form-group"><label>🔗 Button URL</label><input type="url" id="broadcastButtonUrl" placeholder="URL"></div><button class="btn-primary" onclick="sendBroadcast()">📢 Send</button><div id="broadcastProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px;">Sending...</div></div><div id="broadcastResult"></div></div></div>
+    <div id="pageAdminPaymentHistory" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Payment History</h3><div class="card"><div class="card-title">📊 Summary</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#28a745;" id="totalApprovedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Approved</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#ffc107;" id="totalPendingAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Pending</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#dc3545;" id="totalRejectedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Rejected</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#667eea;" id="totalWithdrawAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Withdraw</div></div></div></div><div class="card"><div class="card-title">📋 Transactions</div><div id="paymentTransactionList"><div class="loading"><div class="spinner"></div></div></div></div></div>
+    <div id="pageAdminSettings" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>⚙️ Settings</h3><div class="card"><div class="card-title">💰 Withdraw Methods</div><div id="withdrawMethodsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newMethodName" placeholder="Method" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button></div></div><div class="card"><div class="card-title">📜 Price & Rules</div><textarea id="priceRulesInput" style="width:100%; min-height:80px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"></textarea><button class="btn-primary" onclick="updatePriceRules()">💾 Save</button></div><div class="card"><div class="card-title">📹 Tutorial Video</div><input type="text" id="tutorialVideoUrl" style="width:100%; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"><button class="btn-primary" onclick="updateTutorialVideo()">💾 Save</button></div><div class="card"><div class="card-title">📞 Support</div><div id="supportContactsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button></div></div></div>
+    <div id="pageAdminBackup" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💾 Backup</h3><div class="card"><button class="btn-primary" onclick="downloadBackup()">📥 Download</button></div><div class="card"><div class="upload-area" onclick="document.getElementById('restoreInput').click()"><input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)"><span class="icon">📤</span><p>Click to restore</p></div></div></div>
+    <div id="pageAdminDownload" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📥 Download</h3><div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div><div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All</option></select></div><button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button></div></div>
 
     <!-- ========== MODALS ========== -->
     <div class="modal-overlay" id="withdrawModal">
@@ -536,7 +375,7 @@
             <div class="modal-header"><h3 id="categoryModalTitle">📁 Add Category</h3><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
             <div class="form-group"><label>Name</label><input type="text" id="categoryName" placeholder="Category name"></div>
             <div class="form-group"><label>Icon</label><input type="text" id="categoryIcon" placeholder="Emoji icon"></div>
-            <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details (show to users)"></textarea></div>
+            <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details"></textarea></div>
             <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
             <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
@@ -821,7 +660,7 @@
         }
 
         // =============================================
-        // LOAD CATEGORIES (User) - With Details & Offline Check
+        // LOAD CATEGORIES
         // =============================================
         async function loadCategories() {
             try {
@@ -898,9 +737,7 @@
                     fileIdCount = allIds.length;
                     fileData = allIds;
                     
-                    // =============================================
-                    // GLOBAL DUPLICATE CHECK
-                    // =============================================
+                    // GLOBAL DUPLICATE CHECK from submissions
                     const allSubmissions = await getData('submissions');
                     const existingIds = new Set();
                     
@@ -1005,7 +842,7 @@
         }
 
         // =============================================
-        // FILE UPLOAD - Save to Firebase & Notify
+        // FILE UPLOAD - FIXED: Saves to submissions node
         // =============================================
         async function uploadFile() {
             if (!selectedFile) { showToast('❌ No file selected', 'error'); return; }
@@ -1013,7 +850,7 @@
             if (validIds.length === 0) { showToast('❌ No valid IDs to submit', 'error'); return; }
 
             document.getElementById('uploadProgress').style.display = 'block';
-            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading to server...</div>';
+            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading file to server...</div>';
             document.getElementById('confirmButtons').style.display = 'none';
 
             try {
@@ -1028,11 +865,38 @@
                 }
 
                 // Upload file to Firebase Storage
-                const storageRef = storage.ref(`submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`);
-                const uploadTask = await storageRef.put(selectedFile);
-                const downloadURL = await uploadTask.ref.getDownloadURL();
+                const filePath = `submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`;
+                const storageRef = storage.ref(filePath);
+                
+                console.log('📤 Uploading to:', filePath);
+                
+                // Upload with progress tracking
+                const uploadTask = storageRef.put(selectedFile);
+                
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        document.getElementById('uploadProgress').innerHTML = 
+                            `<div class="spinner"></div>
+                             <div style="margin-top:8px; color:var(--tg-hint);">Uploading... ${Math.round(progress)}%</div>`;
+                    },
+                    (error) => {
+                        console.error('Upload error:', error);
+                        showToast('❌ Upload failed: ' + error.message, 'error');
+                        document.getElementById('uploadProgress').style.display = 'none';
+                        document.getElementById('confirmButtons').style.display = 'flex';
+                    }
+                );
+                
+                // Wait for upload to complete
+                const snapshot = await uploadTask;
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                
+                console.log('✅ Upload complete! URL:', downloadURL);
 
-                // Save submission with full data
+                // =============================================
+                // SAVE TO submissions NODE IN REALTIME DATABASE
+                // =============================================
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
@@ -1048,7 +912,10 @@
                     status: 'pending',
                     timestamp: new Date().toISOString()
                 };
+                
+                // Push to submissions node
                 const subKey = await pushData('submissions', subData);
+                console.log('✅ Saved to submissions! Key:', subKey);
 
                 // Update user stats
                 const userData = await getData(`users/${currentUserId}`);
@@ -1083,12 +950,12 @@
                 }
                 
                 userMsg += `\n⏳ <b>Status:</b> Pending Review\n\n` +
-                    `📌 <b>Next Step:</b> Wait for admin approval. You will get report when approved.`;
+                    `📌 <b>Next Step:</b> Wait for admin approval.`;
 
                 sendTelegramMessage(currentUserId, userMsg);
 
                 // =============================================
-                // SEND FILE TO ADMIN WITH DETAILS
+                // SEND FILE TO ADMIN
                 // =============================================
                 let adminMsg = 
                     `📤 <b>New File Submission</b>\n\n` +
@@ -1100,8 +967,7 @@
                     `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
                     `✅ <b>New IDs:</b> ${validIds.length}\n` +
                     `⚠️ <b>Duplicates Removed:</b> ${duplicateIds.length}\n` +
-                    `⏳ <b>Status:</b> Pending Review\n\n` +
-                    `📌 <b>Action Required:</b> Please review and approve/reject.`;
+                    `⏳ <b>Status:</b> Pending Review`;
 
                 // Send the actual file to admin
                 sendTelegramDocument(ADMIN_CHAT_ID, selectedFile, adminMsg);
@@ -1221,22 +1087,15 @@
                     });
                 }
 
-                // =============================================
-                // SEND WITHDRAW CONFIRMATION TO USER (FULL DETAILS)
-                // =============================================
                 sendTelegramMessage(currentUserId,
                     `💳 <b>Withdraw Request Submitted</b>\n\n` +
                     `📱 <b>Method:</b> ${method.toUpperCase()}\n` +
                     `📞 <b>Number:</b> <code>${number}</code>\n` +
                     `💰 <b>Amount:</b> ${amount} Taka\n` +
                     `⏳ <b>Status:</b> Pending\n` +
-                    `🆔 <b>Request ID:</b> <code>${wdId}</code>\n\n` +
-                    `📌 You will get notification when processed.`
+                    `🆔 <b>Request ID:</b> <code>${wdId}</code>`
                 );
 
-                // =============================================
-                // SEND TO ADMIN (FULL DETAILS)
-                // =============================================
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `💳 <b>New Withdraw Request</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
@@ -1257,7 +1116,7 @@
         }
 
         // =============================================
-        // LOAD HISTORY (with Withdraw Status & Stats)
+        // LOAD HISTORY
         // =============================================
         async function loadHistory() {
             try {
@@ -1270,7 +1129,6 @@
                 // Calculate stats
                 let totalSubs = 0, pending = 0, approved = 0, rejected = 0, withdrawTotal = 0, balance = 0;
 
-                // Submissions stats
                 if (submissions) {
                     Object.values(submissions).forEach(data => {
                         if (data.userId === currentUserId) {
@@ -1282,7 +1140,6 @@
                     });
                 }
 
-                // Withdraw stats
                 if (withdrawals) {
                     Object.values(withdrawals).forEach(data => {
                         if (data.userId === currentUserId && data.status === 'approved') {
@@ -1291,11 +1148,9 @@
                     });
                 }
 
-                // Balance
                 const userData = await getData(`users/${currentUserId}`);
                 if (userData) balance = userData.balance || 0;
 
-                // Update stats UI
                 document.getElementById('hsTotal').textContent = totalSubs;
                 document.getElementById('hsPending').textContent = pending;
                 document.getElementById('hsApproved').textContent = approved;
@@ -1716,7 +1571,6 @@
                     });
                 }
 
-                // Notify user
                 sendTelegramMessage(userId,
                     `💵 <b>Balance Updated</b>\n\n` +
                     `${amount > 0 ? '➕' : '➖'} ${Math.abs(amount)} Taka\n` +
@@ -1952,7 +1806,7 @@
         }
 
         // =============================================
-        // SEND REPORT TO USER (Excel Files)
+        // SEND REPORT TO USER
         // =============================================
         async function sendReportToUser(userId, categoryId, approvedCount, ratePerId, commission, totalEarnings) {
             try {
@@ -2173,7 +2027,6 @@
                     }
                 }
 
-                // Update stats
                 const stats = await getData('stats/summary');
                 if (stats) {
                     await updateData('stats/summary', {
@@ -2200,7 +2053,7 @@
         }
 
         // =============================================
-        // ADMIN: BROADCAST (With Inline Button)
+        // ADMIN: BROADCAST
         // =============================================
         async function sendBroadcast() {
             const message = document.getElementById('broadcastMessage').value.trim();
@@ -2226,7 +2079,6 @@
                 let sent = 0;
                 let failed = 0;
 
-                // Build inline keyboard
                 let replyMarkup = null;
                 if (buttonText && buttonUrl) {
                     replyMarkup = {
@@ -2294,10 +2146,9 @@
                 let totalWithdraw = 0;
                 let transactions = [];
 
-                // Calculate totals from submissions
                 if (submissions) {
                     Object.values(submissions).forEach(data => {
-                        const amount = (data.idCount || 0) * 5; // Assuming rate per ID
+                        const amount = (data.idCount || 0) * 5;
                         if (data.status === 'approved') {
                             totalApproved += amount;
                             transactions.push({
@@ -2315,7 +2166,6 @@
                     });
                 }
 
-                // Calculate withdraw totals
                 if (withdrawals) {
                     Object.values(withdrawals).forEach(data => {
                         if (data.status === 'approved') {
@@ -2331,16 +2181,13 @@
                     });
                 }
 
-                // Update summary
                 document.getElementById('totalApprovedAmount').textContent = totalApproved.toFixed(2);
                 document.getElementById('totalPendingAmount').textContent = totalPending.toFixed(2);
                 document.getElementById('totalRejectedAmount').textContent = totalRejected.toFixed(2);
                 document.getElementById('totalWithdrawAmount').textContent = totalWithdraw.toFixed(2);
 
-                // Sort transactions by date
                 transactions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-                // Display transactions
                 const container = document.getElementById('paymentTransactionList');
                 if (transactions.length === 0) {
                     container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No transactions</div>';
