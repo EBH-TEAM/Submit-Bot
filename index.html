@@ -10,652 +10,132 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
+    <!-- SheetJS for Excel generation -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            min-height: 100vh;
-            padding: 12px;
-            padding-bottom: 80px;
-        }
-
-        :root {
-            --tg-bg: var(--tg-theme-bg-color, #ffffff);
-            --tg-text: var(--tg-theme-text-color, #000000);
-            --tg-hint: var(--tg-theme-hint-color, #999999);
-            --tg-link: var(--tg-theme-link-color, #2481cc);
-            --tg-button: var(--tg-theme-button-color, #2481cc);
-            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
-            --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
-        }
-
-        .header {
-            background: var(--tg-secondary);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            background: var(--tg-button);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .user-name {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .user-id {
-            font-size: 12px;
-            color: var(--tg-hint);
-        }
-
-        .admin-badge {
-            background: #ffc107;
-            color: #333;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 6px;
-        }
-
-        .balance-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            color: white;
-        }
-
-        .balance-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .balance-amount {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 4px 0;
-        }
-
-        .balance-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .balance-actions button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .balance-actions button:active {
-            transform: scale(0.95);
-        }
-
-        .btn-withdraw {
-            background: white;
-            color: #764ba2;
-        }
-
-        .btn-history {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .stat-item {
-            background: var(--tg-secondary);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--tg-text);
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: var(--tg-hint);
-            margin-top: 2px;
-        }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .menu-item {
-            background: var(--tg-secondary);
-            border-radius: 12px;
-            padding: 16px 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .menu-item:active {
-            transform: scale(0.95);
-        }
-
-        .menu-item.active {
-            border-color: var(--tg-button);
-            background: var(--tg-bg);
-        }
-
-        .menu-icon {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .menu-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--tg-text);
-        }
-
-        .admin-menu {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-            background: var(--tg-secondary);
-            border-radius: 16px;
-            padding: 16px;
-        }
-
-        .admin-menu .menu-item {
-            background: var(--tg-bg);
-        }
-
-        .card {
-            background: var(--tg-secondary);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid var(--tg-secondary);
-            border-radius: 10px;
-            font-size: 14px;
-            background: var(--tg-bg);
-            color: var(--tg-text);
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: var(--tg-button);
-            outline: none;
-        }
-
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: var(--tg-button);
-            color: var(--tg-button-text);
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .page {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--tg-link);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 12px;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--tg-hint);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 16px;
-        }
-
-        .upload-area:active {
-            transform: scale(0.98);
-        }
-
-        .upload-area .icon {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .upload-area p {
-            font-size: 14px;
-            color: var(--tg-hint);
-        }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .category-item {
-            background: var(--tg-secondary);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .category-item:active {
-            transform: scale(0.95);
-        }
-
-        .category-item.selected {
-            border-color: var(--tg-button);
-            background: var(--tg-bg);
-        }
-
-        .category-item .cat-icon {
-            font-size: 28px;
-        }
-
-        .category-item .cat-name {
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .category-item .cat-status {
-            font-size: 11px;
-            color: var(--tg-hint);
-        }
-
-        .category-item .cat-status.online {
-            color: #28a745;
-        }
-
-        .category-item .cat-status.offline {
-            color: #dc3545;
-        }
-
-        .history-item {
-            background: var(--tg-bg);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-left .h-title {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .history-left .h-date {
-            font-size: 11px;
-            color: var(--tg-hint);
-        }
-
-        .history-amount {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .history-amount.positive {
-            color: #28a745;
-        }
-
-        .history-amount.negative {
-            color: #dc3545;
-        }
-
-        .status-badge {
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--tg-bg);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .modal-header h3 {
-            font-size: 18px;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--tg-hint);
-        }
-
-        .referral-box {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .referral-box .ref-link {
-            background: white;
-            padding: 10px 14px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .referral-box .ref-link code {
-            font-size: 12px;
-            word-break: break-all;
-            color: #333;
-        }
-
-        .copy-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .copy-btn:active {
-            transform: scale(0.95);
-        }
-
-        .user-item {
-            background: var(--tg-bg);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-item .user-name {
-            font-weight: 600;
-        }
-
-        .user-item .user-balance {
-            color: var(--tg-hint);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 4px;
-            background: var(--tg-secondary);
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 16px;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border: none;
-            background: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--tg-hint);
-            transition: all 0.3s;
-        }
-
-        .tab.active {
-            background: var(--tg-bg);
-            color: var(--tg-text);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 2000;
-            max-width: 90%;
-            text-align: center;
-            animation: fadeIn 0.3s ease;
-            display: none;
-        }
-
-        .toast.success {
-            background: #28a745;
-        }
-
-        .toast.error {
-            background: #dc3545;
-        }
-
-        .toast.info {
-            background: var(--tg-button);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid var(--tg-secondary);
-            border-top: 3px solid var(--tg-button);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .id-input-area textarea {
-            min-height: 120px;
-            font-size: 13px;
-            font-family: monospace;
-        }
-
-        .inline-flex {
-            display: flex;
-            gap: 8px;
-        }
-
-        .inline-flex .btn-primary {
-            flex: 1;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000); min-height: 100vh; padding: 12px; padding-bottom: 80px; }
+        :root { --tg-bg: var(--tg-theme-bg-color, #ffffff); --tg-text: var(--tg-theme-text-color, #000000); --tg-hint: var(--tg-theme-hint-color, #999999); --tg-link: var(--tg-theme-link-color, #2481cc); --tg-button: var(--tg-theme-button-color, #2481cc); --tg-button-text: var(--tg-theme-button-text-color, #ffffff); --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0); }
+        
+        .header { background: var(--tg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 50px; height: 50px; border-radius: 25px; background: var(--tg-button); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; flex-shrink: 0; overflow: hidden; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 18px; font-weight: 600; }
+        .user-id { font-size: 12px; color: var(--tg-hint); }
+        .admin-badge { background: #ffc107; color: #333; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+        
+        .balance-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; color: white; }
+        .balance-label { font-size: 14px; opacity: 0.9; }
+        .balance-amount { font-size: 32px; font-weight: bold; margin: 4px 0; }
+        .balance-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .balance-actions button { flex: 1; padding: 10px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .balance-actions button:active { transform: scale(0.95); }
+        .btn-withdraw { background: white; color: #764ba2; }
+        .btn-history { background: rgba(255,255,255,0.2); color: white; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .stat-item { background: var(--tg-secondary); border-radius: 12px; padding: 12px; text-align: center; }
+        .stat-number { font-size: 18px; font-weight: bold; color: var(--tg-text); }
+        .stat-label { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .menu-item { background: var(--tg-secondary); border-radius: 12px; padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .menu-item:active { transform: scale(0.95); }
+        .menu-item.active { border-color: var(--tg-button); background: var(--tg-bg); }
+        .menu-icon { font-size: 28px; display: block; margin-bottom: 4px; }
+        .menu-label { font-size: 11px; font-weight: 600; color: var(--tg-text); }
+        
+        .admin-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; background: var(--tg-secondary); border-radius: 16px; padding: 16px; }
+        .admin-menu .menu-item { background: var(--tg-bg); }
+        
+        .card { background: var(--tg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 2px solid var(--tg-secondary); border-radius: 10px; font-size: 14px; background: var(--tg-bg); color: var(--tg-text); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--tg-button); outline: none; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        
+        .btn-primary { width: 100%; padding: 14px; background: var(--tg-button); color: var(--tg-button-text); border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .back-btn { background: none; border: none; color: var(--tg-link); font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 0; display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+        
+        .upload-area { border: 2px dashed var(--tg-hint); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 16px; }
+        .upload-area:active { transform: scale(0.98); }
+        .upload-area .icon { font-size: 48px; display: block; margin-bottom: 8px; }
+        .upload-area p { font-size: 14px; color: var(--tg-hint); }
+        
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .category-item { background: var(--tg-secondary); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .category-item:active { transform: scale(0.95); }
+        .category-item.selected { border-color: var(--tg-button); background: var(--tg-bg); }
+        .category-item .cat-icon { font-size: 28px; }
+        .category-item .cat-name { font-size: 13px; font-weight: 600; margin-top: 4px; }
+        .category-item .cat-status { font-size: 11px; color: var(--tg-hint); }
+        .category-item .cat-status.online { color: #28a745; }
+        .category-item .cat-status.offline { color: #dc3545; }
+        
+        .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .history-left .h-title { font-weight: 600; font-size: 14px; }
+        .history-left .h-date { font-size: 11px; color: var(--tg-hint); }
+        .history-amount { font-weight: bold; font-size: 16px; }
+        .history-amount.positive { color: #28a745; }
+        .history-amount.negative { color: #dc3545; }
+        
+        .status-badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--tg-bg); border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-header h3 { font-size: 18px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--tg-hint); }
+        
+        .referral-box { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .referral-box .ref-link { background: white; padding: 10px 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
+        .referral-box .ref-link code { font-size: 12px; word-break: break-all; color: #333; }
+        .copy-btn { background: #667eea; color: white; border: none; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .copy-btn:active { transform: scale(0.95); }
+        
+        .user-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .user-item .user-name { font-weight: 600; }
+        .user-item .user-balance { color: var(--tg-hint); }
+        
+        .tabs { display: flex; gap: 4px; background: var(--tg-secondary); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+        .tab { flex: 1; padding: 10px; text-align: center; border: none; background: none; border-radius: 10px; font-weight: 600; cursor: pointer; color: var(--tg-hint); transition: all 0.3s; }
+        .tab.active { background: var(--tg-bg); color: var(--tg-text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; max-width: 90%; text-align: center; animation: fadeIn 0.3s ease; display: none; }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.info { background: var(--tg-button); }
+        
+        .loading { text-align: center; padding: 20px; }
+        .spinner { border: 3px solid var(--tg-secondary); border-top: 3px solid var(--tg-button); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .commission-item { background: var(--tg-bg); border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .commission-item .rule-text { font-weight: 600; }
+        .commission-item .rule-amount { color: #28a745; font-weight: bold; }
+        
+        .inline-flex { display: flex; gap: 8px; flex-wrap: wrap; }
+        .inline-flex .form-group { flex: 1; min-width: 120px; }
+        .inline-flex .btn-primary { flex: 0.5; min-width: 80px; }
     </style>
 </head>
 <body>
@@ -699,6 +179,7 @@
             <div style="font-weight:600; margin-bottom:8px;">👑 Admin Panel</div>
             <div class="admin-menu">
                 <div class="menu-item" onclick="switchPage('adminCategories')"><span class="menu-icon">📁</span><span class="menu-label">Categories</span></div>
+                <div class="menu-item" onclick="switchPage('adminCommission')"><span class="menu-icon">💰</span><span class="menu-label">Commission</span></div>
                 <div class="menu-item" onclick="switchPage('adminUsers')"><span class="menu-icon">👥</span><span class="menu-label">Users</span></div>
                 <div class="menu-item" onclick="switchPage('adminBalance')"><span class="menu-icon">💰</span><span class="menu-label">Balance</span></div>
                 <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Files</span></div>
@@ -716,9 +197,7 @@
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 Submit IDs</h3>
-        
-        <div class="category-grid" id="categoryGrid"><div class="loading" style="grid-column:1/-1;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
-
+        <div class="category-grid" id="categoryGrid"><div class="loading"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
         <div id="uploadSection" style="display:none;">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="uploadFile(this)">
@@ -794,6 +273,31 @@
         <div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
+    <!-- ========== ADMIN: COMMISSION ========== -->
+    <div id="pageAdminCommission" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">💰 Category Commission</h3>
+        
+        <div class="card">
+            <div class="card-title">📁 Select Category</div>
+            <select id="commissionCategorySelect" class="form-group" style="width:100%; padding:10px 14px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);" onchange="loadCommissionRules()"></select>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📊 Commission Rules</div>
+            <div id="commissionRulesList"><div style="color:var(--tg-hint);">Select a category</div></div>
+            
+            <div style="margin-top:12px; border-top:1px solid var(--tg-secondary); padding-top:12px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <input type="number" id="commissionMinIds" placeholder="Min IDs (100, 200, 300)" style="flex:1; min-width:100px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                    <input type="number" id="commissionBonus" placeholder="Bonus per ID" style="flex:1; min-width:100px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                    <button class="btn-primary" onclick="addCommissionRule()" style="flex:0.5; min-width:80px; padding:10px;">Add</button>
+                </div>
+                <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">Example: Min IDs = 100, Bonus = 2 (means 2 Taka extra per ID for 100+ IDs)</div>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== ADMIN: USERS ========== -->
     <div id="pageAdminUsers" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
@@ -849,8 +353,12 @@
                 <select id="reportCategorySelect"><option value="">All Categories</option></select>
             </div>
             <div class="form-group">
-                <label>📝 Enter IDs (one per line)</label>
-                <textarea id="reportIdsInput" placeholder="Enter IDs line by line..."></textarea>
+                <label>📝 Enter IDs (one per line) - Leave empty for all users in category</label>
+                <textarea id="reportIdsInput" placeholder="Enter IDs line by line... or leave empty for all"></textarea>
+            </div>
+            <div class="form-group">
+                <label>💰 Rate per ID (Taka)</label>
+                <input type="number" id="reportRate" value="5" placeholder="Rate per ID">
             </div>
             <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
         </div>
@@ -1054,6 +562,7 @@
                     await loadWithdrawMethodsList();
                     await loadSupportContactsList();
                     await loadReportCategories();
+                    await loadCommissionCategories();
                 }
 
             } catch (error) {
@@ -1093,7 +602,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // Real-time balance
         db.collection('users').doc(currentUserId).onSnapshot(doc => {
             if (doc.exists) document.getElementById('userBalance').textContent = doc.data().balance?.toFixed(2) || '0.00';
         });
@@ -1156,7 +664,7 @@
         }
 
         // =============================================
-        // FILE UPLOAD
+        // FILE UPLOAD - With Admin Notification
         // =============================================
         async function uploadFile(input) {
             const file = input.files[0];
@@ -1166,15 +674,28 @@
             document.getElementById('uploadProgress').style.display = 'block';
 
             try {
+                // Get category name
+                const catDoc = await db.collection('categories').doc(selectedCategory).get();
+                const catName = catDoc.exists ? catDoc.data().name : 'Unknown';
+
+                // Upload to Storage
                 const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
                 const task = await ref.put(file);
                 const url = await task.ref.getDownloadURL();
 
-                await db.collection('submissions').add({
-                    userId: currentUserId, fileName: file.name, fileUrl: url,
-                    categoryId: selectedCategory, idCount: 0, status: 'pending',
+                // Save to Firestore
+                const subData = {
+                    userId: currentUserId,
+                    userName: tgUser.first_name || 'User',
+                    fileName: file.name,
+                    fileUrl: url,
+                    categoryId: selectedCategory,
+                    categoryName: catName,
+                    idCount: 0,
+                    status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                const subRef = await db.collection('submissions').add(subData);
 
                 await db.collection('users').doc(currentUserId).update({
                     totalSubmits: firebase.firestore.FieldValue.increment(1)
@@ -1184,9 +705,24 @@
                     todaySubmissions: firebase.firestore.FieldValue.increment(1)
                 });
 
-                sendTelegram(`📤 New submission from ${tgUser.first_name || 'User'}\n📄 ${file.name}\n🆔 ${currentUserId}`);
-                showToast('✅ File uploaded!', 'success');
+                // =============================================
+                // SEND ADMIN NOTIFICATION WITH FILE
+                // =============================================
+                const adminMsg = 
+                    `📤 <b>New File Submission</b>\n\n` +
+                    `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
+                    `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
+                    `📁 <b>Category:</b> ${catName}\n` +
+                    `📄 <b>File:</b> ${file.name}\n` +
+                    `⏳ <b>Status:</b> Pending Review\n\n` +
+                    `📌 <b>Action Required:</b> Please review the file.`;
+
+                // Send message with file to admin
+                sendTelegramDocument(ADMIN_CHAT_ID, file, adminMsg);
+
+                showToast('✅ File uploaded! Admin notified.', 'success');
                 loadDashboard();
+                
             } catch (e) {
                 console.error(e);
                 showToast('❌ Upload failed', 'error');
@@ -1197,13 +733,26 @@
         }
 
         // =============================================
-        // SEND TELEGRAM
+        // SEND TELEGRAM MESSAGE WITH FILE
         // =============================================
-        function sendTelegram(text) {
+        function sendTelegramDocument(chatId, file, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('document', file);
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'HTML');
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                method: 'POST',
+                body: formData
+            }).catch(console.error);
+        }
+
+        function sendTelegramMessage(chatId, text) {
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'HTML' })
+                body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
             }).catch(console.error);
         }
 
@@ -1247,7 +796,9 @@
 
             try {
                 await db.collection('withdrawals').add({
-                    userId: currentUserId, method, number, amount, status: 'pending',
+                    userId: currentUserId,
+                    userName: tgUser.first_name || 'User',
+                    method, number, amount, status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 await db.collection('users').doc(currentUserId).update({
@@ -1257,7 +808,15 @@
                     totalBalance: firebase.firestore.FieldValue.increment(-amount)
                 });
 
-                sendTelegram(`💳 Withdraw from ${tgUser.first_name || 'User'}\n📱 ${method}\n📞 ${number}\n💰 ${amount} Taka`);
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `💳 <b>New Withdraw Request</b>\n\n` +
+                    `👤 ${tgUser.first_name || 'User'}\n` +
+                    `🆔 <code>${currentUserId}</code>\n` +
+                    `📱 ${method}\n` +
+                    `📞 ${number}\n` +
+                    `💰 ${amount} Taka`
+                );
+
                 closeModal('withdrawModal');
                 showToast('✅ Withdraw submitted!', 'success');
                 loadUserData();
@@ -1399,6 +958,8 @@
                 closeModal('categoryModal');
                 loadAdminCategories();
                 loadCategories();
+                loadCommissionCategories();
+                loadReportCategories();
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
@@ -1409,6 +970,89 @@
                 showToast('✅ Deleted!', 'success');
                 loadAdminCategories();
                 loadCategories();
+                loadCommissionCategories();
+                loadReportCategories();
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+        }
+
+        // =============================================
+        // ADMIN: COMMISSION
+        // =============================================
+        async function loadCommissionCategories() {
+            try {
+                const snapshot = await db.collection('categories').get();
+                const select = document.getElementById('commissionCategorySelect');
+                select.innerHTML = '<option value="">Select Category</option>';
+                snapshot.forEach(doc => {
+                    const cat = doc.data();
+                    select.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadCommissionRules() {
+            const catId = document.getElementById('commissionCategorySelect').value;
+            if (!catId) {
+                document.getElementById('commissionRulesList').innerHTML = '<div style="color:var(--tg-hint);">Select a category</div>';
+                return;
+            }
+
+            try {
+                const doc = await db.collection('categoryCommission').doc(catId).get();
+                const container = document.getElementById('commissionRulesList');
+                
+                if (!doc.exists || !doc.data().rules || Object.keys(doc.data().rules).length === 0) {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No commission rules set</div>';
+                    return;
+                }
+
+                const rules = doc.data().rules;
+                let html = '';
+                const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(a) - parseInt(b));
+                sortedKeys.forEach(key => {
+                    html += `
+                        <div class="commission-item">
+                            <span class="rule-text">📊 ${key}+ IDs</span>
+                            <span class="rule-amount">${rules[key]} Taka/ID extra</span>
+                            <button onclick="deleteCommissionRule('${catId}','${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        async function addCommissionRule() {
+            const catId = document.getElementById('commissionCategorySelect').value;
+            const minIds = parseInt(document.getElementById('commissionMinIds').value);
+            const bonus = parseFloat(document.getElementById('commissionBonus').value);
+
+            if (!catId) { showToast('❌ Select category', 'error'); return; }
+            if (!minIds || minIds < 1) { showToast('❌ Valid min IDs', 'error'); return; }
+            if (!bonus || bonus < 0) { showToast('❌ Valid bonus', 'error'); return; }
+
+            try {
+                const doc = await db.collection('categoryCommission').doc(catId).get();
+                let rules = doc.exists ? doc.data().rules || {} : {};
+                rules[String(minIds)] = bonus;
+
+                await db.collection('categoryCommission').doc(catId).set({ rules });
+                showToast('✅ Commission rule added!', 'success');
+                loadCommissionRules();
+                document.getElementById('commissionMinIds').value = '';
+                document.getElementById('commissionBonus').value = '';
+            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+        }
+
+        async function deleteCommissionRule(catId, key) {
+            if (!confirm('Delete this rule?')) return;
+            try {
+                const doc = await db.collection('categoryCommission').doc(catId).get();
+                let rules = doc.exists ? doc.data().rules || {} : {};
+                delete rules[key];
+                await db.collection('categoryCommission').doc(catId).set({ rules });
+                showToast('✅ Rule deleted!', 'success');
+                loadCommissionRules();
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
@@ -1491,7 +1135,11 @@
                 showToast(`✅ ${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} Taka`, 'success');
                 loadBalanceStats();
                 loadUserData();
-                sendTelegram(`💵 Balance ${amount > 0 ? 'Added' : 'Removed'}\n👤 ${userId}\n💰 ${Math.abs(amount)} Taka\n📝 ${reason}`);
+                sendTelegramMessage(userId,
+                    `💵 <b>Balance Updated</b>\n\n` +
+                    `${amount > 0 ? '➕' : '➖'} ${Math.abs(amount)} Taka\n` +
+                    `📝 ${reason}`
+                );
                 document.getElementById('balanceAmount').value = '';
                 document.getElementById('balanceReason').value = '';
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
@@ -1530,10 +1178,15 @@
                     const data = doc.data();
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div><div style="font-weight:600;">📄 ${data.fileName}</div><div style="font-size:12px; color:var(--tg-hint);">User: ${data.userId} • ${data.idCount || 0} IDs</div><div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div><div style="font-weight:600;">📄 ${data.fileName}</div>
+                            <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">📁 ${data.categoryName || 'Unknown'} • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span class="status-badge status-${data.status}">${data.status}</span>
-                                ${data.status === 'pending' ? `<button onclick="approveFile('${doc.id}')" class="btn-sm" style="background:#28a745; color:white;">✅</button><button onclick="rejectFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">❌</button>` : ''}
+                                ${data.status === 'pending' ? `
+                                    <button onclick="approveFile('${doc.id}')" class="btn-sm" style="background:#28a745; color:white;">✅ Approve</button>
+                                    <button onclick="rejectFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">❌ Reject</button>
+                                ` : ''}
                                 <button onclick="window.open('${data.fileUrl}','_blank')" class="btn-sm" style="background:var(--tg-button); color:white;">📥</button>
                                 <button onclick="deleteFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                             </div>
@@ -1544,21 +1197,71 @@
             } catch (e) { console.error(e); }
         }
 
+        // =============================================
+        // ADMIN: APPROVE/REJECT WITH COMMISSION
+        // =============================================
         async function approveFile(fileId) {
             try {
                 const doc = await db.collection('submissions').doc(fileId).get();
                 const data = doc.data();
                 await doc.ref.update({ status: 'approved' });
                 await db.collection('users').doc(data.userId).update({ approved: firebase.firestore.FieldValue.increment(1) });
-                const earnings = (data.idCount || 0) * 5;
-                if (earnings > 0) {
-                    await db.collection('users').doc(data.userId).update({ balance: firebase.firestore.FieldValue.increment(earnings) });
-                    await db.collection('transactions').add({ userId: data.userId, amount: earnings, reason: `Approved ${data.idCount} IDs`, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                    sendTelegram(data.userId, `✅ Approved: ${data.idCount} IDs\n💰 Earnings: ${earnings} Taka`);
+
+                // Get rate per ID (from settings or default 5)
+                let ratePerId = 5;
+                const rateDoc = await db.collection('settings').doc('priceRules').get();
+                if (rateDoc.exists && rateDoc.data().ratePerId) {
+                    ratePerId = rateDoc.data().ratePerId;
                 }
-                showToast('✅ Approved!', 'success');
+
+                const approvedCount = data.idCount || 0;
+                const earnings = approvedCount * ratePerId;
+
+                // Check for category commission
+                let commissionBonus = 0;
+                const commissionDoc = await db.collection('categoryCommission').doc(data.categoryId).get();
+                if (commissionDoc.exists) {
+                    const rules = commissionDoc.data().rules || {};
+                    const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
+                    for (const key of sortedKeys) {
+                        if (approvedCount >= parseInt(key)) {
+                            commissionBonus = rules[key] * approvedCount;
+                            break;
+                        }
+                    }
+                }
+
+                const totalEarnings = earnings + commissionBonus;
+
+                if (totalEarnings > 0) {
+                    await db.collection('users').doc(data.userId).update({
+                        balance: firebase.firestore.FieldValue.increment(totalEarnings)
+                    });
+                    await db.collection('transactions').add({
+                        userId: data.userId,
+                        amount: totalEarnings,
+                        reason: `Approved ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Send report to user with Excel files
+                    await sendReportToUser(data.userId, data.categoryId, approvedCount, ratePerId, commissionBonus, totalEarnings);
+
+                    sendTelegramMessage(data.userId,
+                        `✅ <b>IDs Approved!</b>\n\n` +
+                        `📄 ${data.fileName}\n` +
+                        `✅ ${approvedCount} IDs\n` +
+                        `💰 ${ratePerId} Taka/ID\n` +
+                        `🎯 Commission: ${commissionBonus} Taka\n` +
+                        `💵 Total: ${totalEarnings} Taka\n\n` +
+                        `📊 Check your balance in the app.`
+                    );
+                }
+
+                showToast('✅ Approved with commission!', 'success');
                 loadFileList(currentFileTab);
                 loadDashboard();
+
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
@@ -1568,19 +1271,147 @@
                 const data = doc.data();
                 await doc.ref.update({ status: 'rejected' });
                 await db.collection('users').doc(data.userId).update({ rejected: firebase.firestore.FieldValue.increment(1) });
-                sendTelegram(data.userId, `❌ Rejected: ${data.fileName}`);
+
+                // Send rejection report
+                await sendRejectionReport(data.userId, data.fileName);
+
+                sendTelegramMessage(data.userId,
+                    `❌ <b>IDs Rejected</b>\n\n` +
+                    `📄 ${data.fileName}\n` +
+                    `❌ Status: Rejected\n\n` +
+                    `Please check your file format and resubmit.`
+                );
+
                 showToast('✅ Rejected!', 'success');
                 loadFileList(currentFileTab);
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
-        async function deleteFile(fileId) {
-            if (!confirm('Delete?')) return;
+        // =============================================
+        // SEND REPORT TO USER (Excel Files)
+        // =============================================
+        async function sendReportToUser(userId, categoryId, approvedCount, ratePerId, commission, totalEarnings) {
             try {
-                await db.collection('submissions').doc(fileId).delete();
-                showToast('✅ Deleted!', 'success');
-                loadFileList(currentFileTab);
-            } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
+                // Get approved IDs for this user
+                const subs = await db.collection('submissions')
+                    .where('userId', '==', userId)
+                    .where('categoryId', '==', categoryId)
+                    .where('status', '==', 'approved')
+                    .get();
+
+                const approvedIds = [];
+                const rejectedIds = [];
+
+                subs.forEach(doc => {
+                    const data = doc.data();
+                    // Assuming IDs are stored in the file
+                    if (data.idCount) {
+                        for (let i = 0; i < data.idCount; i++) {
+                            approvedIds.push(`ID_${data.userId}_${i+1}`);
+                        }
+                    }
+                });
+
+                // Create Approved Excel
+                const wbApproved = XLSX.utils.book_new();
+                const approvedData = [
+                    ['SL', 'ID', 'Status', 'Rate', 'Earnings'],
+                    ...approvedIds.map((id, i) => [i+1, id, 'Approved', ratePerId, ratePerId])
+                ];
+                if (approvedIds.length === 0) {
+                    approvedData.push(['No approved IDs found']);
+                }
+                const wsApproved = XLSX.utils.aoa_to_sheet(approvedData);
+                XLSX.utils.book_append_sheet(wbApproved, wsApproved, 'Approved');
+                const approvedExcel = XLSX.write(wbApproved, { type: 'array', bookType: 'xlsx' });
+
+                // Create Rejected Excel (empty for now)
+                const wbRejected = XLSX.utils.book_new();
+                const rejectedData = [
+                    ['SL', 'ID', 'Status', 'Reason']
+                ];
+                if (rejectedIds.length === 0) {
+                    rejectedData.push(['No rejected IDs']);
+                } else {
+                    rejectedIds.forEach((id, i) => {
+                        rejectedData.push([i+1, id, 'Rejected', 'Invalid format']);
+                    });
+                }
+                const wsRejected = XLSX.utils.aoa_to_sheet(rejectedData);
+                XLSX.utils.book_append_sheet(wbRejected, wsRejected, 'Rejected');
+                const rejectedExcel = XLSX.write(wbRejected, { type: 'array', bookType: 'xlsx' });
+
+                // Convert to Blobs
+                const approvedBlob = new Blob([approvedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const rejectedBlob = new Blob([rejectedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                // Send to user via Telegram
+                const formDataApproved = new FormData();
+                formDataApproved.append('chat_id', userId);
+                formDataApproved.append('document', approvedBlob, `approved_${new Date().toISOString().split('T')[0]}.xlsx`);
+                formDataApproved.append('caption', 
+                    `✅ <b>Approved IDs Report</b>\n\n` +
+                    `📊 Total Approved: ${approvedIds.length}\n` +
+                    `💰 Rate: ${ratePerId} Taka/ID\n` +
+                    `🎯 Commission: ${commission} Taka\n` +
+                    `💵 Total: ${totalEarnings} Taka\n\n` +
+                    `📅 ${new Date().toLocaleDateString()}`
+                );
+                formDataApproved.append('parse_mode', 'HTML');
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                    method: 'POST',
+                    body: formDataApproved
+                });
+
+                // Send rejected file
+                const formDataRejected = new FormData();
+                formDataRejected.append('chat_id', userId);
+                formDataRejected.append('document', rejectedBlob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
+                formDataRejected.append('caption', 
+                    `❌ <b>Rejected IDs Report</b>\n\n` +
+                    `📊 Total Rejected: ${rejectedIds.length}\n\n` +
+                    `📅 ${new Date().toLocaleDateString()}`
+                );
+                formDataRejected.append('parse_mode', 'HTML');
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                    method: 'POST',
+                    body: formDataRejected
+                });
+
+            } catch (e) { console.error('Send report error:', e); }
+        }
+
+        async function sendRejectionReport(userId, fileName) {
+            try {
+                const wb = XLSX.utils.book_new();
+                const data = [
+                    ['SL', 'ID', 'Status', 'Reason']
+                ];
+                data.push([1, 'All IDs', 'Rejected', 'File rejected by admin']);
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, 'Rejected');
+                const excel = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                const blob = new Blob([excel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                const formData = new FormData();
+                formData.append('chat_id', userId);
+                formData.append('document', blob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
+                formData.append('caption', 
+                    `❌ <b>File Rejected</b>\n\n` +
+                    `📄 ${fileName}\n` +
+                    `❌ All IDs Rejected\n\n` +
+                    `📅 ${new Date().toLocaleDateString()}`
+                );
+                formData.append('parse_mode', 'HTML');
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+            } catch (e) { console.error('Send rejection error:', e); }
         }
 
         // =============================================
@@ -1599,7 +1430,9 @@
                     const data = doc.data();
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div><div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div><div style="font-size:12px; color:var(--tg-hint);">${data.userId} • ${data.number}</div><div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div><div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div>
+                            <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.number}</div>
+                            <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; align-items:center;">
                                 <div style="font-weight:bold; color:#ffc107;">${data.amount} Taka</div>
                                 <button onclick="approveWithdraw('${doc.id}','${data.userId}',${data.amount})" class="btn-sm" style="background:#28a745; color:white;">✅</button>
@@ -1615,7 +1448,7 @@
         async function approveWithdraw(wdId, userId, amount) {
             try {
                 await db.collection('withdrawals').doc(wdId).update({ status: 'approved' });
-                sendTelegram(userId, `✅ Withdraw Approved: ${amount} Taka`);
+                sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka\n✅ Status: Approved`);
                 showToast('✅ Approved!', 'success');
                 loadWithdrawRequests();
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
@@ -1625,7 +1458,7 @@
             try {
                 await db.collection('withdrawals').doc(wdId).update({ status: 'rejected' });
                 await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
-                sendTelegram(userId, `❌ Withdraw Rejected: ${amount} Taka refunded`);
+                sendTelegramMessage(userId, `❌ <b>Withdraw Rejected</b>\n\n💰 ${amount} Taka refunded`);
                 showToast('✅ Rejected, refunded', 'success');
                 loadWithdrawRequests();
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
@@ -1651,84 +1484,125 @@
             } catch (e) { console.error(e); }
         }
 
+        // =============================================
+        // SEND REPORT (Admin) - Full System
+        // =============================================
         async function sendReport() {
             const category = document.getElementById('reportCategorySelect').value;
             const idsText = document.getElementById('reportIdsInput').value.trim();
-            
-            if (!idsText) { showToast('❌ Enter IDs', 'error'); return; }
-            
-            const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
-            if (ids.length === 0) { showToast('❌ No valid IDs', 'error'); return; }
+            const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
 
-            showToast(`📤 Sending report to ${ids.length} users...`, 'info');
+            showToast('📤 Processing report...', 'info');
 
             try {
-                let query = db.collection('users');
-                if (category) {
-                    // Get users who submitted in this category
+                let targetUsers = [];
+
+                if (idsText) {
+                    // Specific users
+                    const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
+                    for (const id of ids) {
+                        const doc = await db.collection('users').doc(id).get();
+                        if (doc.exists) targetUsers.push({ id, ...doc.data() });
+                    }
+                } else if (category) {
+                    // All users in category
                     const subs = await db.collection('submissions').where('categoryId', '==', category).get();
                     const userIds = new Set();
                     subs.forEach(d => userIds.add(d.data().userId));
-                    // Filter users
-                    const allUsers = await db.collection('users').get();
-                    const users = [];
-                    allUsers.forEach(d => {
-                        if (userIds.has(d.id)) users.push({ id: d.id, ...d.data() });
-                    });
-                    // Process each user
-                    for (const user of users) {
-                        const userSubs = await db.collection('submissions').where('userId', '==', user.id).where('categoryId', '==', category).get();
-                        let approved = 0;
-                        userSubs.forEach(d => { if (d.data().status === 'approved') approved += d.data().idCount || 0; });
-                        const earnings = approved * 5;
-                        if (earnings > 0) {
-                            await db.collection('users').doc(user.id).update({
-                                balance: firebase.firestore.FieldValue.increment(earnings)
-                            });
-                            await db.collection('transactions').add({
-                                userId: user.id,
-                                amount: earnings,
-                                reason: `Report: ${approved} IDs approved`,
-                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            sendTelegram(user.id, `📊 Report: ${approved} IDs approved\n💰 Earnings: ${earnings} Taka`);
-                        }
+                    for (const uid of userIds) {
+                        const doc = await db.collection('users').doc(uid).get();
+                        if (doc.exists) targetUsers.push({ id: uid, ...doc.data() });
                     }
-                    showToast(`✅ Report sent to ${users.length} users!`, 'success');
                 } else {
-                    // Send to specific IDs
-                    for (const id of ids) {
-                        const doc = await db.collection('users').doc(id).get();
-                        if (doc.exists) {
-                            const subs = await db.collection('submissions').where('userId', '==', id).where('status', '==', 'approved').get();
-                            let total = 0;
-                            subs.forEach(d => total += d.data().idCount || 0);
-                            const earnings = total * 5;
-                            if (earnings > 0) {
-                                await db.collection('users').doc(id).update({
-                                    balance: firebase.firestore.FieldValue.increment(earnings)
-                                });
-                                await db.collection('transactions').add({
-                                    userId: id,
-                                    amount: earnings,
-                                    reason: `Report: ${total} IDs approved`,
-                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                                sendTelegram(id, `📊 Report: ${total} IDs approved\n💰 Earnings: ${earnings} Taka`);
+                    showToast('❌ Enter IDs or select category', 'error');
+                    return;
+                }
+
+                if (targetUsers.length === 0) {
+                    showToast('❌ No users found', 'error');
+                    return;
+                }
+
+                let totalEarnings = 0;
+                let totalApproved = 0;
+
+                for (const user of targetUsers) {
+                    // Get approved submissions for this user
+                    let query = db.collection('submissions')
+                        .where('userId', '==', user.id)
+                        .where('status', '==', 'approved');
+                    
+                    if (category) {
+                        query = query.where('categoryId', '==', category);
+                    }
+
+                    const subs = await query.get();
+                    let approvedCount = 0;
+                    const approvedIds = [];
+                    const rejectedIds = [];
+
+                    subs.forEach(doc => {
+                        const data = doc.data();
+                        approvedCount += data.idCount || 0;
+                        for (let i = 0; i < (data.idCount || 0); i++) {
+                            approvedIds.push(`ID_${user.id}_${i+1}`);
+                        }
+                    });
+
+                    if (approvedCount === 0) continue;
+
+                    // Check commission
+                    let commissionBonus = 0;
+                    if (category) {
+                        const commissionDoc = await db.collection('categoryCommission').doc(category).get();
+                        if (commissionDoc.exists) {
+                            const rules = commissionDoc.data().rules || {};
+                            const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
+                            for (const key of sortedKeys) {
+                                if (approvedCount >= parseInt(key)) {
+                                    commissionBonus = rules[key] * approvedCount;
+                                    break;
+                                }
                             }
                         }
                     }
-                    showToast(`✅ Report sent to ${ids.length} users!`, 'success');
+
+                    const earnings = approvedCount * ratePerId;
+                    const total = earnings + commissionBonus;
+
+                    if (total > 0) {
+                        await db.collection('users').doc(user.id).update({
+                            balance: firebase.firestore.FieldValue.increment(total)
+                        });
+                        await db.collection('transactions').add({
+                            userId: user.id,
+                            amount: total,
+                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        totalEarnings += total;
+                        totalApproved += approvedCount;
+
+                        // Send Excel report to user
+                        await sendReportToUser(user.id, category, approvedCount, ratePerId, commissionBonus, total);
+                    }
                 }
+
+                showToast(`✅ Report sent to ${targetUsers.length} users! Total: ${totalApproved} IDs, ${totalEarnings} Taka`, 'success');
                 loadUserData();
                 loadBalanceStats();
                 document.getElementById('reportIdsInput').value = '';
+
             } catch (e) {
                 console.error(e);
                 showToast('❌ Error sending report', 'error');
             }
         }
 
+        // =============================================
+        // DOWNLOAD REPORT
+        // =============================================
         async function downloadReport() {
             const date = document.getElementById('reportDate').value;
             const category = document.getElementById('reportCategoryDownload').value;
@@ -1747,22 +1621,29 @@
                 const snapshot = await query.get();
                 if (snapshot.empty) { showToast('❌ No data', 'error'); return; }
 
-                let csv = 'User ID,File Name,ID Count,Status,Category,Date\n';
-                let total = 0;
+                let csv = 'User ID,User Name,File Name,ID Count,Status,Category,Date,Earnings\n';
+                let totalIds = 0;
+                let totalEarnings = 0;
+                const ratePerId = 5;
+
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    csv += `${data.userId},${data.fileName},${data.idCount || 0},${data.status},${data.categoryId || ''},${new Date(data.timestamp?.toDate()).toLocaleDateString()}\n`;
-                    total += data.idCount || 0;
+                    const earnings = (data.idCount || 0) * ratePerId;
+                    totalIds += data.idCount || 0;
+                    totalEarnings += earnings;
+                    csv += `${data.userId},${data.userName || 'User'},${data.fileName},${data.idCount || 0},${data.status},${data.categoryName || ''},${new Date(data.timestamp?.toDate()).toLocaleDateString()},${earnings}\n`;
                 });
+
+                csv += `\nTOTAL,,,${totalIds},,,,${totalEarnings}`;
 
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `report_${date || 'all'}_${total}_ids.csv`;
+                a.download = `report_${date || 'all'}_${totalIds}_ids.csv`;
                 a.click();
                 URL.revokeObjectURL(url);
-                showToast(`✅ Report downloaded! Total: ${total} IDs`, 'success');
+                showToast(`✅ Report downloaded! Total: ${totalIds} IDs, ${totalEarnings} Taka`, 'success');
             } catch (e) { console.error(e); showToast('❌ Error', 'error'); }
         }
 
@@ -1887,7 +1768,7 @@
         async function downloadBackup() {
             showToast('💾 Creating backup...', 'info');
             try {
-                const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats'];
+                const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats', 'categoryCommission'];
                 const backup = {};
                 for (const c of collections) {
                     const snapshot = await db.collection(c).get();
@@ -1938,6 +1819,7 @@
             if (page === 'adminWithdraw') loadWithdrawRequests();
             if (page === 'adminBalance') loadBalanceStats();
             if (page === 'adminCategories') loadAdminCategories();
+            if (page === 'adminCommission') { loadCommissionCategories(); loadCommissionRules(); }
             if (page === 'adminReport') loadReportCategories();
         }
 
