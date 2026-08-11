@@ -7,7 +7,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
@@ -137,7 +137,6 @@
     </style>
 </head>
 <body>
-    <!-- Connection Status -->
     <div id="connectionStatus" class="connection-status online">✅ Connected to Firebase</div>
 
     <!-- ========== HOME ========== -->
@@ -458,7 +457,7 @@
 
     <script>
         // =============================================
-        // FIREBASE CONFIG
+        // FIREBASE CONFIG - Realtime Database
         // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
@@ -471,49 +470,10 @@
             measurementId: "G-09Q5HBQQS4"
         };
 
-        // Initialize Firebase with error handling
-        let db, storage;
-
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            storage = firebase.storage();
-
-            // Enable offline persistence
-            db.enablePersistence()
-                .then(() => {
-                    console.log('🔥 Firebase offline persistence enabled');
-                    updateConnectionStatus(true);
-                })
-                .catch((err) => {
-                    console.warn('⚠️ Firebase persistence error:', err);
-                    updateConnectionStatus(true);
-                });
-
-            // Connection status listener
-            db.collection('stats').doc('summary').onSnapshot(
-                () => updateConnectionStatus(true),
-                (error) => {
-                    console.error('🔥 Firebase connection error:', error);
-                    updateConnectionStatus(false);
-                }
-            );
-
-        } catch (error) {
-            console.error('🔥 Firebase init error:', error);
-            showToast('❌ Firebase initialization failed!', 'error');
-        }
-
-        function updateConnectionStatus(online) {
-            const el = document.getElementById('connectionStatus');
-            if (online) {
-                el.className = 'connection-status online';
-                el.textContent = '✅ Connected to Firebase';
-            } else {
-                el.className = 'connection-status offline';
-                el.textContent = '❌ Offline - Check your internet connection';
-            }
-        }
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
 
         // =============================================
         // TELEGRAM
@@ -529,10 +489,76 @@
         const ADMIN_CHAT_ID = '6140196943';
 
         // =============================================
+        // DATABASE HELPERS
+        // =============================================
+        function getRef(path) {
+            return db.ref(path);
+        }
+
+        function getData(path) {
+            return new Promise((resolve, reject) => {
+                db.ref(path).once('value', (snapshot) => {
+                    resolve(snapshot.val());
+                }, (error) => {
+                    reject(error);
+                });
+            });
+        }
+
+        function setData(path, data) {
+            return new Promise((resolve, reject) => {
+                db.ref(path).set(data, (error) => {
+                    if (error) reject(error);
+                    else resolve();
+                });
+            });
+        }
+
+        function pushData(path, data) {
+            return new Promise((resolve, reject) => {
+                const ref = db.ref(path).push();
+                ref.set(data, (error) => {
+                    if (error) reject(error);
+                    else resolve(ref.key);
+                });
+            });
+        }
+
+        function updateData(path, data) {
+            return new Promise((resolve, reject) => {
+                db.ref(path).update(data, (error) => {
+                    if (error) reject(error);
+                    else resolve();
+                });
+            });
+        }
+
+        function deleteData(path) {
+            return new Promise((resolve, reject) => {
+                db.ref(path).remove((error) => {
+                    if (error) reject(error);
+                    else resolve();
+                });
+            });
+        }
+
+        // =============================================
         // INIT
         // =============================================
         function init() {
             try {
+                // Check connection
+                db.ref('.info/connected').on('value', (snap) => {
+                    const status = document.getElementById('connectionStatus');
+                    if (snap.val() === true) {
+                        status.className = 'connection-status online';
+                        status.textContent = '✅ Connected to Firebase';
+                    } else {
+                        status.className = 'connection-status offline';
+                        status.textContent = '❌ Offline - Check your internet';
+                    }
+                });
+
                 if (isAdmin) {
                     document.getElementById('adminBadge').style.display = 'inline';
                     document.getElementById('adminMenu').style.display = 'block';
@@ -560,7 +586,7 @@
                 document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
             } catch (error) {
                 console.error('Init error:', error);
-                showToast('❌ Initialization error: ' + error.message, 'error');
+                showToast('❌ Error: ' + error.message, 'error');
             }
         }
 
@@ -569,16 +595,10 @@
         // =============================================
         async function initUser() {
             try {
-                if (!db) {
-                    showToast('❌ Firebase not initialized!', 'error');
-                    return;
-                }
-
-                const userRef = db.collection('users').doc(currentUserId);
-                const doc = await userRef.get();
-
-                if (!doc.exists) {
-                    await userRef.set({
+                const userData = await getData(`users/${currentUserId}`);
+                
+                if (!userData) {
+                    const newUser = {
                         userId: currentUserId,
                         firstName: tgUser.first_name || 'User',
                         username: tgUser.username || '',
@@ -589,18 +609,18 @@
                         referralCode: generateRefCode(),
                         referralCount: 0,
                         referralEarnings: 0,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                        createdAt: new Date().toISOString()
+                    };
+                    await setData(`users/${currentUserId}`, newUser);
                     
                     // Update stats
-                    const statsRef = db.collection('stats').doc('summary');
-                    const statsDoc = await statsRef.get();
-                    if (statsDoc.exists) {
-                        await statsRef.update({
-                            totalUsers: firebase.firestore.FieldValue.increment(1)
+                    const stats = await getData('stats/summary');
+                    if (stats) {
+                        await updateData('stats/summary', {
+                            totalUsers: (stats.totalUsers || 0) + 1
                         });
                     } else {
-                        await statsRef.set({
+                        await setData('stats/summary', {
                             totalUsers: 1,
                             totalBalance: 0,
                             totalSubmissions: 0,
@@ -647,10 +667,8 @@
         // =============================================
         async function loadUserData() {
             try {
-                if (!db) return;
-                const doc = await db.collection('users').doc(currentUserId).get();
-                if (doc.exists) {
-                    const data = doc.data();
+                const data = await getData(`users/${currentUserId}`);
+                if (data) {
                     document.getElementById('userBalance').textContent = data.balance?.toFixed(2) || '0.00';
                     document.getElementById('statSubmits').textContent = data.totalSubmits || 0;
                     document.getElementById('statApproved').textContent = data.approved || 0;
@@ -668,39 +686,39 @@
         }
 
         // Real-time balance
-        if (currentUserId && db) {
-            db.collection('users').doc(currentUserId).onSnapshot(doc => {
-                if (doc.exists) {
-                    document.getElementById('userBalance').textContent = doc.data().balance?.toFixed(2) || '0.00';
-                }
-            }, (error) => {
-                console.error('Balance listener error:', error);
-            });
-        }
+        db.ref(`users/${currentUserId}/balance`).on('value', (snapshot) => {
+            document.getElementById('userBalance').textContent = snapshot.val()?.toFixed(2) || '0.00';
+        });
 
         // =============================================
         // LOAD DASHBOARD
         // =============================================
         async function loadDashboard() {
             try {
-                if (!db) return;
-                const subs = await db.collection('submissions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(5)
-                    .get();
-                    
+                const submissions = await getData('submissions');
                 const container = document.getElementById('recentSubmissions');
-                if (subs.empty) {
+                
+                if (!submissions) {
                     container.innerHTML = `<div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">No submissions</div>`;
                     return;
                 }
+
+                // Filter user's submissions
+                const userSubs = Object.entries(submissions)
+                    .filter(([key, val]) => val.userId === currentUserId)
+                    .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                    .slice(0, 5);
+
+                if (userSubs.length === 0) {
+                    container.innerHTML = `<div style="background:var(--tg-secondary); border-radius:12px; padding:20px; text-align:center; color:var(--tg-hint);">No submissions</div>`;
+                    return;
+                }
+
                 let html = '<div style="margin-top:16px;">';
-                subs.forEach(d => {
-                    const data = d.data();
+                userSubs.forEach(([key, data]) => {
                     html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div><div style="font-weight:600; font-size:14px;">${data.fileName}</div>
-                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleDateString()}</div></div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div></div>
                         <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span>
                     </div>`;
                 });
@@ -714,22 +732,22 @@
         // =============================================
         async function loadCategories() {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('categories').get();
+                const categories = await getData('categories');
                 const grid = document.getElementById('categoryGrid');
-                if (snapshot.empty) {
+                
+                if (!categories) {
                     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--tg-hint); padding:20px;">No categories available</div>';
                     return;
                 }
+
                 grid.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const cat = doc.data();
-                    const statusClass = cat.active ? 'online' : 'offline';
+                Object.entries(categories).forEach(([key, cat]) => {
+                    const statusClass = cat.active !== false ? 'online' : 'offline';
                     grid.innerHTML += `
-                        <div class="category-item" onclick="selectCategory('${doc.id}')" data-id="${doc.id}">
+                        <div class="category-item" onclick="selectCategory('${key}')" data-id="${key}">
                             <div class="cat-icon">${cat.icon || '📁'}</div>
                             <div class="cat-name">${cat.name}</div>
-                            <div class="cat-status ${statusClass}">${cat.active ? '🟢 Online' : '🔴 Offline'}</div>
+                            <div class="cat-status ${statusClass}">${cat.active !== false ? '🟢 Online' : '🔴 Offline'}</div>
                         </div>
                     `;
                 });
@@ -754,21 +772,16 @@
             document.getElementById('uploadProgress').style.display = 'block';
 
             try {
-                if (!db || !storage) {
-                    showToast('❌ Firebase not connected!', 'error');
-                    return;
-                }
-
                 // Get category name
-                const catDoc = await db.collection('categories').doc(selectedCategory).get();
-                const catName = catDoc.exists ? catDoc.data().name : 'Unknown';
+                const catData = await getData(`categories/${selectedCategory}`);
+                const catName = catData ? catData.name : 'Unknown';
 
                 // Upload to Storage
                 const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${file.name}`);
                 const task = await ref.put(file);
                 const url = await task.ref.getDownloadURL();
 
-                // Save to Firestore
+                // Save to Database
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
@@ -778,27 +791,22 @@
                     categoryName: catName,
                     idCount: 0,
                     status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    timestamp: new Date().toISOString()
                 };
-                await db.collection('submissions').add(subData);
+                await pushData('submissions', subData);
 
-                await db.collection('users').doc(currentUserId).update({
-                    totalSubmits: firebase.firestore.FieldValue.increment(1)
+                // Update user stats
+                const userData = await getData(`users/${currentUserId}`);
+                await updateData(`users/${currentUserId}`, {
+                    totalSubmits: (userData.totalSubmits || 0) + 1
                 });
-                
-                const statsRef = db.collection('stats').doc('summary');
-                const statsDoc = await statsRef.get();
-                if (statsDoc.exists) {
-                    await statsRef.update({
-                        totalSubmissions: firebase.firestore.FieldValue.increment(1),
-                        todaySubmissions: firebase.firestore.FieldValue.increment(1)
-                    });
-                } else {
-                    await statsRef.set({
-                        totalUsers: 0,
-                        totalBalance: 0,
-                        totalSubmissions: 1,
-                        todaySubmissions: 1
+
+                // Update stats
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    await updateData('stats/summary', {
+                        totalSubmissions: (stats.totalSubmissions || 0) + 1,
+                        todaySubmissions: (stats.todaySubmissions || 0) + 1
                     });
                 }
 
@@ -809,8 +817,7 @@
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
                     `📁 <b>Category:</b> ${catName}\n` +
                     `📄 <b>File:</b> ${file.name}\n` +
-                    `⏳ <b>Status:</b> Pending Review\n\n` +
-                    `📌 Action Required: Please review the file.`;
+                    `⏳ <b>Status:</b> Pending Review`;
 
                 sendTelegramDocument(ADMIN_CHAT_ID, file, adminMsg);
                 showToast('✅ File uploaded! Admin notified.', 'success');
@@ -854,12 +861,11 @@
         // =============================================
         async function loadWithdrawMethods() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('withdrawMethods').get();
+                const data = await getData('settings/withdrawMethods');
                 const select = document.getElementById('withdrawMethod');
                 select.innerHTML = '<option value="">Select</option>';
-                if (doc.exists) {
-                    (doc.data().methods || []).forEach(m => {
+                if (data && data.methods) {
+                    data.methods.forEach(m => {
                         select.innerHTML += `<option value="${m.name}">${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</option>`;
                     });
                 }
@@ -889,21 +895,22 @@
             if (amount > balance) { showToast('❌ Insufficient balance', 'error'); return; }
 
             try {
-                await db.collection('withdrawals').add({
+                await pushData('withdrawals', {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
                     method, number, amount, status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    timestamp: new Date().toISOString()
                 });
-                await db.collection('users').doc(currentUserId).update({
-                    balance: firebase.firestore.FieldValue.increment(-amount)
+
+                const userData = await getData(`users/${currentUserId}`);
+                await updateData(`users/${currentUserId}`, {
+                    balance: (userData.balance || 0) - amount
                 });
-                
-                const statsRef = db.collection('stats').doc('summary');
-                const statsDoc = await statsRef.get();
-                if (statsDoc.exists) {
-                    await statsRef.update({
-                        totalBalance: firebase.firestore.FieldValue.increment(-amount)
+
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    await updateData('stats/summary', {
+                        totalBalance: (stats.totalBalance || 0) - amount
                     });
                 }
 
@@ -929,34 +936,37 @@
         // =============================================
         async function loadHistory() {
             try {
-                if (!db) return;
-                const subs = await db.collection('submissions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-                    
-                const txs = await db.collection('transactions')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-                    
+                const submissions = await getData('submissions');
+                const transactions = await getData('transactions');
                 const container = document.getElementById('historyList');
                 let html = '';
 
-                txs.forEach(d => {
-                    const data = d.data();
-                    const pos = data.amount > 0;
-                    html += `<div class="history-item"><div class="history-left"><div class="h-title">${data.reason || 'Transaction'}</div><div class="h-date">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
-                        <div class="history-amount ${pos ? 'positive' : 'negative'}">${pos ? '+' : ''}${data.amount?.toFixed(2) || '0.00'}</div></div>`;
-                });
+                // Transactions
+                if (transactions) {
+                    const userTxs = Object.entries(transactions)
+                        .filter(([key, val]) => val.userId === currentUserId)
+                        .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                        .slice(0, 50);
 
-                subs.forEach(d => {
-                    const data = d.data();
-                    html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div><div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
-                        <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
-                });
+                    userTxs.forEach(([key, data]) => {
+                        const pos = data.amount > 0;
+                        html += `<div class="history-item"><div class="history-left"><div class="h-title">${data.reason || 'Transaction'}</div><div class="h-date">${new Date(data.timestamp).toLocaleString()}</div></div>
+                            <div class="history-amount ${pos ? 'positive' : 'negative'}">${pos ? '+' : ''}${data.amount?.toFixed(2) || '0.00'}</div></div>`;
+                    });
+                }
+
+                // Submissions
+                if (submissions) {
+                    const userSubs = Object.entries(submissions)
+                        .filter(([key, val]) => val.userId === currentUserId)
+                        .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                        .slice(0, 50);
+
+                    userSubs.forEach(([key, data]) => {
+                        html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div><div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}</div></div>
+                            <span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
+                    });
+                }
 
                 container.innerHTML = html || '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No history</div>';
             } catch (e) { console.error(e); }
@@ -967,33 +977,31 @@
         // =============================================
         async function loadSupportContacts() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('support').get();
+                const data = await getData('settings/support');
                 const container = document.getElementById('supportContacts');
-                if (doc.exists) {
-                    const contacts = doc.data().contacts || [];
-                    container.innerHTML = contacts.length ? contacts.map(s => `<div><a href="https://t.me/${s.username}" style="color:var(--tg-link);">📞 ${s.name}</a></div>`).join('') : '<div style="color:var(--tg-hint);">No contacts</div>';
+                if (data && data.contacts) {
+                    container.innerHTML = data.contacts.map(s => `<div><a href="https://t.me/${s.username}" style="color:var(--tg-link);">📞 ${s.name}</a></div>`).join('');
+                } else {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No contacts</div>';
                 }
             } catch (e) { console.error(e); }
         }
 
         async function loadPriceRules() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('priceRules').get();
-                document.getElementById('priceRules').innerHTML = doc.exists ? `<div style="white-space:pre-wrap;">${doc.data().rules || 'No rules'}</div>` : '<div style="color:var(--tg-hint);">No rules</div>';
-                document.getElementById('priceRulesInput').value = doc.exists ? doc.data().rules || '' : '';
+                const data = await getData('settings/priceRules');
+                document.getElementById('priceRules').innerHTML = data && data.rules ? `<div style="white-space:pre-wrap;">${data.rules}</div>` : '<div style="color:var(--tg-hint);">No rules</div>';
+                document.getElementById('priceRulesInput').value = data && data.rules ? data.rules : '';
             } catch (e) { console.error(e); }
         }
 
         async function loadTutorialVideo() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('tutorial').get();
+                const data = await getData('settings/tutorial');
                 const container = document.getElementById('howToUseVideo');
-                if (doc.exists && doc.data().videoUrl) {
-                    container.innerHTML = `<video controls style="width:100%; border-radius:10px; max-height:300px;"><source src="${doc.data().videoUrl}"></video>`;
-                    document.getElementById('tutorialVideoUrl').value = doc.data().videoUrl || '';
+                if (data && data.videoUrl) {
+                    container.innerHTML = `<video controls style="width:100%; border-radius:10px; max-height:300px;"><source src="${data.videoUrl}"></video>`;
+                    document.getElementById('tutorialVideoUrl').value = data.videoUrl || '';
                 } else {
                     container.innerHTML = '<div style="color:var(--tg-hint);">No video</div>';
                 }
@@ -1004,23 +1012,24 @@
         // ADMIN: CATEGORIES
         // =============================================
         async function loadAdminCategories() {
-            if (!isAdmin || !db) return;
+            if (!isAdmin) return;
             try {
-                const snapshot = await db.collection('categories').get();
+                const categories = await getData('categories');
                 const container = document.getElementById('adminCategoryList');
-                if (snapshot.empty) {
+                
+                if (!categories) {
                     container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No categories</div>';
                     return;
                 }
+
                 let html = '';
-                snapshot.forEach(doc => {
-                    const cat = doc.data();
+                Object.entries(categories).forEach(([key, cat]) => {
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
-                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active ? '🟢 Active' : '🔴 Inactive'}</div></div>
+                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${cat.active !== false ? '🟢 Active' : '🔴 Inactive'}</div></div>
                         <div style="display:flex; gap:4px;">
-                            <button onclick="editCategory('${doc.id}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
-                            <button onclick="deleteCategory('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
+                            <button onclick="editCategory('${key}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
+                            <button onclick="deleteCategory('${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                         </div>
                     </div>`;
                 });
@@ -1032,10 +1041,10 @@
             editingCategoryId = catId;
             document.getElementById('categoryModalTitle').textContent = catId ? '✏️ Edit Category' : '📁 Add Category';
             document.getElementById('categorySubmitBtn').textContent = catId ? '💾 Update' : '💾 Save';
+            
             if (catId) {
-                db.collection('categories').doc(catId).get().then(doc => {
-                    if (doc.exists) {
-                        const data = doc.data();
+                getData(`categories/${catId}`).then(data => {
+                    if (data) {
                         document.getElementById('categoryName').value = data.name || '';
                         document.getElementById('categoryIcon').value = data.icon || '';
                         document.getElementById('categoryDetails').value = data.details || '';
@@ -1061,14 +1070,13 @@
             if (!name) { showToast('❌ Enter name', 'error'); return; }
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                
                 const data = { name, icon, details, active };
                 if (editingCategoryId) {
-                    await db.collection('categories').doc(editingCategoryId).update(data);
+                    await setData(`categories/${editingCategoryId}`, data);
                     showToast('✅ Updated!', 'success');
                 } else {
-                    await db.collection('categories').add(data);
+                    const newKey = db.ref('categories').push().key;
+                    await setData(`categories/${newKey}`, data);
                     showToast('✅ Added!', 'success');
                 }
                 closeModal('categoryModal');
@@ -1085,8 +1093,7 @@
         async function deleteCategory(catId) {
             if (!confirm('Delete this category?')) return;
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                await db.collection('categories').doc(catId).delete();
+                await deleteData(`categories/${catId}`);
                 showToast('✅ Deleted!', 'success');
                 await loadAdminCategories();
                 await loadCategories();
@@ -1103,14 +1110,14 @@
         // =============================================
         async function loadCommissionCategories() {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('categories').get();
+                const categories = await getData('categories');
                 const select = document.getElementById('commissionCategorySelect');
                 select.innerHTML = '<option value="">Select Category</option>';
-                snapshot.forEach(doc => {
-                    const cat = doc.data();
-                    select.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
-                });
+                if (categories) {
+                    Object.entries(categories).forEach(([key, cat]) => {
+                        select.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                }
             } catch (e) { console.error(e); }
         }
 
@@ -1122,16 +1129,15 @@
             }
 
             try {
-                if (!db) return;
-                const doc = await db.collection('categoryCommission').doc(catId).get();
+                const data = await getData(`categoryCommission/${catId}`);
                 const container = document.getElementById('commissionRulesList');
                 
-                if (!doc.exists || !doc.data().rules || Object.keys(doc.data().rules).length === 0) {
+                if (!data || !data.rules || Object.keys(data.rules).length === 0) {
                     container.innerHTML = '<div style="color:var(--tg-hint);">No commission rules set</div>';
                     return;
                 }
 
-                const rules = doc.data().rules;
+                const rules = data.rules;
                 let html = '';
                 const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(a) - parseInt(b));
                 sortedKeys.forEach(key => {
@@ -1157,12 +1163,10 @@
             if (!bonus || bonus < 0) { showToast('❌ Valid bonus', 'error'); return; }
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('categoryCommission').doc(catId).get();
-                let rules = doc.exists ? doc.data().rules || {} : {};
+                const data = await getData(`categoryCommission/${catId}`);
+                let rules = data && data.rules ? data.rules : {};
                 rules[String(minIds)] = bonus;
-
-                await db.collection('categoryCommission').doc(catId).set({ rules });
+                await setData(`categoryCommission/${catId}`, { rules });
                 showToast('✅ Commission rule added!', 'success');
                 await loadCommissionRules();
                 document.getElementById('commissionMinIds').value = '';
@@ -1176,13 +1180,13 @@
         async function deleteCommissionRule(catId, key) {
             if (!confirm('Delete this rule?')) return;
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('categoryCommission').doc(catId).get();
-                let rules = doc.exists ? doc.data().rules || {} : {};
-                delete rules[key];
-                await db.collection('categoryCommission').doc(catId).set({ rules });
-                showToast('✅ Rule deleted!', 'success');
-                await loadCommissionRules();
+                const data = await getData(`categoryCommission/${catId}`);
+                if (data && data.rules) {
+                    delete data.rules[key];
+                    await setData(`categoryCommission/${catId}`, data);
+                    showToast('✅ Rule deleted!', 'success');
+                    await loadCommissionRules();
+                }
             } catch (e) { 
                 console.error('Delete commission error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1194,13 +1198,17 @@
         // =============================================
         async function loadAllUsers() {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(50).get();
+                const users = await getData('users');
                 const container = document.getElementById('userList');
-                if (snapshot.empty) { container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>'; return; }
+                
+                if (!users) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No users</div>';
+                    return;
+                }
+
                 let html = '';
-                snapshot.forEach(doc => {
-                    const u = doc.data();
+                const sorted = Object.entries(users).sort((a, b) => (b[1].createdAt || '').localeCompare(a[1].createdAt || ''));
+                sorted.slice(0, 50).forEach(([key, u]) => {
                     html += `<div class="user-item">
                         <div><div class="user-name">${u.firstName || 'User'}</div><div style="font-size:12px; color:var(--tg-hint);">${u.userId}</div></div>
                         <div style="text-align:right;"><div style="font-weight:600;">${u.balance?.toFixed(2) || '0.00'} Taka</div><div style="font-size:11px; color:var(--tg-hint);">📝 ${u.totalSubmits || 0}</div></div>
@@ -1221,20 +1229,32 @@
 
         async function viewUser(userId) {
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('users').doc(userId).get();
-                if (!doc.exists) { showToast('❌ Not found', 'error'); return; }
-                const u = doc.data();
-                const subs = await db.collection('submissions').where('userId', '==', userId).orderBy('timestamp', 'desc').limit(10).get();
-                let html = `<div style="text-align:center; margin-bottom:16px;"><div style="font-size:48px;">👤</div><div style="font-weight:600; font-size:18px;">${u.firstName || 'User'}</div><div style="color:var(--tg-hint);">${u.userId}</div></div>
+                const user = await getData(`users/${userId}`);
+                if (!user) { showToast('❌ Not found', 'error'); return; }
+
+                const submissions = await getData('submissions');
+                let html = `<div style="text-align:center; margin-bottom:16px;"><div style="font-size:48px;">👤</div><div style="font-weight:600; font-size:18px;">${user.firstName || 'User'}</div><div style="color:var(--tg-hint);">${user.userId}</div></div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${u.balance?.toFixed(2) || '0.00'}</div><div style="font-size:11px; color:var(--tg-hint);">Balance</div></div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${u.totalSubmits || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Submits</div></div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#28a745;">${u.approved || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Approved</div></div>
-                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#dc3545;">${u.rejected || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Rejected</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${user.balance?.toFixed(2) || '0.00'}</div><div style="font-size:11px; color:var(--tg-hint);">Balance</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px;">${user.totalSubmits || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Submits</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#28a745;">${user.approved || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Approved</div></div>
+                        <div style="background:var(--tg-secondary); padding:12px; border-radius:10px; text-align:center;"><div style="font-weight:bold; font-size:18px; color:#dc3545;">${user.rejected || 0}</div><div style="font-size:11px; color:var(--tg-hint);">Rejected</div></div>
                     </div><div><div style="font-weight:600; margin-bottom:8px;">📄 Recent Submissions</div>`;
-                if (subs.empty) html += '<div style="color:var(--tg-hint);">None</div>';
-                else subs.forEach(d => { const data = d.data(); html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}</span><span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`; });
+
+                if (submissions) {
+                    const userSubs = Object.entries(submissions)
+                        .filter(([key, val]) => val.userId === userId)
+                        .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                        .slice(0, 10);
+
+                    if (userSubs.length === 0) {
+                        html += '<div style="color:var(--tg-hint);">None</div>';
+                    } else {
+                        userSubs.forEach(([key, data]) => {
+                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}</span><span class="status-badge status-${data.status || 'pending'}">${data.status || 'pending'}</span></div>`;
+                        });
+                    }
+                }
                 html += '</div>';
                 document.getElementById('userDetailContent').innerHTML = html;
                 document.getElementById('userDetailModal').classList.add('active');
@@ -1244,12 +1264,12 @@
         async function deleteUser(userId) {
             if (!confirm(`Delete ${userId}?`)) return;
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                await db.collection('users').doc(userId).delete();
-                const statsRef = db.collection('stats').doc('summary');
-                const statsDoc = await statsRef.get();
-                if (statsDoc.exists) {
-                    await statsRef.update({ totalUsers: firebase.firestore.FieldValue.increment(-1) });
+                await deleteData(`users/${userId}`);
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    await updateData('stats/summary', {
+                        totalUsers: Math.max(0, (stats.totalUsers || 0) - 1)
+                    });
                 }
                 showToast('✅ Deleted!', 'success');
                 await loadAllUsers();
@@ -1267,31 +1287,35 @@
             if (isNaN(amount) || amount === 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('users').doc(userId).get();
-                if (!doc.exists) { showToast('❌ User not found', 'error'); return; }
-                await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
-                await db.collection('transactions').add({ 
-                    userId, amount, reason, 
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                const user = await getData(`users/${userId}`);
+                if (!user) { showToast('❌ User not found', 'error'); return; }
+
+                await updateData(`users/${userId}`, {
+                    balance: (user.balance || 0) + amount
                 });
-                
-                const statsRef = db.collection('stats').doc('summary');
-                const statsDoc = await statsRef.get();
-                if (statsDoc.exists) {
-                    await statsRef.update({ totalBalance: firebase.firestore.FieldValue.increment(amount) });
+
+                await pushData('transactions', {
+                    userId, amount, reason,
+                    timestamp: new Date().toISOString()
+                });
+
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    await updateData('stats/summary', {
+                        totalBalance: (stats.totalBalance || 0) + amount
+                    });
                 }
-                
+
                 showToast(`✅ ${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} Taka`, 'success');
                 await loadBalanceStats();
                 await loadUserData();
-                
+
                 sendTelegramMessage(userId,
                     `💵 <b>Balance Updated</b>\n\n` +
                     `${amount > 0 ? '➕' : '➖'} ${Math.abs(amount)} Taka\n` +
                     `📝 ${reason}`
                 );
-                
+
                 document.getElementById('balanceAmount').value = '';
                 document.getElementById('balanceReason').value = '';
             } catch (e) { 
@@ -1302,11 +1326,10 @@
 
         async function loadBalanceStats() {
             try {
-                if (!db) return;
-                const doc = await db.collection('stats').doc('summary').get();
-                if (doc.exists) {
-                    document.getElementById('totalBalance').textContent = doc.data().totalBalance?.toFixed(2) || '0.00';
-                    document.getElementById('totalUsers').textContent = doc.data().totalUsers || 0;
+                const stats = await getData('stats/summary');
+                if (stats) {
+                    document.getElementById('totalBalance').textContent = stats.totalBalance?.toFixed(2) || '0.00';
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
                 }
             } catch (e) { console.error(e); }
         }
@@ -1323,34 +1346,39 @@
 
         async function loadFileList(status = 'pending') {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('submissions')
-                    .where('status', '==', status)
-                    .orderBy('timestamp', 'desc')
-                    .limit(50)
-                    .get();
-                    
+                const submissions = await getData('submissions');
                 const container = document.getElementById('adminFileList');
-                if (snapshot.empty) {
+                
+                if (!submissions) {
                     container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
                     return;
                 }
+
+                const filtered = Object.entries(submissions)
+                    .filter(([key, val]) => (val.status || 'pending') === status)
+                    .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''))
+                    .slice(0, 50);
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
+                    return;
+                }
+
                 let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                filtered.forEach(([key, data]) => {
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                             <div><div style="font-weight:600;">📄 ${data.fileName}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">📁 ${data.categoryName || 'Unknown'} • ${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div style="font-size:11px; color:var(--tg-hint);">📁 ${data.categoryName || 'Unknown'} • ${new Date(data.timestamp).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span class="status-badge status-${data.status}">${data.status}</span>
                                 ${data.status === 'pending' ? `
-                                    <button onclick="approveFile('${doc.id}')" class="btn-sm" style="background:#28a745; color:white;">✅ Approve</button>
-                                    <button onclick="rejectFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">❌ Reject</button>
+                                    <button onclick="approveFile('${key}')" class="btn-sm" style="background:#28a745; color:white;">✅ Approve</button>
+                                    <button onclick="rejectFile('${key}')" class="btn-sm" style="background:#dc3545; color:white;">❌ Reject</button>
                                 ` : ''}
                                 <button onclick="window.open('${data.fileUrl}','_blank')" class="btn-sm" style="background:var(--tg-button); color:white;">📥</button>
-                                <button onclick="deleteFile('${doc.id}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
+                                <button onclick="deleteFile('${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                             </div>
                         </div>
                     </div>`;
@@ -1360,29 +1388,33 @@
         }
 
         // =============================================
-        // APPROVE/REJECT WITH COMMISSION
+        // APPROVE/REJECT
         // =============================================
         async function approveFile(fileId) {
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('submissions').doc(fileId).get();
-                const data = doc.data();
-                await doc.ref.update({ status: 'approved' });
-                await db.collection('users').doc(data.userId).update({ approved: firebase.firestore.FieldValue.increment(1) });
+                const data = await getData(`submissions/${fileId}`);
+                if (!data) { showToast('❌ File not found', 'error'); return; }
+
+                await updateData(`submissions/${fileId}`, { status: 'approved' });
+
+                const userData = await getData(`users/${data.userId}`);
+                await updateData(`users/${data.userId}`, {
+                    approved: (userData.approved || 0) + 1
+                });
 
                 let ratePerId = 5;
-                const rateDoc = await db.collection('settings').doc('priceRules').get();
-                if (rateDoc.exists && rateDoc.data().ratePerId) {
-                    ratePerId = rateDoc.data().ratePerId;
+                const rateData = await getData('settings/priceRules');
+                if (rateData && rateData.ratePerId) {
+                    ratePerId = rateData.ratePerId;
                 }
 
                 const approvedCount = data.idCount || 0;
                 const earnings = approvedCount * ratePerId;
 
                 let commissionBonus = 0;
-                const commissionDoc = await db.collection('categoryCommission').doc(data.categoryId).get();
-                if (commissionDoc.exists) {
-                    const rules = commissionDoc.data().rules || {};
+                const commissionData = await getData(`categoryCommission/${data.categoryId}`);
+                if (commissionData && commissionData.rules) {
+                    const rules = commissionData.rules;
                     const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
                     for (const key of sortedKeys) {
                         if (approvedCount >= parseInt(key)) {
@@ -1395,14 +1427,15 @@
                 const totalEarnings = earnings + commissionBonus;
 
                 if (totalEarnings > 0) {
-                    await db.collection('users').doc(data.userId).update({
-                        balance: firebase.firestore.FieldValue.increment(totalEarnings)
+                    await updateData(`users/${data.userId}`, {
+                        balance: (userData.balance || 0) + totalEarnings
                     });
-                    await db.collection('transactions').add({
+
+                    await pushData('transactions', {
                         userId: data.userId,
                         amount: totalEarnings,
                         reason: `Approved ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: new Date().toISOString()
                     });
 
                     await sendReportToUser(data.userId, data.categoryId, approvedCount, ratePerId, commissionBonus, totalEarnings);
@@ -1413,8 +1446,7 @@
                         `✅ ${approvedCount} IDs\n` +
                         `💰 ${ratePerId} Taka/ID\n` +
                         `🎯 Commission: ${commissionBonus} Taka\n` +
-                        `💵 Total: ${totalEarnings} Taka\n\n` +
-                        `📊 Check your balance in the app.`
+                        `💵 Total: ${totalEarnings} Taka`
                     );
                 }
 
@@ -1430,19 +1462,22 @@
 
         async function rejectFile(fileId) {
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('submissions').doc(fileId).get();
-                const data = doc.data();
-                await doc.ref.update({ status: 'rejected' });
-                await db.collection('users').doc(data.userId).update({ rejected: firebase.firestore.FieldValue.increment(1) });
+                const data = await getData(`submissions/${fileId}`);
+                if (!data) { showToast('❌ File not found', 'error'); return; }
+
+                await updateData(`submissions/${fileId}`, { status: 'rejected' });
+
+                const userData = await getData(`users/${data.userId}`);
+                await updateData(`users/${data.userId}`, {
+                    rejected: (userData.rejected || 0) + 1
+                });
 
                 await sendRejectionReport(data.userId, data.fileName);
 
                 sendTelegramMessage(data.userId,
                     `❌ <b>IDs Rejected</b>\n\n` +
                     `📄 ${data.fileName}\n` +
-                    `❌ Status: Rejected\n\n` +
-                    `Please check your file format and resubmit.`
+                    `❌ Status: Rejected`
                 );
 
                 showToast('✅ Rejected!', 'success');
@@ -1458,23 +1493,21 @@
         // =============================================
         async function sendReportToUser(userId, categoryId, approvedCount, ratePerId, commission, totalEarnings) {
             try {
-                const subs = await db.collection('submissions')
-                    .where('userId', '==', userId)
-                    .where('categoryId', '==', categoryId)
-                    .where('status', '==', 'approved')
-                    .get();
-
+                const submissions = await getData('submissions');
                 const approvedIds = [];
                 const rejectedIds = [];
 
-                subs.forEach(doc => {
-                    const data = doc.data();
-                    if (data.idCount) {
-                        for (let i = 0; i < data.idCount; i++) {
-                            approvedIds.push(`ID_${data.userId}_${i+1}`);
+                if (submissions) {
+                    Object.entries(submissions).forEach(([key, data]) => {
+                        if (data.userId === userId && data.categoryId === categoryId && data.status === 'approved') {
+                            if (data.idCount) {
+                                for (let i = 0; i < data.idCount; i++) {
+                                    approvedIds.push(`ID_${data.userId}_${i+1}`);
+                                }
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 // Approved Excel
                 const wbApproved = XLSX.utils.book_new();
@@ -1515,8 +1548,7 @@
                     `📊 Total Approved: ${approvedIds.length}\n` +
                     `💰 Rate: ${ratePerId} Taka/ID\n` +
                     `🎯 Commission: ${commission} Taka\n` +
-                    `💵 Total: ${totalEarnings} Taka\n\n` +
-                    `📅 ${new Date().toLocaleDateString()}`
+                    `💵 Total: ${totalEarnings} Taka`
                 );
                 formDataApproved.append('parse_mode', 'HTML');
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataApproved });
@@ -1527,8 +1559,7 @@
                 formDataRejected.append('document', rejectedBlob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
                 formDataRejected.append('caption', 
                     `❌ <b>Rejected IDs Report</b>\n\n` +
-                    `📊 Total Rejected: ${rejectedIds.length}\n\n` +
-                    `📅 ${new Date().toLocaleDateString()}`
+                    `📊 Total Rejected: ${rejectedIds.length}`
                 );
                 formDataRejected.append('parse_mode', 'HTML');
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataRejected });
@@ -1552,8 +1583,7 @@
                 formData.append('caption', 
                     `❌ <b>File Rejected</b>\n\n` +
                     `📄 ${fileName}\n` +
-                    `❌ All IDs Rejected\n\n` +
-                    `📅 ${new Date().toLocaleDateString()}`
+                    `❌ All IDs Rejected`
                 );
                 formData.append('parse_mode', 'HTML');
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
@@ -1565,29 +1595,34 @@
         // =============================================
         async function loadWithdrawRequests() {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('withdrawals')
-                    .where('status', '==', 'pending')
-                    .orderBy('timestamp', 'desc')
-                    .get();
-                    
+                const withdrawals = await getData('withdrawals');
                 const container = document.getElementById('withdrawRequests');
-                if (snapshot.empty) {
+                
+                if (!withdrawals) {
                     container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending</div>';
                     return;
                 }
+
+                const pending = Object.entries(withdrawals)
+                    .filter(([key, val]) => (val.status || 'pending') === 'pending')
+                    .sort((a, b) => (b[1].timestamp || '').localeCompare(a[1].timestamp || ''));
+
+                if (pending.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No pending</div>';
+                    return;
+                }
+
                 let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                pending.forEach(([key, data]) => {
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                             <div><div style="font-weight:600;">💳 ${data.method.toUpperCase()}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.number}</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp?.toDate()).toLocaleString()}</div></div>
+                            <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; align-items:center;">
                                 <div style="font-weight:bold; color:#ffc107;">${data.amount} Taka</div>
-                                <button onclick="approveWithdraw('${doc.id}','${data.userId}',${data.amount})" class="btn-sm" style="background:#28a745; color:white;">✅</button>
-                                <button onclick="rejectWithdraw('${doc.id}','${data.userId}',${data.amount})" class="btn-sm" style="background:#dc3545; color:white;">❌</button>
+                                <button onclick="approveWithdraw('${key}','${data.userId}',${data.amount})" class="btn-sm" style="background:#28a745; color:white;">✅</button>
+                                <button onclick="rejectWithdraw('${key}','${data.userId}',${data.amount})" class="btn-sm" style="background:#dc3545; color:white;">❌</button>
                             </div>
                         </div>
                     </div>`;
@@ -1598,8 +1633,8 @@
 
         async function approveWithdraw(wdId, userId, amount) {
             try {
-                await db.collection('withdrawals').doc(wdId).update({ status: 'approved' });
-                sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka\n✅ Status: Approved`);
+                await updateData(`withdrawals/${wdId}`, { status: 'approved' });
+                sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka`);
                 showToast('✅ Approved!', 'success');
                 await loadWithdrawRequests();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
@@ -1607,8 +1642,11 @@
 
         async function rejectWithdraw(wdId, userId, amount) {
             try {
-                await db.collection('withdrawals').doc(wdId).update({ status: 'rejected' });
-                await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
+                await updateData(`withdrawals/${wdId}`, { status: 'rejected' });
+                const userData = await getData(`users/${userId}`);
+                await updateData(`users/${userId}`, {
+                    balance: (userData.balance || 0) + amount
+                });
                 sendTelegramMessage(userId, `❌ <b>Withdraw Rejected</b>\n\n💰 ${amount} Taka refunded`);
                 showToast('✅ Rejected, refunded', 'success');
                 await loadWithdrawRequests();
@@ -1620,17 +1658,17 @@
         // =============================================
         async function loadReportCategories() {
             try {
-                if (!db) return;
-                const snapshot = await db.collection('categories').get();
+                const categories = await getData('categories');
                 const selects = ['reportCategorySelect', 'reportCategoryDownload'];
                 selects.forEach(id => {
                     const sel = document.getElementById(id);
                     if (sel) {
                         sel.innerHTML = '<option value="">All Categories</option>';
-                        snapshot.forEach(doc => {
-                            const cat = doc.data();
-                            sel.innerHTML += `<option value="${doc.id}">${cat.icon || '📁'} ${cat.name}</option>`;
-                        });
+                        if (categories) {
+                            Object.entries(categories).forEach(([key, cat]) => {
+                                sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                            });
+                        }
                     }
                 });
             } catch (e) { console.error(e); }
@@ -1647,27 +1685,31 @@
             showToast('📤 Processing report...', 'info');
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                
                 let targetUsers = [];
 
                 if (idsText) {
                     const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
                     for (const id of ids) {
-                        const doc = await db.collection('users').doc(id).get();
-                        if (doc.exists) targetUsers.push({ id, ...doc.data() });
+                        const user = await getData(`users/${id}`);
+                        if (user) targetUsers.push({ id, ...user });
                     }
                 } else if (category) {
-                    const subs = await db.collection('submissions').where('categoryId', '==', category).get();
-                    const userIds = new Set();
-                    subs.forEach(d => userIds.add(d.data().userId));
-                    for (const uid of userIds) {
-                        const doc = await db.collection('users').doc(uid).get();
-                        if (doc.exists) targetUsers.push({ id: uid, ...doc.data() });
+                    const submissions = await getData('submissions');
+                    if (submissions) {
+                        const userIds = new Set();
+                        Object.values(submissions).forEach(data => {
+                            if (data.categoryId === category) userIds.add(data.userId);
+                        });
+                        for (const uid of userIds) {
+                            const user = await getData(`users/${uid}`);
+                            if (user) targetUsers.push({ id: uid, ...user });
+                        }
                     }
                 } else {
-                    showToast('❌ Enter IDs or select category', 'error');
-                    return;
+                    const users = await getData('users');
+                    if (users) {
+                        targetUsers = Object.entries(users).map(([key, val]) => ({ id: key, ...val }));
+                    }
                 }
 
                 if (targetUsers.length === 0) {
@@ -1679,34 +1721,26 @@
                 let totalApproved = 0;
 
                 for (const user of targetUsers) {
-                    let query = db.collection('submissions')
-                        .where('userId', '==', user.id)
-                        .where('status', '==', 'approved');
-                    
-                    if (category) {
-                        query = query.where('categoryId', '==', category);
-                    }
-
-                    const subs = await query.get();
+                    const submissions = await getData('submissions');
                     let approvedCount = 0;
                     const approvedIds = [];
-                    const rejectedIds = [];
 
-                    subs.forEach(doc => {
-                        const data = doc.data();
-                        approvedCount += data.idCount || 0;
-                        for (let i = 0; i < (data.idCount || 0); i++) {
-                            approvedIds.push(`ID_${user.id}_${i+1}`);
-                        }
-                    });
+                    if (submissions) {
+                        Object.values(submissions).forEach(data => {
+                            if (data.userId === user.id && data.status === 'approved') {
+                                if (category && data.categoryId !== category) return;
+                                approvedCount += data.idCount || 0;
+                            }
+                        });
+                    }
 
                     if (approvedCount === 0) continue;
 
                     let commissionBonus = 0;
                     if (category) {
-                        const commissionDoc = await db.collection('categoryCommission').doc(category).get();
-                        if (commissionDoc.exists) {
-                            const rules = commissionDoc.data().rules || {};
+                        const commissionData = await getData(`categoryCommission/${category}`);
+                        if (commissionData && commissionData.rules) {
+                            const rules = commissionData.rules;
                             const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
                             for (const key of sortedKeys) {
                                 if (approvedCount >= parseInt(key)) {
@@ -1721,14 +1755,15 @@
                     const total = earnings + commissionBonus;
 
                     if (total > 0) {
-                        await db.collection('users').doc(user.id).update({
-                            balance: firebase.firestore.FieldValue.increment(total)
+                        await updateData(`users/${user.id}`, {
+                            balance: (user.balance || 0) + total
                         });
-                        await db.collection('transactions').add({
+
+                        await pushData('transactions', {
                             userId: user.id,
                             amount: total,
                             reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            timestamp: new Date().toISOString()
                         });
 
                         totalEarnings += total;
@@ -1759,33 +1794,25 @@
             showToast('📊 Generating report...', 'info');
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                
-                let query = db.collection('submissions')
-                    .where('status', '==', 'approved')
-                    .orderBy('timestamp', 'desc');
-                    
-                if (date) {
-                    const start = new Date(date); start.setHours(0,0,0,0);
-                    const end = new Date(date); end.setHours(23,59,59,999);
-                    query = query.where('timestamp', '>=', start).where('timestamp', '<=', end);
-                }
-                if (category) query = query.where('categoryId', '==', category);
-
-                const snapshot = await query.get();
-                if (snapshot.empty) { showToast('❌ No data', 'error'); return; }
+                const submissions = await getData('submissions');
+                if (!submissions) { showToast('❌ No data', 'error'); return; }
 
                 let csv = 'User ID,User Name,File Name,ID Count,Status,Category,Date,Earnings\n';
                 let totalIds = 0;
                 let totalEarnings = 0;
                 const ratePerId = 5;
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                Object.values(submissions).forEach(data => {
+                    if (data.status !== 'approved') return;
+                    if (category && data.categoryId !== category) return;
+                    if (date) {
+                        const subDate = new Date(data.timestamp).toISOString().split('T')[0];
+                        if (subDate !== date) return;
+                    }
                     const earnings = (data.idCount || 0) * ratePerId;
                     totalIds += data.idCount || 0;
                     totalEarnings += earnings;
-                    csv += `${data.userId},${data.userName || 'User'},${data.fileName},${data.idCount || 0},${data.status},${data.categoryName || ''},${new Date(data.timestamp?.toDate()).toLocaleDateString()},${earnings}\n`;
+                    csv += `${data.userId},${data.userName || 'User'},${data.fileName},${data.idCount || 0},${data.status},${data.categoryName || ''},${new Date(data.timestamp).toLocaleDateString()},${earnings}\n`;
                 });
 
                 csv += `\nTOTAL,,,${totalIds},,,,${totalEarnings}`;
@@ -1806,17 +1833,17 @@
         // =============================================
         async function loadWithdrawMethodsList() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('withdrawMethods').get();
+                const data = await getData('settings/withdrawMethods');
                 const container = document.getElementById('withdrawMethodsList');
-                if (doc.exists) {
-                    const methods = doc.data().methods || [];
-                    container.innerHTML = methods.length ? methods.map((m, i) =>
+                if (data && data.methods) {
+                    container.innerHTML = data.methods.map((m, i) =>
                         `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
                             <span>${m.name.toUpperCase()} (Min: ${m.minAmount} Taka)</span>
                             <button onclick="removeWithdrawMethod(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
                         </div>`
-                    ).join('') : '<div style="color:var(--tg-hint);">No methods</div>';
+                    ).join('');
+                } else {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No methods</div>';
                 }
             } catch (e) { console.error(e); }
         }
@@ -1828,12 +1855,11 @@
             if (!minAmount || minAmount <= 0) { showToast('❌ Valid amount', 'error'); return; }
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('settings').doc('withdrawMethods').get();
-                let methods = doc.exists ? doc.data().methods || [] : [];
+                const data = await getData('settings/withdrawMethods');
+                let methods = data && data.methods ? data.methods : [];
                 if (methods.find(m => m.name === name)) { showToast('❌ Exists', 'error'); return; }
                 methods.push({ name, minAmount });
-                await db.collection('settings').doc('withdrawMethods').set({ methods });
+                await setData('settings/withdrawMethods', { methods });
                 showToast('✅ Added!', 'success');
                 await loadWithdrawMethodsList();
                 await loadWithdrawMethods();
@@ -1844,22 +1870,21 @@
 
         async function removeWithdrawMethod(index) {
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('settings').doc('withdrawMethods').get();
-                let methods = doc.exists ? doc.data().methods || [] : [];
-                methods.splice(index, 1);
-                await db.collection('settings').doc('withdrawMethods').set({ methods });
-                showToast('✅ Removed!', 'success');
-                await loadWithdrawMethodsList();
-                await loadWithdrawMethods();
+                const data = await getData('settings/withdrawMethods');
+                if (data && data.methods) {
+                    data.methods.splice(index, 1);
+                    await setData('settings/withdrawMethods', data);
+                    showToast('✅ Removed!', 'success');
+                    await loadWithdrawMethodsList();
+                    await loadWithdrawMethods();
+                }
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         async function updatePriceRules() {
             const rules = document.getElementById('priceRulesInput').value.trim();
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                await db.collection('settings').doc('priceRules').set({ rules });
+                await setData('settings/priceRules', { rules });
                 showToast('✅ Rules updated!', 'success');
                 await loadPriceRules();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
@@ -1868,8 +1893,7 @@
         async function updateTutorialVideo() {
             const videoUrl = document.getElementById('tutorialVideoUrl').value.trim();
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                await db.collection('settings').doc('tutorial').set({ videoUrl });
+                await setData('settings/tutorial', { videoUrl });
                 showToast('✅ Video updated!', 'success');
                 await loadTutorialVideo();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
@@ -1877,17 +1901,17 @@
 
         async function loadSupportContactsList() {
             try {
-                if (!db) return;
-                const doc = await db.collection('settings').doc('support').get();
+                const data = await getData('settings/support');
                 const container = document.getElementById('supportContactsList');
-                if (doc.exists) {
-                    const contacts = doc.data().contacts || [];
-                    container.innerHTML = contacts.length ? contacts.map((c, i) =>
+                if (data && data.contacts) {
+                    container.innerHTML = data.contacts.map((c, i) =>
                         `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
                             <span>📞 ${c.name} (@${c.username})</span>
                             <button onclick="removeSupportContact(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
                         </div>`
-                    ).join('') : '<div style="color:var(--tg-hint);">No contacts</div>';
+                    ).join('');
+                } else {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No contacts</div>';
                 }
             } catch (e) { console.error(e); }
         }
@@ -1898,11 +1922,10 @@
             if (!name || !username) { showToast('❌ Enter all fields', 'error'); return; }
 
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('settings').doc('support').get();
-                let contacts = doc.exists ? doc.data().contacts || [] : [];
+                const data = await getData('settings/support');
+                let contacts = data && data.contacts ? data.contacts : [];
                 contacts.push({ name, username });
-                await db.collection('settings').doc('support').set({ contacts });
+                await setData('settings/support', { contacts });
                 showToast('✅ Contact added!', 'success');
                 await loadSupportContactsList();
                 await loadSupportContacts();
@@ -1913,14 +1936,14 @@
 
         async function removeSupportContact(index) {
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                const doc = await db.collection('settings').doc('support').get();
-                let contacts = doc.exists ? doc.data().contacts || [] : [];
-                contacts.splice(index, 1);
-                await db.collection('settings').doc('support').set({ contacts });
-                showToast('✅ Removed!', 'success');
-                await loadSupportContactsList();
-                await loadSupportContacts();
+                const data = await getData('settings/support');
+                if (data && data.contacts) {
+                    data.contacts.splice(index, 1);
+                    await setData('settings/support', data);
+                    showToast('✅ Removed!', 'success');
+                    await loadSupportContactsList();
+                    await loadSupportContacts();
+                }
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
@@ -1930,13 +1953,11 @@
         async function downloadBackup() {
             showToast('💾 Creating backup...', 'info');
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const collections = ['users', 'submissions', 'withdrawals', 'transactions', 'categories', 'settings', 'stats', 'categoryCommission'];
                 const backup = {};
                 for (const c of collections) {
-                    const snapshot = await db.collection(c).get();
-                    backup[c] = [];
-                    snapshot.forEach(d => backup[c].push({ id: d.id, ...d.data() }));
+                    const data = await getData(c);
+                    if (data) backup[c] = data;
                 }
                 const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -1954,13 +1975,10 @@
             if (!file) return;
             showToast('📤 Restoring...', 'info');
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
                 const text = await file.text();
                 const backup = JSON.parse(text);
                 for (const [collection, data] of Object.entries(backup)) {
-                    for (const item of data) {
-                        await db.collection(collection).doc(item.id).set(item);
-                    }
+                    await setData(collection, data);
                 }
                 showToast('✅ Restored!', 'success');
                 await loadAllUsers();
@@ -1976,8 +1994,7 @@
         async function deleteFile(fileId) {
             if (!confirm('Delete this file?')) return;
             try {
-                if (!db) { showToast('❌ Database not connected', 'error'); return; }
-                await db.collection('submissions').doc(fileId).delete();
+                await deleteData(`submissions/${fileId}`);
                 showToast('✅ File deleted!', 'success');
                 await loadFileList(currentFileTab);
             } catch (e) { 
