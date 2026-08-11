@@ -137,7 +137,7 @@
         .connection-status.online { background: #d4edda; color: #155724; }
         .connection-status.offline { background: #f8d7da; color: #721c24; }
         
-        .file-preview { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+        .file-preview { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #28a745; }
         .file-preview .file-info { display: flex; align-items: center; gap: 10px; }
         .file-preview .file-info .icon { font-size: 24px; }
         .file-preview .file-info .details .name { font-weight: 600; font-size: 14px; }
@@ -152,6 +152,9 @@
         
         .copy-number { background: none; border: none; color: var(--tg-link); cursor: pointer; font-size: 12px; }
         .copy-number:active { opacity: 0.6; }
+        
+        .confirm-buttons { display: flex; gap: 10px; margin-top: 12px; }
+        .confirm-buttons .btn-primary { flex: 1; }
     </style>
 </head>
 <body>
@@ -203,6 +206,8 @@
                 <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Files</span></div>
                 <div class="menu-item" onclick="switchPage('adminWithdraw')"><span class="menu-icon">💳</span><span class="menu-label">Withdraw</span></div>
                 <div class="menu-item" onclick="switchPage('adminReport')"><span class="menu-icon">📊</span><span class="menu-label">Report</span></div>
+                <div class="menu-item" onclick="switchPage('adminBroadcast')"><span class="menu-icon">📢</span><span class="menu-label">Broadcast</span></div>
+                <div class="menu-item" onclick="switchPage('adminPaymentHistory')"><span class="menu-icon">💰</span><span class="menu-label">Payment History</span></div>
                 <div class="menu-item" onclick="switchPage('adminSettings')"><span class="menu-icon">⚙️</span><span class="menu-label">Settings</span></div>
                 <div class="menu-item" onclick="switchPage('adminBackup')"><span class="menu-icon">💾</span><span class="menu-label">Backup</span></div>
                 <div class="menu-item" onclick="switchPage('adminDownload')"><span class="menu-icon">📥</span><span class="menu-label">Download</span></div>
@@ -228,10 +233,11 @@
             </div>
             
             <div id="filePreview" style="display:none;"></div>
-            
-            <div id="uploadProgress" class="loading" style="display:none;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading...</div></div>
-            
-            <div id="confirmButtons" style="display:none; gap:10px; margin-top:12px;">
+            <div id="uploadProgress" style="display:none; text-align:center; padding:20px;">
+                <div class="spinner"></div>
+                <div style="margin-top:8px; color:var(--tg-hint);">Uploading file to server...</div>
+            </div>
+            <div id="confirmButtons" style="display:none;" class="confirm-buttons">
                 <button class="btn-primary btn-success" onclick="uploadFile()">✅ Confirm Submit</button>
                 <button class="btn-primary btn-danger" onclick="cancelSubmit()">❌ Cancel</button>
             </div>
@@ -306,16 +312,13 @@
     <div id="pageAdminCommission" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">💰 Category Commission</h3>
-        
         <div class="card">
             <div class="card-title">📁 Select Category</div>
             <select id="commissionCategorySelect" class="form-group" style="width:100%; padding:10px 14px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);" onchange="loadCommissionRules()"></select>
         </div>
-
         <div class="card">
             <div class="card-title">📊 Commission Rules</div>
             <div id="commissionRulesList"><div style="color:var(--tg-hint);">Select a category</div></div>
-            
             <div style="margin-top:12px; border-top:1px solid var(--tg-secondary); padding-top:12px;">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <input type="number" id="commissionMinIds" placeholder="Min IDs (100, 200, 300)" style="flex:1; min-width:100px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
@@ -370,26 +373,60 @@
         <div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ========== ADMIN: REPORT ========== -->
-    <div id="pageAdminReport" class="page">
+    <!-- ========== ADMIN: BROADCAST ========== -->
+    <div id="pageAdminBroadcast" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📊 Report System</h3>
-        
+        <h3 style="margin-bottom:12px;">📢 Broadcast Message</h3>
         <div class="card">
-            <div class="card-title">📤 Send Report to Users</div>
             <div class="form-group">
-                <label>📁 Category</label>
-                <select id="reportCategorySelect"><option value="">All Categories</option></select>
+                <label>📝 Message</label>
+                <textarea id="broadcastMessage" placeholder="Enter your broadcast message..." style="min-height:100px;"></textarea>
             </div>
             <div class="form-group">
-                <label>📝 Enter IDs (one per line) - Leave empty for all users in category</label>
-                <textarea id="reportIdsInput" placeholder="Enter IDs line by line... or leave empty for all"></textarea>
+                <label>🔗 Button Text (Optional)</label>
+                <input type="text" id="broadcastButtonText" placeholder="Button text (e.g. Visit Website)">
             </div>
             <div class="form-group">
-                <label>💰 Rate per ID (Taka)</label>
-                <input type="number" id="reportRate" value="5" placeholder="Rate per ID">
+                <label>🔗 Button URL (Optional)</label>
+                <input type="url" id="broadcastButtonUrl" placeholder="Button URL (e.g. https://example.com)">
             </div>
-            <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
+            <button class="btn-primary" onclick="sendBroadcast()">📢 Send Broadcast</button>
+            <div id="broadcastProgress" style="display:none; text-align:center; padding:10px;">
+                <div class="spinner"></div>
+                <div style="margin-top:8px; color:var(--tg-hint);">Sending broadcast...</div>
+            </div>
+            <div id="broadcastResult" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ========== ADMIN: PAYMENT HISTORY ========== -->
+    <div id="pageAdminPaymentHistory" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">💰 Payment History</h3>
+        <div class="card">
+            <div class="card-title">📊 Summary</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#28a745;" id="totalApprovedAmount">0.00</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Total Approved</div>
+                </div>
+                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#ffc107;" id="totalPendingAmount">0.00</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Total Pending</div>
+                </div>
+                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#dc3545;" id="totalRejectedAmount">0.00</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Total Rejected</div>
+                </div>
+                <div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#667eea;" id="totalWithdrawAmount">0.00</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Total Withdraw</div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">📋 Payment Transactions</div>
+            <div id="paymentTransactionList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
     </div>
 
@@ -397,17 +434,9 @@
     <div id="pageAdminDownload" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📥 Download Files</h3>
-        
         <div class="card">
-            <div class="card-title">📅 Download by Date & Category</div>
-            <div class="form-group">
-                <label>📅 Select Date</label>
-                <input type="date" id="downloadDate">
-            </div>
-            <div class="form-group">
-                <label>📁 Select Category</label>
-                <select id="downloadCategorySelect"><option value="">All Categories</option></select>
-            </div>
+            <div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div>
+            <div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All Categories</option></select></div>
             <button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button>
         </div>
     </div>
@@ -416,7 +445,6 @@
     <div id="pageAdminSettings" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">⚙️ Settings</h3>
-        
         <div class="card">
             <div class="card-title">💰 Withdraw Methods</div>
             <div id="withdrawMethodsList"></div>
@@ -426,19 +454,16 @@
                 <button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title">📜 Price & Rules</div>
             <div class="form-group"><textarea id="priceRulesInput" placeholder="Enter price rules..."></textarea></div>
             <button class="btn-primary" onclick="updatePriceRules()">💾 Save Rules</button>
         </div>
-
         <div class="card">
             <div class="card-title">📹 Tutorial Video</div>
             <div class="form-group"><input type="text" id="tutorialVideoUrl" placeholder="Enter video URL"></div>
             <button class="btn-primary" onclick="updateTutorialVideo()">💾 Save Video</button>
         </div>
-
         <div class="card">
             <div class="card-title">📞 Support Contacts</div>
             <div id="supportContactsList"></div>
@@ -498,7 +523,7 @@
 
     <script>
         // =============================================
-        // FIREBASE CONFIG
+        // FIREBASE CONFIG - Realtime Database
         // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
@@ -523,23 +548,65 @@
         let currentUserId = tgUser.id ? String(tgUser.id) : null;
         let isAdmin = (currentUserId === '6140196943');
         let selectedCategory = null;
+        let selectedCategoryData = null;
         let editingCategoryId = null;
         let currentFileTab = 'pending';
         let selectedFile = null;
         let selectedFileName = null;
         let fileIdCount = 0;
+        let fileData = [];
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
         // =============================================
         // DATABASE HELPERS
         // =============================================
-        function getRef(path) { return db.ref(path); }
-        function getData(path) { return new Promise((resolve, reject) => { db.ref(path).once('value', (snap) => { resolve(snap.val()); }, (err) => { reject(err); }); }); }
-        function setData(path, data) { return new Promise((resolve, reject) => { db.ref(path).set(data, (err) => { if(err) reject(err); else resolve(); }); }); }
-        function pushData(path, data) { return new Promise((resolve, reject) => { const ref = db.ref(path).push(); ref.set(data, (err) => { if(err) reject(err); else resolve(ref.key); }); }); }
-        function updateData(path, data) { return new Promise((resolve, reject) => { db.ref(path).update(data, (err) => { if(err) reject(err); else resolve(); }); }); }
-        function deleteData(path) { return new Promise((resolve, reject) => { db.ref(path).remove((err) => { if(err) reject(err); else resolve(); }); }); }
+        function getData(path) { 
+            return new Promise((resolve, reject) => { 
+                db.ref(path).once('value', (snap) => { 
+                    resolve(snap.val()); 
+                }, (err) => { 
+                    reject(err); 
+                }); 
+            }); 
+        }
+
+        function setData(path, data) { 
+            return new Promise((resolve, reject) => { 
+                db.ref(path).set(data, (err) => { 
+                    if(err) reject(err); 
+                    else resolve(); 
+                }); 
+            }); 
+        }
+
+        function pushData(path, data) { 
+            return new Promise((resolve, reject) => { 
+                const ref = db.ref(path).push(); 
+                ref.set(data, (err) => { 
+                    if(err) reject(err); 
+                    else resolve(ref.key); 
+                }); 
+            }); 
+        }
+
+        function updateData(path, data) { 
+            return new Promise((resolve, reject) => { 
+                db.ref(path).update(data, (err) => { 
+                    if(err) reject(err); 
+                    else resolve(); 
+                }); 
+            }); 
+        }
+
+        function deleteData(path) { 
+            return new Promise((resolve, reject) => { 
+                db.ref(path).remove((err) => { 
+                    if(err) reject(err); 
+                    else resolve(); 
+                }); 
+            }); 
+        }
 
         // =============================================
         // INIT
@@ -638,6 +705,7 @@
                     await loadReportCategories();
                     await loadCommissionCategories();
                     await loadDownloadCategories();
+                    await loadPaymentHistory();
                 }
 
             } catch (error) {
@@ -756,11 +824,12 @@
             document.getElementById('confirmButtons').style.display = 'none';
             document.getElementById('fileInput').value = '';
             selectedFile = null;
+            fileData = [];
             showToast('📁 Category selected! Upload your file.', 'info');
         }
 
         // =============================================
-        // FILE PREVIEW
+        // FILE PREVIEW - Parse Excel Data
         // =============================================
         function previewFile(input) {
             const file = input.files[0];
@@ -769,7 +838,9 @@
             selectedFile = file;
             selectedFileName = file.name;
             
-            // Count IDs from Excel
+            document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Reading file data...</div>';
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -778,11 +849,17 @@
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                     
-                    // Count valid IDs (first column)
+                    // Extract all rows with data
+                    fileData = [];
                     let count = 0;
                     jsonData.forEach(row => {
-                        if (row[0] && row[0].toString().trim()) count++;
+                        if (row && row.length > 0 && row[0] && row[0].toString().trim()) {
+                            // Store the entire row data
+                            fileData.push(row);
+                            count++;
+                        }
                     });
+                    
                     fileIdCount = count;
                     
                     // Show preview
@@ -795,29 +872,37 @@
                                 <div class="details">
                                     <div class="name">${file.name}</div>
                                     <div class="size">📊 ${count} IDs found • ${(file.size / 1024).toFixed(1)} KB</div>
+                                    ${count > 0 ? `<div style="font-size:11px; color:#28a745; margin-top:2px;">✅ ${count} rows of data ready</div>` : `<div style="font-size:11px; color:#dc3545; margin-top:2px;">⚠️ No valid data found</div>`}
                                 </div>
                             </div>
                             <span style="color:#28a745;">✅ Ready</span>
                         </div>
                     `;
                     
+                    document.getElementById('uploadProgress').style.display = 'none';
                     document.getElementById('confirmButtons').style.display = 'flex';
+                    
+                    if (count === 0) {
+                        showToast('⚠️ No valid IDs found in file', 'error');
+                    }
                 } catch (err) {
+                    console.error('File parse error:', err);
                     fileIdCount = 0;
-                    const preview = document.getElementById('filePreview');
-                    preview.style.display = 'block';
-                    preview.innerHTML = `
+                    fileData = [];
+                    document.getElementById('uploadProgress').style.display = 'none';
+                    document.getElementById('filePreview').style.display = 'block';
+                    document.getElementById('filePreview').innerHTML = `
                         <div class="file-preview" style="border-left:4px solid #dc3545;">
                             <div class="file-info">
                                 <span class="icon">⚠️</span>
                                 <div class="details">
                                     <div class="name">${file.name}</div>
-                                    <div class="size" style="color:#dc3545;">Could not read Excel file</div>
+                                    <div class="size" style="color:#dc3545;">Could not read Excel file. Please check format.</div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    document.getElementById('confirmButtons').style.display = 'flex';
+                    showToast('❌ Could not read Excel file', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -827,22 +912,27 @@
             document.getElementById('fileInput').value = '';
             document.getElementById('filePreview').style.display = 'none';
             document.getElementById('confirmButtons').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
             selectedFile = null;
+            fileData = [];
             fileIdCount = 0;
             showToast('❌ Submission cancelled', 'info');
         }
 
         // =============================================
-        // FILE UPLOAD
+        // FILE UPLOAD - Save to Firebase & Notify
         // =============================================
         async function uploadFile() {
             if (!selectedFile) { showToast('❌ No file selected', 'error'); return; }
             if (!selectedCategory) { showToast('❌ Select category first', 'error'); return; }
+            if (fileIdCount === 0) { showToast('❌ No valid IDs found in file', 'error'); return; }
 
             document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading to server...</div>';
             document.getElementById('confirmButtons').style.display = 'none';
 
             try {
+                // Get category details
                 const catData = await getData(`categories/${selectedCategory}`);
                 const catName = catData ? catData.name : 'Unknown';
                 const isActive = catData ? catData.active !== false : true;
@@ -852,28 +942,34 @@
                     return;
                 }
 
-                const ref = storage.ref(`submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`);
-                const task = await ref.put(selectedFile);
-                const url = await task.ref.getDownloadURL();
+                // Upload file to Firebase Storage
+                const storageRef = storage.ref(`submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`);
+                const uploadTask = await storageRef.put(selectedFile);
+                const downloadURL = await uploadTask.ref.getDownloadURL();
 
+                // Save submission with full data
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
+                    userUsername: tgUser.username || '',
                     fileName: selectedFile.name,
-                    fileUrl: url,
+                    fileUrl: downloadURL,
                     categoryId: selectedCategory,
                     categoryName: catName,
-                    idCount: fileIdCount || 0,
+                    idCount: fileIdCount,
+                    fileData: fileData, // Full Excel data
                     status: 'pending',
                     timestamp: new Date().toISOString()
                 };
-                await pushData('submissions', subData);
+                const subKey = await pushData('submissions', subData);
 
+                // Update user stats
                 const userData = await getData(`users/${currentUserId}`);
                 await updateData(`users/${currentUserId}`, {
                     totalSubmits: (userData.totalSubmits || 0) + 1
                 });
 
+                // Update global stats
                 const stats = await getData('stats/summary');
                 if (stats) {
                     await updateData('stats/summary', {
@@ -882,43 +978,53 @@
                     });
                 }
 
-                // Send admin notification
+                // =============================================
+                // SEND CONFIRMATION TO USER
+                // =============================================
+                sendTelegramMessage(currentUserId,
+                    `✅ <b>File Submitted Successfully!</b>\n\n` +
+                    `📁 <b>Category:</b> ${catName}\n` +
+                    `📄 <b>File:</b> ${selectedFile.name}\n` +
+                    `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
+                    `⏳ <b>Status:</b> Pending Review\n\n` +
+                    `📌 <b>Next Step:</b> Wait for admin approval. You will get report when approved.`
+                );
+
+                // =============================================
+                // SEND FILE TO ADMIN WITH DETAILS
+                // =============================================
                 const adminMsg = 
                     `📤 <b>New File Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
+                    `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
                     `📁 <b>Category:</b> ${catName}\n` +
                     `📄 <b>File:</b> ${selectedFile.name}\n` +
-                    `📊 <b>Total IDs:</b> ${fileIdCount || 0}\n` +
-                    `⏳ <b>Status:</b> Pending Review`;
+                    `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
+                    `⏳ <b>Status:</b> Pending Review\n\n` +
+                    `📌 <b>Action Required:</b> Please review and approve/reject.`;
 
+                // Send the actual file to admin
                 sendTelegramDocument(ADMIN_CHAT_ID, selectedFile, adminMsg);
-
-                // Send confirmation to user
-                sendTelegramMessage(currentUserId,
-                    `✅ <b>File Submitted Successfully!</b>\n\n` +
-                    `📁 Category: ${catName}\n` +
-                    `📄 File: ${selectedFile.name}\n` +
-                    `📊 Total IDs: ${fileIdCount || 0}\n` +
-                    `⏳ Status: Pending Review\n\n` +
-                    `📌 You will get report when admin approves.`
-                );
 
                 showToast('✅ File submitted successfully!', 'success');
                 loadDashboard();
                 
+                // Reset UI
                 document.getElementById('fileInput').value = '';
                 document.getElementById('filePreview').style.display = 'none';
                 document.getElementById('confirmButtons').style.display = 'none';
+                document.getElementById('uploadProgress').style.display = 'none';
                 document.getElementById('uploadSection').style.display = 'none';
                 selectedFile = null;
+                fileData = [];
                 fileIdCount = 0;
                 
             } catch (e) {
                 console.error('Upload error:', e);
                 showToast('❌ Upload failed: ' + e.message, 'error');
-            } finally {
                 document.getElementById('uploadProgress').style.display = 'none';
+                document.getElementById('confirmButtons').style.display = 'flex';
             }
         }
 
@@ -935,7 +1041,13 @@
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
                 method: 'POST',
                 body: formData
-            }).catch(console.error);
+            }).then(res => res.json())
+              .then(data => {
+                  if (!data.ok) {
+                      console.error('Telegram send error:', data);
+                  }
+              })
+              .catch(console.error);
         }
 
         function sendTelegramMessage(chatId, text) {
@@ -988,7 +1100,11 @@
                 const wdId = await pushData('withdrawals', {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
-                    method, number, amount, status: 'pending',
+                    userUsername: tgUser.username || '',
+                    method, 
+                    number, 
+                    amount, 
+                    status: 'pending',
                     timestamp: new Date().toISOString()
                 });
 
@@ -1004,26 +1120,31 @@
                     });
                 }
 
-                // Send to user
+                // =============================================
+                // SEND WITHDRAW CONFIRMATION TO USER (FULL DETAILS)
+                // =============================================
                 sendTelegramMessage(currentUserId,
                     `💳 <b>Withdraw Request Submitted</b>\n\n` +
-                    `📱 Method: ${method.toUpperCase()}\n` +
-                    `📞 Number: ${number}\n` +
-                    `💰 Amount: ${amount} Taka\n` +
-                    `⏳ Status: Pending\n\n` +
-                    `🆔 Request ID: <code>${wdId}</code>\n\n` +
+                    `📱 <b>Method:</b> ${method.toUpperCase()}\n` +
+                    `📞 <b>Number:</b> <code>${number}</code>\n` +
+                    `💰 <b>Amount:</b> ${amount} Taka\n` +
+                    `⏳ <b>Status:</b> Pending\n` +
+                    `🆔 <b>Request ID:</b> <code>${wdId}</code>\n\n` +
                     `📌 You will get notification when processed.`
                 );
 
-                // Send to admin
+                // =============================================
+                // SEND TO ADMIN (FULL DETAILS)
+                // =============================================
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `💳 <b>New Withdraw Request</b>\n\n` +
-                    `👤 ${tgUser.first_name || 'User'}\n` +
-                    `🆔 <code>${currentUserId}</code>\n` +
-                    `📱 ${method}\n` +
-                    `📞 <code>${number}</code>\n` +
-                    `💰 ${amount} Taka\n` +
-                    `🆔 Request: <code>${wdId}</code>`
+                    `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
+                    `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
+                    `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
+                    `📱 <b>Method:</b> ${method.toUpperCase()}\n` +
+                    `📞 <b>Number:</b> <code>${number}</code>\n` +
+                    `💰 <b>Amount:</b> ${amount} Taka\n` +
+                    `🆔 <b>Request:</b> <code>${wdId}</code>`
                 );
 
                 closeModal('withdrawModal');
@@ -1336,7 +1457,7 @@
         }
 
         // =============================================
-        // ADMIN: USERS (No Delete, Only View & Edit)
+        // ADMIN: USERS
         // =============================================
         async function loadAllUsers() {
             try {
@@ -1640,6 +1761,7 @@
                 showToast('✅ Approved with commission!', 'success');
                 await loadFileList(currentFileTab);
                 await loadDashboard();
+                await loadPaymentHistory();
 
             } catch (e) { 
                 console.error('Approve error:', e); 
@@ -1669,6 +1791,7 @@
 
                 showToast('✅ Rejected!', 'success');
                 await loadFileList(currentFileTab);
+                await loadPaymentHistory();
             } catch (e) { 
                 console.error('Reject error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
@@ -1687,9 +1810,15 @@
                 if (submissions) {
                     Object.entries(submissions).forEach(([key, data]) => {
                         if (data.userId === userId && data.categoryId === categoryId && data.status === 'approved') {
-                            if (data.idCount) {
+                            if (data.fileData) {
+                                data.fileData.forEach(row => {
+                                    if (row && row.length > 0 && row[0] && row[0].toString().trim()) {
+                                        approvedIds.push(row);
+                                    }
+                                });
+                            } else if (data.idCount) {
                                 for (let i = 0; i < data.idCount; i++) {
-                                    approvedIds.push(`ID_${data.userId}_${i+1}`);
+                                    approvedIds.push([`ID_${data.userId}_${i+1}`]);
                                 }
                             }
                         }
@@ -1700,7 +1829,10 @@
                 const wbApproved = XLSX.utils.book_new();
                 const approvedData = [
                     ['SL', 'ID', 'Status', 'Rate', 'Earnings'],
-                    ...approvedIds.map((id, i) => [i+1, id, 'Approved', ratePerId, ratePerId])
+                    ...approvedIds.map((row, i) => {
+                        const id = row[0] || `ID_${i+1}`;
+                        return [i+1, id, 'Approved', ratePerId, ratePerId];
+                    })
                 ];
                 if (approvedIds.length === 0) approvedData.push(['No approved IDs found']);
                 const wsApproved = XLSX.utils.aoa_to_sheet(approvedData);
@@ -1715,7 +1847,8 @@
                 if (rejectedIds.length === 0) {
                     rejectedData.push(['No rejected IDs']);
                 } else {
-                    rejectedIds.forEach((id, i) => {
+                    rejectedIds.forEach((row, i) => {
+                        const id = row[0] || `ID_${i+1}`;
                         rejectedData.push([i+1, id, 'Rejected', 'Invalid format']);
                     });
                 }
@@ -1824,6 +1957,7 @@
                 sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka`);
                 showToast('✅ Approved!', 'success');
                 await loadWithdrawRequests();
+                await loadPaymentHistory();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
@@ -1837,132 +1971,165 @@
                 sendTelegramMessage(userId, `❌ <b>Withdraw Rejected</b>\n\n💰 ${amount} Taka refunded`);
                 showToast('✅ Rejected, refunded', 'success');
                 await loadWithdrawRequests();
+                await loadPaymentHistory();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
-        // ADMIN: REPORT
+        // ADMIN: BROADCAST
         // =============================================
-        async function loadReportCategories() {
-            try {
-                const categories = await getData('categories');
-                const sel = document.getElementById('reportCategorySelect');
-                sel.innerHTML = '<option value="">All Categories</option>';
-                if (categories) {
-                    Object.entries(categories).forEach(([key, cat]) => {
-                        sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
-                    });
-                }
-            } catch (e) { console.error(e); }
-        }
+        async function sendBroadcast() {
+            const message = document.getElementById('broadcastMessage').value.trim();
+            const buttonText = document.getElementById('broadcastButtonText').value.trim();
+            const buttonUrl = document.getElementById('broadcastButtonUrl').value.trim();
 
-        // =============================================
-        // SEND REPORT
-        // =============================================
-        async function sendReport() {
-            const category = document.getElementById('reportCategorySelect').value;
-            const idsText = document.getElementById('reportIdsInput').value.trim();
-            const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
+            if (!message) {
+                showToast('❌ Enter message', 'error');
+                return;
+            }
 
-            showToast('📤 Processing report...', 'info');
+            document.getElementById('broadcastProgress').style.display = 'block';
+            document.getElementById('broadcastResult').innerHTML = '';
 
             try {
-                let targetUsers = [];
-
-                if (idsText) {
-                    const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
-                    for (const id of ids) {
-                        const user = await getData(`users/${id}`);
-                        if (user) targetUsers.push({ id, ...user });
-                    }
-                } else if (category) {
-                    const submissions = await getData('submissions');
-                    if (submissions) {
-                        const userIds = new Set();
-                        Object.values(submissions).forEach(data => {
-                            if (data.categoryId === category) userIds.add(data.userId);
-                        });
-                        for (const uid of userIds) {
-                            const user = await getData(`users/${uid}`);
-                            if (user) targetUsers.push({ id: uid, ...user });
-                        }
-                    }
-                } else {
-                    const users = await getData('users');
-                    if (users) {
-                        targetUsers = Object.entries(users).map(([key, val]) => ({ id: key, ...val }));
-                    }
-                }
-
-                if (targetUsers.length === 0) {
+                const users = await getData('users');
+                if (!users) {
                     showToast('❌ No users found', 'error');
                     return;
                 }
 
-                let totalEarnings = 0;
-                let totalApproved = 0;
+                const userIds = Object.keys(users);
+                let sent = 0;
+                let failed = 0;
 
-                for (const user of targetUsers) {
-                    const submissions = await getData('submissions');
-                    let approvedCount = 0;
+                // Build message with button if provided
+                let finalMessage = message;
+                if (buttonText && buttonUrl) {
+                    finalMessage += `\n\n<a href="${buttonUrl}">${buttonText}</a>`;
+                }
 
-                    if (submissions) {
-                        Object.values(submissions).forEach(data => {
-                            if (data.userId === user.id && data.status === 'approved') {
-                                if (category && data.categoryId !== category) return;
-                                approvedCount += data.idCount || 0;
-                            }
+                for (const uid of userIds) {
+                    try {
+                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                chat_id: uid, 
+                                text: finalMessage, 
+                                parse_mode: 'HTML',
+                                disable_web_page_preview: true
+                            })
                         });
-                    }
-
-                    if (approvedCount === 0) continue;
-
-                    let commissionBonus = 0;
-                    if (category) {
-                        const commissionData = await getData(`categoryCommission/${category}`);
-                        if (commissionData && commissionData.rules) {
-                            const rules = commissionData.rules;
-                            const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
-                            for (const key of sortedKeys) {
-                                if (approvedCount >= parseInt(key)) {
-                                    commissionBonus = rules[key] * approvedCount;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    const earnings = approvedCount * ratePerId;
-                    const total = earnings + commissionBonus;
-
-                    if (total > 0) {
-                        await updateData(`users/${user.id}`, {
-                            balance: (user.balance || 0) + total
-                        });
-
-                        await pushData('transactions', {
-                            userId: user.id,
-                            amount: total,
-                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
-                            timestamp: new Date().toISOString()
-                        });
-
-                        totalEarnings += total;
-                        totalApproved += approvedCount;
-
-                        await sendReportToUser(user.id, category, approvedCount, ratePerId, commissionBonus, total);
+                        sent++;
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    } catch (e) {
+                        failed++;
+                        console.error(`Failed to send to ${uid}:`, e);
                     }
                 }
 
-                showToast(`✅ Report sent to ${targetUsers.length} users! Total: ${totalApproved} IDs, ${totalEarnings} Taka`, 'success');
-                await loadUserData();
-                await loadBalanceStats();
-                document.getElementById('reportIdsInput').value = '';
+                document.getElementById('broadcastResult').innerHTML = `
+                    <div style="background:${failed > 0 ? '#fff3cd' : '#d4edda'}; border-radius:12px; padding:16px; text-align:center;">
+                        <div style="font-size:18px; font-weight:bold; color:${failed > 0 ? '#856404' : '#155724'};">✅ Broadcast Complete</div>
+                        <div>📤 Sent: ${sent} users</div>
+                        ${failed > 0 ? `<div>❌ Failed: ${failed} users</div>` : ''}
+                    </div>
+                `;
+
+                showToast(`✅ Broadcast sent to ${sent} users!`, 'success');
 
             } catch (e) {
-                console.error(e);
+                console.error('Broadcast error:', e);
                 showToast('❌ Error: ' + e.message, 'error');
+            } finally {
+                document.getElementById('broadcastProgress').style.display = 'none';
             }
+        }
+
+        // =============================================
+        // ADMIN: PAYMENT HISTORY
+        // =============================================
+        async function loadPaymentHistory() {
+            try {
+                const submissions = await getData('submissions');
+                const withdrawals = await getData('withdrawals');
+                
+                let totalApproved = 0;
+                let totalPending = 0;
+                let totalRejected = 0;
+                let totalWithdraw = 0;
+                let transactions = [];
+
+                // Calculate totals from submissions
+                if (submissions) {
+                    Object.values(submissions).forEach(data => {
+                        const amount = (data.idCount || 0) * 5; // Assuming rate per ID
+                        if (data.status === 'approved') {
+                            totalApproved += amount;
+                            transactions.push({
+                                type: '✅ Approved',
+                                user: data.userName || data.userId,
+                                amount: amount,
+                                date: data.timestamp,
+                                details: `${data.idCount} IDs - ${data.fileName}`
+                            });
+                        } else if (data.status === 'pending') {
+                            totalPending += amount;
+                        } else if (data.status === 'rejected') {
+                            totalRejected += amount;
+                        }
+                    });
+                }
+
+                // Calculate withdraw totals
+                if (withdrawals) {
+                    Object.values(withdrawals).forEach(data => {
+                        if (data.status === 'approved') {
+                            totalWithdraw += data.amount || 0;
+                            transactions.push({
+                                type: '💳 Withdraw',
+                                user: data.userName || data.userId,
+                                amount: data.amount || 0,
+                                date: data.timestamp,
+                                details: `${data.method} - ${data.number}`
+                            });
+                        }
+                    });
+                }
+
+                // Update summary
+                document.getElementById('totalApprovedAmount').textContent = totalApproved.toFixed(2);
+                document.getElementById('totalPendingAmount').textContent = totalPending.toFixed(2);
+                document.getElementById('totalRejectedAmount').textContent = totalRejected.toFixed(2);
+                document.getElementById('totalWithdrawAmount').textContent = totalWithdraw.toFixed(2);
+
+                // Sort transactions by date
+                transactions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+                // Display transactions
+                const container = document.getElementById('paymentTransactionList');
+                if (transactions.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--tg-hint); padding:20px;">No transactions</div>';
+                    return;
+                }
+
+                let html = '';
+                transactions.slice(0, 50).forEach(t => {
+                    const color = t.type.includes('Approved') ? '#28a745' : t.type.includes('Withdraw') ? '#667eea' : '#ffc107';
+                    html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; border-left:4px solid ${color};">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:600;">${t.type}</div>
+                                <div style="font-size:12px; color:var(--tg-hint);">${t.user} • ${t.details}</div>
+                                <div style="font-size:11px; color:var(--tg-hint);">${new Date(t.date).toLocaleString()}</div>
+                            </div>
+                            <div style="font-weight:bold; color:${color};">${t.amount.toFixed(2)} Taka</div>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+
+            } catch (e) { console.error('Load payment history error:', e); }
         }
 
         // =============================================
@@ -2192,6 +2359,7 @@
                 await loadAllUsers();
                 await loadFileList('pending');
                 await loadWithdrawRequests();
+                await loadPaymentHistory();
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
             input.value = '';
         }
@@ -2227,6 +2395,7 @@
             if (page === 'adminCommission') { loadCommissionCategories(); loadCommissionRules(); }
             if (page === 'adminReport') loadReportCategories();
             if (page === 'adminDownload') { loadDownloadCategories(); }
+            if (page === 'adminPaymentHistory') loadPaymentHistory();
         }
 
         // =============================================
