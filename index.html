@@ -8,7 +8,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <style>
@@ -16,13 +15,30 @@
         body { background: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000); min-height: 100vh; padding: 12px; padding-bottom: 80px; }
         :root { --tg-bg: var(--tg-theme-bg-color, #ffffff); --tg-text: var(--tg-theme-text-color, #000000); --tg-hint: var(--tg-theme-hint-color, #999999); --tg-link: var(--tg-theme-link-color, #2481cc); --tg-button: var(--tg-theme-button-color, #2481cc); --tg-button-text: var(--tg-theme-button-text-color, #ffffff); --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0); }
         
-        .header { background: var(--tg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
-        .user-avatar { width: 50px; height: 50px; border-radius: 25px; background: var(--tg-button); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; flex-shrink: 0; overflow: hidden; }
+        .header { background: var(--tg-secondary); border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; position: relative; }
+        .user-avatar { width: 45px; height: 45px; border-radius: 22.5px; background: var(--tg-button); display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0; overflow: hidden; }
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-info { flex: 1; min-width: 0; }
-        .user-name { font-size: 18px; font-weight: 600; }
-        .user-id { font-size: 12px; color: var(--tg-hint); }
-        .admin-badge { background: #ffc107; color: #333; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+        .user-name { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .user-id { font-size: 11px; color: var(--tg-hint); }
+        .admin-badge { background: #ffc107; color: #333; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        
+        /* Connection Status - Small badge on right of header */
+        .connection-badge { 
+            font-size: 10px; 
+            font-weight: 600; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .connection-badge.online { background: #d4edda; color: #155724; }
+        .connection-badge.offline { background: #f8d7da; color: #721c24; }
+        .connection-badge .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .connection-badge.online .dot { background: #28a745; }
+        .connection-badge.offline .dot { background: #dc3545; }
         
         .balance-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; color: white; }
         .balance-label { font-size: 14px; opacity: 0.9; }
@@ -75,7 +91,7 @@
         .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 2px solid var(--tg-secondary); border-radius: 10px; font-size: 14px; background: var(--tg-bg); color: var(--tg-text); }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--tg-button); outline: none; }
-        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-group textarea { min-height: 60px; resize: vertical; font-family: monospace; font-size: 13px; }
         
         .btn-primary { width: 100%; padding: 14px; background: var(--tg-button); color: var(--tg-button-text); border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
@@ -90,11 +106,6 @@
         
         .back-btn { background: none; border: none; color: var(--tg-link); font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 0; display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
         
-        .upload-area { border: 2px dashed var(--tg-hint); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 16px; }
-        .upload-area:active { transform: scale(0.98); }
-        .upload-area .icon { font-size: 48px; display: block; margin-bottom: 8px; }
-        .upload-area p { font-size: 14px; color: var(--tg-hint); }
-        
         .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
         .category-item { background: var(--tg-secondary); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .category-item:active { transform: scale(0.95); }
@@ -106,6 +117,10 @@
         .category-item .cat-status.online { color: #28a745; }
         .category-item .cat-status.offline { color: #dc3545; }
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
+        .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
+        
+        .input-fields-area { margin-top: 12px; }
+        .input-fields-area .form-group textarea { min-height: 40px; }
         
         .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .history-left .h-title { font-weight: 600; font-size: 14px; }
@@ -153,15 +168,13 @@
         .commission-item .rule-text { font-weight: 600; }
         .commission-item .rule-amount { color: #28a745; font-weight: bold; }
         
-        .connection-status { padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px; font-weight: 600; text-align: center; }
-        .connection-status.online { background: #d4edda; color: #155724; }
-        .connection-status.offline { background: #f8d7da; color: #721c24; }
+        .confirm-buttons { display: flex; gap: 10px; margin-top: 12px; }
+        .confirm-buttons .btn-primary { flex: 1; }
         
-        .file-preview { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #28a745; }
-        .file-preview .file-info { display: flex; align-items: center; gap: 10px; }
-        .file-preview .file-info .icon { font-size: 24px; }
-        .file-preview .file-info .details .name { font-weight: 600; font-size: 14px; }
-        .file-preview .file-info .details .size { font-size: 11px; color: var(--tg-hint); }
+        .history-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .history-stats .hs-item { background: var(--tg-bg); padding: 10px; border-radius: 10px; text-align: center; }
+        .history-stats .hs-item .hs-num { font-size: 18px; font-weight: bold; }
+        .history-stats .hs-item .hs-label { font-size: 10px; color: var(--tg-hint); }
         
         .withdraw-status-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid #ffc107; }
         .withdraw-status-item.approved { border-left-color: #28a745; }
@@ -173,20 +186,13 @@
         .copy-number { background: none; border: none; color: var(--tg-link); cursor: pointer; font-size: 12px; }
         .copy-number:active { opacity: 0.6; }
         
-        .confirm-buttons { display: flex; gap: 10px; margin-top: 12px; }
-        .confirm-buttons .btn-primary { flex: 1; }
-        
-        .history-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-        .history-stats .hs-item { background: var(--tg-bg); padding: 10px; border-radius: 10px; text-align: center; }
-        .history-stats .hs-item .hs-num { font-size: 18px; font-weight: bold; }
-        .history-stats .hs-item .hs-label { font-size: 10px; color: var(--tg-hint); }
-        
-        .history-page-content { padding-bottom: 20px; }
+        .field-row { display: flex; gap: 8px; align-items: center; background: var(--tg-bg); padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; }
+        .field-row .field-label { font-weight: 600; font-size: 13px; min-width: 80px; color: var(--tg-text); }
+        .field-row .field-input { flex: 1; background: var(--tg-secondary); border: none; padding: 6px 10px; border-radius: 6px; color: var(--tg-text); font-size: 13px; }
+        .field-row .field-input:focus { outline: 2px solid var(--tg-button); }
     </style>
 </head>
 <body>
-    <div id="connectionStatus" class="connection-status online">✅ Connected to Firebase</div>
-
     <!-- ========== HOME ========== -->
     <div id="pageHome" class="page active">
         <div class="header">
@@ -194,6 +200,9 @@
             <div class="user-info">
                 <div class="user-name" id="userName">Loading... <span class="admin-badge" id="adminBadge" style="display:none;">👑 Admin</span></div>
                 <div class="user-id" id="userIdDisplay">ID: ---</div>
+            </div>
+            <div class="connection-badge online" id="connectionBadge">
+                <span class="dot"></span> <span id="connText">Connected</span>
             </div>
         </div>
 
@@ -214,13 +223,11 @@
             <div class="stat-item"><div class="stat-number" id="statReferrals" style="color:#ffc107;">0</div><div class="stat-label">👥 Referrals</div></div>
         </div>
 
-        <!-- ONE BIG SUBMIT BUTTON -->
         <button class="submit-main-btn" onclick="switchPage('submit')">
             <span class="icon">📤</span>
-            FB & IG ID FILE SUBMIT
+            FB & IG ID SUBMIT
         </button>
 
-        <!-- Menu - Only 4 items -->
         <div class="menu-grid">
             <div class="menu-item" onclick="switchPage('referral')"><span class="menu-icon">👥</span><span class="menu-label">Refer & Earn</span></div>
             <div class="menu-item" onclick="switchPage('support')"><span class="menu-icon">📞</span><span class="menu-label">Support</span></div>
@@ -234,7 +241,7 @@
                 <div class="menu-item" onclick="switchPage('adminCommission')"><span class="menu-icon">💰</span><span class="menu-label">Commission</span></div>
                 <div class="menu-item" onclick="switchPage('adminUsers')"><span class="menu-icon">👥</span><span class="menu-label">Users</span></div>
                 <div class="menu-item" onclick="switchPage('adminBalance')"><span class="menu-icon">💰</span><span class="menu-label">Balance</span></div>
-                <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Files</span></div>
+                <div class="menu-item" onclick="switchPage('adminFiles')"><span class="menu-icon">📄</span><span class="menu-label">Submissions</span></div>
                 <div class="menu-item" onclick="switchPage('adminWithdraw')"><span class="menu-icon">💳</span><span class="menu-label">Withdraw</span></div>
                 <div class="menu-item" onclick="switchPage('adminReport')"><span class="menu-icon">📊</span><span class="menu-label">Report</span></div>
                 <div class="menu-item" onclick="switchPage('adminDelete')"><span class="menu-icon">🗑️</span><span class="menu-label">Delete</span></div>
@@ -249,28 +256,24 @@
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ========== SUBMIT ========== -->
+    <!-- ========== SUBMIT (Input Box System) ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
-        <h3 style="margin-bottom:12px;">📤 FB & IG ID FILE SUBMIT</h3>
+        <h3 style="margin-bottom:12px;">📤 FB & IG ID SUBMIT</h3>
         
         <div class="category-grid" id="categoryGrid"><div class="loading"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Loading categories...</div></div></div>
         
-        <div id="uploadSection" style="display:none;">
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="previewFile(this)">
-                <span class="icon">📁</span>
-                <p>Click to select Excel file</p>
-                <div style="font-size:12px; color:var(--tg-hint);">Supported: .xlsx, .xls</div>
-            </div>
+        <div id="submitSection" style="display:none;">
+            <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
-            <div id="filePreview" style="display:none;"></div>
-            <div id="uploadProgress" style="display:none; text-align:center; padding:20px;">
+            <div class="input-fields-area" id="inputFields"></div>
+            
+            <div id="submitProgress" style="display:none; text-align:center; padding:20px;">
                 <div class="spinner"></div>
-                <div style="margin-top:8px; color:var(--tg-hint);">Uploading file to server...</div>
+                <div style="margin-top:8px; color:var(--tg-hint);">Submitting...</div>
             </div>
-            <div id="confirmButtons" style="display:none;" class="confirm-buttons">
-                <button class="btn-primary btn-success" onclick="uploadFile()">✅ Confirm Submit</button>
+            <div id="submitButtons" style="display:none;" class="confirm-buttons">
+                <button class="btn-primary btn-success" onclick="submitIDs()">✅ Confirm Submit</button>
                 <button class="btn-primary btn-danger" onclick="cancelSubmit()">❌ Cancel</button>
             </div>
         </div>
@@ -281,7 +284,6 @@
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <div class="history-page-content">
             <h3 style="margin-bottom:12px;">📋 Transaction History</h3>
-            
             <div class="history-stats" id="historyStats">
                 <div class="hs-item"><div class="hs-num" id="hsTotal" style="color:#667eea;">0</div><div class="hs-label">📊 Total</div></div>
                 <div class="hs-item"><div class="hs-num" id="hsPending" style="color:#ffc107;">0</div><div class="hs-label">⏳ Pending</div></div>
@@ -290,7 +292,6 @@
                 <div class="hs-item"><div class="hs-num" id="hsWithdraw" style="color:#667eea;">0</div><div class="hs-label">💳 Withdraw</div></div>
                 <div class="hs-item"><div class="hs-num" id="hsBalance" style="color:#28a745;">0</div><div class="hs-label">💰 Balance</div></div>
             </div>
-            
             <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
     </div>
@@ -345,19 +346,102 @@
     </div>
 
     <!-- ========== ADMIN PANELS ========== -->
-    <div id="pageAdminCategories" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📁 Category Management</h3><button class="btn-primary" onclick="openCategoryModal()" style="margin-bottom:16px;">➕ Add Category</button><div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div></div>
-    <div id="pageAdminCommission" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Category Commission</h3><div class="card"><div class="card-title">📁 Select Category</div><select id="commissionCategorySelect" class="form-group" onchange="loadCommissionRules()"></select></div><div class="card"><div class="card-title">📊 Commission Rules</div><div id="commissionRulesList"></div><div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><input type="number" id="commissionMinIds" placeholder="Min IDs" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="commissionBonus" placeholder="Bonus/ID" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addCommissionRule()" style="flex:0.5; padding:10px;">Add</button></div></div></div>
-    <div id="pageAdminUsers" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>👥 User Management</h3><div class="form-group"><input type="text" id="userSearch" placeholder="🔍 Search User..." oninput="searchUsers()"></div><div id="userList"><div class="loading"><div class="spinner"></div></div></div></div>
-    <div id="pageAdminBalance" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Balance Management</h3><div class="card"><div class="form-group"><label>👤 User ID</label><input type="text" id="balanceUserId"></div><div class="form-group"><label>💰 Amount</label><input type="number" id="balanceAmount" placeholder="+ add, - remove"></div><div class="form-group"><label>📝 Reason</label><input type="text" id="balanceReason"></div><button class="btn-primary" onclick="updateBalance()">💵 Update</button></div><div class="card"><div class="card-title">📊 Stats</div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Balance</span><span id="totalBalance">0.00</span></div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Users</span><span id="totalUsers">0</span></div></div></div>
-    <div id="pageAdminFiles" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📄 File Management</h3><div class="tabs"><button class="tab active" onclick="switchFileTab('pending')">⏳ Pending</button><button class="tab" onclick="switchFileTab('approved')">✅ Approved</button><button class="tab" onclick="switchFileTab('rejected')">❌ Rejected</button></div><div id="adminFileList"><div class="loading"><div class="spinner"></div></div></div></div>
-    <div id="pageAdminWithdraw" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💳 Withdraw Requests</h3><div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div></div>
-    <div id="pageAdminReport" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📊 Report System</h3><div class="card"><div class="card-title">📤 Send Report</div><div class="form-group"><label>📁 Category</label><select id="reportCategorySelect"><option value="">All</option></select></div><div class="form-group"><label>📝 IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter IDs..."></textarea></div><div class="form-group"><label>💰 Rate/ID</label><input type="number" id="reportRate" value="5"></div><button class="btn-primary" onclick="sendReport()">📤 Send</button></div></div>
-    <div id="pageAdminDelete" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>🗑️ Delete Submissions</h3><div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="deleteDate"></div><div class="form-group"><label>📁 Category</label><select id="deleteCategorySelect"><option value="">All</option></select></div><button class="btn-primary btn-danger" onclick="deleteSubmissions()">🗑️ Delete</button><div id="deleteResult"></div></div></div>
-    <div id="pageAdminBroadcast" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📢 Broadcast</h3><div class="card"><div class="form-group"><label>📝 Message</label><textarea id="broadcastMessage" style="min-height:100px;"></textarea></div><div class="form-group"><label>🔗 Button Text</label><input type="text" id="broadcastButtonText" placeholder="Button text"></div><div class="form-group"><label>🔗 Button URL</label><input type="url" id="broadcastButtonUrl" placeholder="URL"></div><button class="btn-primary" onclick="sendBroadcast()">📢 Send</button><div id="broadcastProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px;">Sending...</div></div><div id="broadcastResult"></div></div></div>
-    <div id="pageAdminPaymentHistory" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💰 Payment History</h3><div class="card"><div class="card-title">📊 Summary</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#28a745;" id="totalApprovedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Approved</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#ffc107;" id="totalPendingAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Pending</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#dc3545;" id="totalRejectedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Rejected</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#667eea;" id="totalWithdrawAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Withdraw</div></div></div></div><div class="card"><div class="card-title">📋 Transactions</div><div id="paymentTransactionList"><div class="loading"><div class="spinner"></div></div></div></div></div>
-    <div id="pageAdminSettings" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>⚙️ Settings</h3><div class="card"><div class="card-title">💰 Withdraw Methods</div><div id="withdrawMethodsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newMethodName" placeholder="Method" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button></div></div><div class="card"><div class="card-title">📜 Price & Rules</div><textarea id="priceRulesInput" style="width:100%; min-height:80px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"></textarea><button class="btn-primary" onclick="updatePriceRules()">💾 Save</button></div><div class="card"><div class="card-title">📹 Tutorial Video</div><input type="text" id="tutorialVideoUrl" style="width:100%; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"><button class="btn-primary" onclick="updateTutorialVideo()">💾 Save</button></div><div class="card"><div class="card-title">📞 Support</div><div id="supportContactsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button></div></div></div>
-    <div id="pageAdminBackup" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>💾 Backup</h3><div class="card"><button class="btn-primary" onclick="downloadBackup()">📥 Download</button></div><div class="card"><div class="upload-area" onclick="document.getElementById('restoreInput').click()"><input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)"><span class="icon">📤</span><p>Click to restore</p></div></div></div>
-    <div id="pageAdminDownload" class="page"><button class="back-btn" onclick="switchPage('home')">← Back</button><h3>📥 Download</h3><div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div><div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All</option></select></div><button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button></div></div>
+    <div id="pageAdminCategories" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3 style="margin-bottom:12px;">📁 Category Management</h3>
+        <button class="btn-primary" onclick="openCategoryModal()" style="margin-bottom:16px;">➕ Add Category</button>
+        <div id="adminCategoryList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <div id="pageAdminCommission" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>💰 Category Commission</h3>
+        <div class="card"><div class="card-title">📁 Select Category</div><select id="commissionCategorySelect" class="form-group" onchange="loadCommissionRules()"></select></div>
+        <div class="card"><div class="card-title">📊 Commission Rules</div><div id="commissionRulesList"></div>
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><input type="number" id="commissionMinIds" placeholder="Min IDs" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="commissionBonus" placeholder="Bonus/ID" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addCommissionRule()" style="flex:0.5; padding:10px;">Add</button></div></div>
+    </div>
+
+    <div id="pageAdminUsers" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>👥 User Management</h3>
+        <div class="form-group"><input type="text" id="userSearch" placeholder="🔍 Search User..." oninput="searchUsers()"></div>
+        <div id="userList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <div id="pageAdminBalance" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>💰 Balance Management</h3>
+        <div class="card"><div class="form-group"><label>👤 User ID</label><input type="text" id="balanceUserId"></div><div class="form-group"><label>💰 Amount</label><input type="number" id="balanceAmount" placeholder="+ add, - remove"></div><div class="form-group"><label>📝 Reason</label><input type="text" id="balanceReason"></div><button class="btn-primary" onclick="updateBalance()">💵 Update</button></div>
+        <div class="card"><div class="card-title">📊 Stats</div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Balance</span><span id="totalBalance">0.00</span></div><div style="display:flex; justify-content:space-between; padding:8px 0;"><span>Total Users</span><span id="totalUsers">0</span></div></div>
+    </div>
+
+    <div id="pageAdminFiles" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>📄 Submissions</h3>
+        <div class="tabs"><button class="tab active" onclick="switchFileTab('pending')">⏳ Pending</button><button class="tab" onclick="switchFileTab('approved')">✅ Approved</button><button class="tab" onclick="switchFileTab('rejected')">❌ Rejected</button></div>
+        <div id="adminFileList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <div id="pageAdminWithdraw" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>💳 Withdraw Requests</h3>
+        <div id="withdrawRequests"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <div id="pageAdminReport" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>📊 Report System</h3>
+        <div class="card">
+            <div class="card-title">📤 Send Report</div>
+            <div class="form-group"><label>📁 Category</label><select id="reportCategorySelect"><option value="">All</option></select></div>
+            <div class="form-group"><label>📝 Enter IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter IDs line by line..."></textarea></div>
+            <div class="form-group"><label>💰 Rate/ID (Taka)</label><input type="number" id="reportRate" value="5"></div>
+            <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
+            <div id="reportProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Processing...</div></div>
+            <div id="reportResult" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <div id="pageAdminDelete" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>🗑️ Delete Submissions</h3>
+        <div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="deleteDate"></div><div class="form-group"><label>📁 Category</label><select id="deleteCategorySelect"><option value="">All</option></select></div><button class="btn-primary btn-danger" onclick="deleteSubmissions()">🗑️ Delete</button><div id="deleteResult"></div></div>
+    </div>
+
+    <div id="pageAdminBroadcast" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>📢 Broadcast</h3>
+        <div class="card"><div class="form-group"><label>📝 Message</label><textarea id="broadcastMessage" style="min-height:100px;"></textarea></div><div class="form-group"><label>🔗 Button Text</label><input type="text" id="broadcastButtonText" placeholder="Button text"></div><div class="form-group"><label>🔗 Button URL</label><input type="url" id="broadcastButtonUrl" placeholder="URL"></div><button class="btn-primary" onclick="sendBroadcast()">📢 Send</button><div id="broadcastProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px;">Sending...</div></div><div id="broadcastResult"></div></div>
+    </div>
+
+    <div id="pageAdminPaymentHistory" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>💰 Payment History</h3>
+        <div class="card"><div class="card-title">📊 Summary</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#28a745;" id="totalApprovedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Approved</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#ffc107;" id="totalPendingAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Pending</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#dc3545;" id="totalRejectedAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Rejected</div></div><div style="background:var(--tg-bg); padding:16px; border-radius:12px; text-align:center;"><div style="font-size:24px; font-weight:bold; color:#667eea;" id="totalWithdrawAmount">0.00</div><div style="font-size:12px; color:var(--tg-hint);">Withdraw</div></div></div></div>
+        <div class="card"><div class="card-title">📋 Transactions</div><div id="paymentTransactionList"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+
+    <div id="pageAdminSettings" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>⚙️ Settings</h3>
+        <div class="card"><div class="card-title">💰 Withdraw Methods</div><div id="withdrawMethodsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newMethodName" placeholder="Method" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button></div></div>
+        <div class="card"><div class="card-title">📜 Price & Rules</div><textarea id="priceRulesInput" style="width:100%; min-height:80px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"></textarea><button class="btn-primary" onclick="updatePriceRules()">💾 Save</button></div>
+        <div class="card"><div class="card-title">📹 Tutorial Video</div><input type="text" id="tutorialVideoUrl" style="width:100%; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"><button class="btn-primary" onclick="updateTutorialVideo()">💾 Save</button></div>
+        <div class="card"><div class="card-title">📞 Support</div><div id="supportContactsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newSupportName" placeholder="Name" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="text" id="newSupportUsername" placeholder="Username" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addSupportContact()" style="flex:0.5; padding:10px;">Add</button></div></div>
+    </div>
+
+    <div id="pageAdminBackup" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>💾 Backup</h3>
+        <div class="card"><button class="btn-primary" onclick="downloadBackup()">📥 Download</button></div>
+        <div class="card"><div class="upload-area" onclick="document.getElementById('restoreInput').click()"><input type="file" id="restoreInput" accept=".json" onchange="restoreBackup(this)"><span class="icon">📤</span><p>Click to restore</p></div></div>
+    </div>
+
+    <div id="pageAdminDownload" class="page">
+        <button class="back-btn" onclick="switchPage('home')">← Back</button>
+        <h3>📥 Download</h3>
+        <div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div><div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All</option></select></div><button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button></div>
+    </div>
 
     <!-- ========== MODALS ========== -->
     <div class="modal-overlay" id="withdrawModal">
@@ -375,8 +459,12 @@
             <div class="modal-header"><h3 id="categoryModalTitle">📁 Add Category</h3><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
             <div class="form-group"><label>Name</label><input type="text" id="categoryName" placeholder="Category name"></div>
             <div class="form-group"><label>Icon</label><input type="text" id="categoryIcon" placeholder="Emoji icon"></div>
-            <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details"></textarea></div>
+            <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details (show to users)"></textarea></div>
             <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
+            <div class="form-group"><label>📋 Input Fields (comma separated)</label>
+                <input type="text" id="categoryFields" placeholder="e.g. ID, Password, Cookies" value="ID, Password">
+                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Enter field names separated by comma. Users will see these as input boxes.</div>
+            </div>
             <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
     </div>
@@ -407,7 +495,6 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const storage = firebase.storage();
 
         // =============================================
         // TELEGRAM
@@ -417,14 +504,10 @@
         let currentUserId = tgUser.id ? String(tgUser.id) : null;
         let isAdmin = (currentUserId === '6140196943');
         let selectedCategory = null;
+        let selectedCategoryData = null;
         let editingCategoryId = null;
         let currentFileTab = 'pending';
-        let selectedFile = null;
-        let selectedFileName = null;
-        let fileIdCount = 0;
-        let fileData = [];
-        let duplicateIds = [];
-        let validIds = [];
+        let inputData = {};
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
@@ -433,48 +516,28 @@
         // =============================================
         function getData(path) { 
             return new Promise((resolve, reject) => { 
-                db.ref(path).once('value', (snap) => { 
-                    resolve(snap.val()); 
-                }, (err) => { 
-                    reject(err); 
-                }); 
+                db.ref(path).once('value', (snap) => { resolve(snap.val()); }, (err) => { reject(err); }); 
             }); 
         }
-
         function setData(path, data) { 
             return new Promise((resolve, reject) => { 
-                db.ref(path).set(data, (err) => { 
-                    if(err) reject(err); 
-                    else resolve(); 
-                }); 
+                db.ref(path).set(data, (err) => { if(err) reject(err); else resolve(); }); 
             }); 
         }
-
         function pushData(path, data) { 
             return new Promise((resolve, reject) => { 
                 const ref = db.ref(path).push(); 
-                ref.set(data, (err) => { 
-                    if(err) reject(err); 
-                    else resolve(ref.key); 
-                }); 
+                ref.set(data, (err) => { if(err) reject(err); else resolve(ref.key); }); 
             }); 
         }
-
         function updateData(path, data) { 
             return new Promise((resolve, reject) => { 
-                db.ref(path).update(data, (err) => { 
-                    if(err) reject(err); 
-                    else resolve(); 
-                }); 
+                db.ref(path).update(data, (err) => { if(err) reject(err); else resolve(); }); 
             }); 
         }
-
         function deleteData(path) { 
             return new Promise((resolve, reject) => { 
-                db.ref(path).remove((err) => { 
-                    if(err) reject(err); 
-                    else resolve(); 
-                }); 
+                db.ref(path).remove((err) => { if(err) reject(err); else resolve(); }); 
             }); 
         }
 
@@ -483,14 +546,16 @@
         // =============================================
         function init() {
             try {
+                // Connection status - update badge
                 db.ref('.info/connected').on('value', (snap) => {
-                    const status = document.getElementById('connectionStatus');
+                    const badge = document.getElementById('connectionBadge');
+                    const text = document.getElementById('connText');
                     if (snap.val() === true) {
-                        status.className = 'connection-status online';
-                        status.textContent = '✅ Connected to Firebase';
+                        badge.className = 'connection-badge online';
+                        text.textContent = 'Connected';
                     } else {
-                        status.className = 'connection-status offline';
-                        status.textContent = '❌ Offline - Check your internet';
+                        badge.className = 'connection-badge offline';
+                        text.textContent = 'Disconnected';
                     }
                 });
 
@@ -648,9 +713,8 @@
                     const statusText = data.status || 'pending';
                     const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
                     html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><div style="font-weight:600; font-size:14px;">📄 ${data.fileName}</div>
-                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div>
-                        ${data.duplicateCount > 0 ? `<div style="font-size:10px; color:#dc3545;">⚠️ ${data.duplicateCount} duplicates removed</div>` : ''}</div>
+                        <div><div style="font-weight:600; font-size:14px;">📄 ${data.fileName || 'Manual Entry'}</div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div></div>
                         <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span>
                     </div>`;
                 });
@@ -660,7 +724,7 @@
         }
 
         // =============================================
-        // LOAD CATEGORIES
+        // LOAD CATEGORIES (User)
         // =============================================
         async function loadCategories() {
             try {
@@ -678,6 +742,7 @@
                     const statusClass = isActive ? 'online' : 'offline';
                     const disabledClass = isActive ? '' : 'disabled';
                     const statusText = isActive ? '🟢 Online' : '🔴 Offline';
+                    const fieldsText = cat.fields ? `📋 ${cat.fields.split(',').length} fields` : '';
                     
                     grid.innerHTML += `
                         <div class="category-item ${disabledClass}" onclick="${isActive ? `selectCategory('${key}')` : ''}" data-id="${key}" style="${!isActive ? 'opacity:0.5; cursor:not-allowed;' : ''}">
@@ -685,6 +750,7 @@
                             <div class="cat-name">${cat.name}</div>
                             <div class="cat-status ${statusClass}">${statusText}</div>
                             ${cat.details ? `<div class="cat-details">📋 ${cat.details}</div>` : ''}
+                            ${fieldsText ? `<div class="cat-fields">${fieldsText}</div>` : ''}
                         </div>
                     `;
                 });
@@ -694,228 +760,126 @@
         function selectCategory(catId) {
             document.querySelectorAll('.category-item').forEach(el => el.classList.toggle('selected', el.dataset.id === catId));
             selectedCategory = catId;
-            document.getElementById('uploadSection').style.display = 'block';
-            document.getElementById('filePreview').style.display = 'none';
-            document.getElementById('confirmButtons').style.display = 'none';
-            document.getElementById('fileInput').value = '';
-            selectedFile = null;
-            fileData = [];
-            validIds = [];
-            duplicateIds = [];
-            showToast('📁 Category selected! Upload your file.', 'info');
+            
+            // Load category data
+            getData(`categories/${catId}`).then(catData => {
+                selectedCategoryData = catData;
+                document.getElementById('submitSection').style.display = 'block';
+                document.getElementById('submitButtons').style.display = 'none';
+                document.getElementById('submitProgress').style.display = 'none';
+                
+                // Show category info
+                const info = document.getElementById('categoryInfo');
+                info.innerHTML = `
+                    <div style="font-weight:600; font-size:16px;">${catData.icon || '📁'} ${catData.name}</div>
+                    ${catData.details ? `<div style="font-size:13px; color:var(--tg-hint); margin-top:4px;">${catData.details}</div>` : ''}
+                    <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 Fill in the fields below and submit</div>
+                `;
+                
+                // Generate input fields
+                const fieldsContainer = document.getElementById('inputFields');
+                const fieldNames = catData.fields ? catData.fields.split(',').map(f => f.trim()) : ['ID', 'Password'];
+                
+                fieldsContainer.innerHTML = '';
+                inputData = {};
+                
+                fieldNames.forEach((field, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'form-group';
+                    div.innerHTML = `
+                        <label>${field}</label>
+                        ${field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass') ? 
+                            `<textarea id="field_${index}" placeholder="Enter ${field}..." style="min-height:50px;"></textarea>` :
+                            `<input type="text" id="field_${index}" placeholder="Enter ${field}...">`
+                        }
+                    `;
+                    fieldsContainer.appendChild(div);
+                    
+                    // Store reference
+                    inputData[field] = document.getElementById(`field_${index}`);
+                });
+                
+                // Show submit button
+                document.getElementById('submitButtons').style.display = 'flex';
+                
+                showToast('📁 Category selected! Fill in the fields.', 'info');
+            }).catch(e => {
+                showToast('❌ Error loading category', 'error');
+            });
         }
 
         // =============================================
-        // FILE PREVIEW - Parse Excel Data with Duplicate Check
+        // SUBMIT IDs (Input Box System)
         // =============================================
-        function previewFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            selectedFile = file;
-            selectedFileName = file.name;
-            
-            document.getElementById('uploadProgress').style.display = 'block';
-            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Reading file data...</div>';
-            
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    
-                    // Extract all IDs from first column
-                    const allIds = [];
-                    jsonData.forEach(row => {
-                        if (row && row.length > 0 && row[0] && row[0].toString().trim()) {
-                            allIds.push(row[0].toString().trim());
-                        }
-                    });
-                    
-                    fileIdCount = allIds.length;
-                    fileData = allIds;
-                    
-                    // GLOBAL DUPLICATE CHECK from submissions
-                    const allSubmissions = await getData('submissions');
-                    const existingIds = new Set();
-                    
-                    if (allSubmissions) {
-                        Object.values(allSubmissions).forEach(sub => {
-                            if (sub.fileData && Array.isArray(sub.fileData)) {
-                                sub.fileData.forEach(id => {
-                                    if (id) existingIds.add(id.toString().trim());
-                                });
-                            }
-                        });
-                    }
-                    
-                    // Check duplicates
-                    validIds = [];
-                    duplicateIds = [];
-                    const seenInFile = new Set();
-                    
-                    allIds.forEach(id => {
-                        const cleanId = id.toString().trim();
-                        if (existingIds.has(cleanId) || seenInFile.has(cleanId)) {
-                            duplicateIds.push(cleanId);
-                        } else {
-                            seenInFile.add(cleanId);
-                            validIds.push(cleanId);
-                        }
-                    });
-                    
-                    // Show preview
-                    const preview = document.getElementById('filePreview');
-                    preview.style.display = 'block';
-                    
-                    let statusHtml = '';
-                    if (duplicateIds.length > 0) {
-                        statusHtml = `<div style="font-size:11px; color:#dc3545; margin-top:2px;">⚠️ ${duplicateIds.length} duplicate IDs found (will be removed)</div>`;
-                    }
-                    if (validIds.length === 0) {
-                        statusHtml = `<div style="font-size:11px; color:#dc3545; margin-top:2px;">❌ All IDs are duplicates! Cannot submit.</div>`;
-                    } else {
-                        statusHtml += `<div style="font-size:11px; color:#28a745; margin-top:2px;">✅ ${validIds.length} new IDs ready to submit</div>`;
-                    }
-                    
-                    preview.innerHTML = `
-                        <div class="file-preview">
-                            <div class="file-info">
-                                <span class="icon">📄</span>
-                                <div class="details">
-                                    <div class="name">${file.name}</div>
-                                    <div class="size">📊 ${fileIdCount} IDs found • ${(file.size / 1024).toFixed(1)} KB</div>
-                                    ${statusHtml}
-                                </div>
-                            </div>
-                            <span style="color:${validIds.length > 0 ? '#28a745' : '#dc3545'};">${validIds.length > 0 ? '✅ Ready' : '❌ Blocked'}</span>
-                        </div>
-                    `;
-                    
-                    document.getElementById('uploadProgress').style.display = 'none';
-                    
-                    if (validIds.length > 0) {
-                        document.getElementById('confirmButtons').style.display = 'flex';
-                    } else {
-                        document.getElementById('confirmButtons').style.display = 'none';
-                        showToast('❌ All IDs are duplicates!', 'error');
-                    }
-                    
-                } catch (err) {
-                    console.error('File parse error:', err);
-                    fileIdCount = 0;
-                    fileData = [];
-                    validIds = [];
-                    duplicateIds = [];
-                    document.getElementById('uploadProgress').style.display = 'none';
-                    document.getElementById('filePreview').style.display = 'block';
-                    document.getElementById('filePreview').innerHTML = `
-                        <div class="file-preview" style="border-left:4px solid #dc3545;">
-                            <div class="file-info">
-                                <span class="icon">⚠️</span>
-                                <div class="details">
-                                    <div class="name">${file.name}</div>
-                                    <div class="size" style="color:#dc3545;">Could not read Excel file. Please check format.</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    showToast('❌ Could not read Excel file', 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
         function cancelSubmit() {
-            document.getElementById('fileInput').value = '';
-            document.getElementById('filePreview').style.display = 'none';
-            document.getElementById('confirmButtons').style.display = 'none';
-            document.getElementById('uploadProgress').style.display = 'none';
-            selectedFile = null;
-            fileData = [];
-            validIds = [];
-            duplicateIds = [];
-            fileIdCount = 0;
+            document.getElementById('submitSection').style.display = 'none';
+            document.getElementById('submitButtons').style.display = 'none';
+            document.getElementById('submitProgress').style.display = 'none';
+            document.getElementById('inputFields').innerHTML = '';
+            selectedCategory = null;
+            selectedCategoryData = null;
             showToast('❌ Submission cancelled', 'info');
         }
 
-        // =============================================
-        // FILE UPLOAD - FIXED: Saves to submissions node
-        // =============================================
-        async function uploadFile() {
-            if (!selectedFile) { showToast('❌ No file selected', 'error'); return; }
-            if (!selectedCategory) { showToast('❌ Select category first', 'error'); return; }
-            if (validIds.length === 0) { showToast('❌ No valid IDs to submit', 'error'); return; }
+        async function submitIDs() {
+            if (!selectedCategory || !selectedCategoryData) {
+                showToast('❌ Select a category first', 'error');
+                return;
+            }
 
-            document.getElementById('uploadProgress').style.display = 'block';
-            document.getElementById('uploadProgress').innerHTML = '<div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Uploading file to server...</div>';
-            document.getElementById('confirmButtons').style.display = 'none';
+            // Collect data from fields
+            const fieldNames = selectedCategoryData.fields ? selectedCategoryData.fields.split(',').map(f => f.trim()) : ['ID', 'Password'];
+            const fieldData = {};
+            let hasData = false;
+
+            fieldNames.forEach((field, index) => {
+                const el = document.getElementById(`field_${index}`);
+                if (el) {
+                    const val = el.value.trim();
+                    fieldData[field] = val;
+                    if (val) hasData = true;
+                }
+            });
+
+            if (!hasData) {
+                showToast('❌ Please fill in at least one field', 'error');
+                return;
+            }
+
+            // Check if category is active
+            if (selectedCategoryData.active === false) {
+                showToast('❌ Category is offline', 'error');
+                return;
+            }
+
+            document.getElementById('submitProgress').style.display = 'block';
+            document.getElementById('submitButtons').style.display = 'none';
 
             try {
-                // Get category details
-                const catData = await getData(`categories/${selectedCategory}`);
-                const catName = catData ? catData.name : 'Unknown';
-                const isActive = catData ? catData.active !== false : true;
-                
-                if (!isActive) {
-                    showToast('❌ Category is offline', 'error');
-                    return;
-                }
+                // Count how many entries (based on first field)
+                const firstField = fieldNames[0];
+                const firstFieldValue = fieldData[firstField] || '';
+                const entries = firstFieldValue.split('\n').filter(line => line.trim());
+                const idCount = entries.length;
 
-                // Upload file to Firebase Storage
-                const filePath = `submissions/${currentUserId}/${Date.now()}_${selectedFile.name}`;
-                const storageRef = storage.ref(filePath);
-                
-                console.log('📤 Uploading to:', filePath);
-                
-                // Upload with progress tracking
-                const uploadTask = storageRef.put(selectedFile);
-                
-                uploadTask.on('state_changed', 
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        document.getElementById('uploadProgress').innerHTML = 
-                            `<div class="spinner"></div>
-                             <div style="margin-top:8px; color:var(--tg-hint);">Uploading... ${Math.round(progress)}%</div>`;
-                    },
-                    (error) => {
-                        console.error('Upload error:', error);
-                        showToast('❌ Upload failed: ' + error.message, 'error');
-                        document.getElementById('uploadProgress').style.display = 'none';
-                        document.getElementById('confirmButtons').style.display = 'flex';
-                    }
-                );
-                
-                // Wait for upload to complete
-                const snapshot = await uploadTask;
-                const downloadURL = await snapshot.ref.getDownloadURL();
-                
-                console.log('✅ Upload complete! URL:', downloadURL);
-
-                // =============================================
-                // SAVE TO submissions NODE IN REALTIME DATABASE
-                // =============================================
+                // Create submission data
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
                     userUsername: tgUser.username || '',
-                    fileName: selectedFile.name,
-                    fileUrl: downloadURL,
                     categoryId: selectedCategory,
-                    categoryName: catName,
-                    idCount: validIds.length,
-                    fileData: validIds,
-                    duplicateCount: duplicateIds.length,
-                    duplicateIds: duplicateIds,
+                    categoryName: selectedCategoryData.name || 'Unknown',
+                    fields: fieldNames,
+                    data: fieldData,
+                    idCount: idCount,
                     status: 'pending',
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    type: 'manual'
                 };
-                
-                // Push to submissions node
+
+                // Save to database
                 const subKey = await pushData('submissions', subData);
-                console.log('✅ Saved to submissions! Key:', subKey);
+                console.log('✅ Submission saved! Key:', subKey);
 
                 // Update user stats
                 const userData = await getData(`users/${currentUserId}`);
@@ -936,87 +900,62 @@
                 // SEND CONFIRMATION TO USER
                 // =============================================
                 let userMsg = 
-                    `✅ <b>File Submitted Successfully!</b>\n\n` +
-                    `📁 <b>Category:</b> ${catName}\n` +
-                    `📄 <b>File:</b> ${selectedFile.name}\n` +
-                    `📊 <b>Total IDs Found:</b> ${fileIdCount}\n` +
-                    `✅ <b>Valid New IDs:</b> ${validIds.length}\n`;
-                
-                if (duplicateIds.length > 0) {
-                    userMsg += `⚠️ <b>Duplicate IDs Removed:</b> ${duplicateIds.length}\n`;
-                    if (duplicateIds.length <= 10) {
-                        userMsg += `📌 Duplicate IDs: ${duplicateIds.join(', ')}\n`;
-                    }
-                }
-                
-                userMsg += `\n⏳ <b>Status:</b> Pending Review\n\n` +
+                    `✅ <b>Submission Successful!</b>\n\n` +
+                    `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
+                    `📊 <b>Total IDs:</b> ${idCount}\n` +
+                    `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
+                    `⏳ <b>Status:</b> Pending Review\n\n` +
                     `📌 <b>Next Step:</b> Wait for admin approval.`;
 
                 sendTelegramMessage(currentUserId, userMsg);
 
                 // =============================================
-                // SEND FILE TO ADMIN
+                // SEND TO ADMIN
                 // =============================================
                 let adminMsg = 
-                    `📤 <b>New File Submission</b>\n\n` +
+                    `📤 <b>New Manual Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
                     `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
-                    `📁 <b>Category:</b> ${catName}\n` +
-                    `📄 <b>File:</b> ${selectedFile.name}\n` +
-                    `📊 <b>Total IDs:</b> ${fileIdCount}\n` +
-                    `✅ <b>New IDs:</b> ${validIds.length}\n` +
-                    `⚠️ <b>Duplicates Removed:</b> ${duplicateIds.length}\n` +
+                    `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
+                    `📊 <b>Total IDs:</b> ${idCount}\n` +
+                    `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
                     `⏳ <b>Status:</b> Pending Review`;
 
-                // Send the actual file to admin
-                sendTelegramDocument(ADMIN_CHAT_ID, selectedFile, adminMsg);
+                // Send to admin
+                sendTelegramMessage(ADMIN_CHAT_ID, adminMsg);
 
-                showToast('✅ File submitted successfully!', 'success');
+                // Also send the actual data to admin
+                let dataMsg = `📋 <b>Submitted Data:</b>\n\n`;
+                fieldNames.forEach(field => {
+                    const val = fieldData[field] || '';
+                    const displayVal = val.length > 200 ? val.substring(0, 200) + '...' : val;
+                    dataMsg += `<b>${field}:</b>\n<code>${displayVal}</code>\n\n`;
+                });
+                sendTelegramMessage(ADMIN_CHAT_ID, dataMsg);
+
+                showToast('✅ Submitted successfully!', 'success');
                 loadDashboard();
                 
                 // Reset UI
-                document.getElementById('fileInput').value = '';
-                document.getElementById('filePreview').style.display = 'none';
-                document.getElementById('confirmButtons').style.display = 'none';
-                document.getElementById('uploadProgress').style.display = 'none';
-                document.getElementById('uploadSection').style.display = 'none';
-                selectedFile = null;
-                fileData = [];
-                validIds = [];
-                duplicateIds = [];
-                fileIdCount = 0;
+                document.getElementById('submitSection').style.display = 'none';
+                document.getElementById('submitButtons').style.display = 'none';
+                document.getElementById('submitProgress').style.display = 'none';
+                document.getElementById('inputFields').innerHTML = '';
+                selectedCategory = null;
+                selectedCategoryData = null;
                 
             } catch (e) {
-                console.error('Upload error:', e);
-                showToast('❌ Upload failed: ' + e.message, 'error');
-                document.getElementById('uploadProgress').style.display = 'none';
-                document.getElementById('confirmButtons').style.display = 'flex';
+                console.error('Submit error:', e);
+                showToast('❌ Submission failed: ' + e.message, 'error');
+                document.getElementById('submitProgress').style.display = 'none';
+                document.getElementById('submitButtons').style.display = 'flex';
             }
         }
 
         // =============================================
-        // SEND TELEGRAM MESSAGE WITH FILE
+        // SEND TELEGRAM MESSAGE
         // =============================================
-        function sendTelegramDocument(chatId, file, caption) {
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append('document', file);
-            formData.append('caption', caption);
-            formData.append('parse_mode', 'HTML');
-
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                method: 'POST',
-                body: formData
-            }).then(res => res.json())
-              .then(data => {
-                  if (!data.ok) {
-                      console.error('Telegram send error:', data);
-                  }
-              })
-              .catch(console.error);
-        }
-
         function sendTelegramMessage(chatId, text) {
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
@@ -1068,10 +1007,7 @@
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
                     userUsername: tgUser.username || '',
-                    method, 
-                    number, 
-                    amount, 
-                    status: 'pending',
+                    method, number, amount, status: 'pending',
                     timestamp: new Date().toISOString()
                 });
 
@@ -1092,8 +1028,7 @@
                     `📱 <b>Method:</b> ${method.toUpperCase()}\n` +
                     `📞 <b>Number:</b> <code>${number}</code>\n` +
                     `💰 <b>Amount:</b> ${amount} Taka\n` +
-                    `⏳ <b>Status:</b> Pending\n` +
-                    `🆔 <b>Request ID:</b> <code>${wdId}</code>`
+                    `⏳ <b>Status:</b> Pending`
                 );
 
                 sendTelegramMessage(ADMIN_CHAT_ID,
@@ -1103,8 +1038,7 @@
                     `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
                     `📱 <b>Method:</b> ${method.toUpperCase()}\n` +
                     `📞 <b>Number:</b> <code>${number}</code>\n` +
-                    `💰 <b>Amount:</b> ${amount} Taka\n` +
-                    `🆔 <b>Request:</b> <code>${wdId}</code>`
+                    `💰 <b>Amount:</b> ${amount} Taka`
                 );
 
                 closeModal('withdrawModal');
@@ -1126,7 +1060,6 @@
                 const container = document.getElementById('historyList');
                 let html = '';
 
-                // Calculate stats
                 let totalSubs = 0, pending = 0, approved = 0, rejected = 0, withdrawTotal = 0, balance = 0;
 
                 if (submissions) {
@@ -1209,12 +1142,9 @@
                     userSubs.forEach(([key, data]) => {
                         const statusText = data.status || 'pending';
                         const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
-                        let dupText = '';
-                        if (data.duplicateCount > 0) {
-                            dupText = ` ⚠️ ${data.duplicateCount} duplicates removed`;
-                        }
-                        html += `<div class="history-item"><div class="history-left"><div class="h-title">📄 ${data.fileName}</div>
-                            <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}${dupText}</div></div>
+                        const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
+                        html += `<div class="history-item"><div class="history-left"><div class="h-title">${typeText} ${data.fileName || data.categoryName || 'Submission'}</div>
+                            <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}</div></div>
                             <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                     });
                 }
@@ -1268,7 +1198,7 @@
         }
 
         // =============================================
-        // ADMIN: CATEGORIES
+        // ADMIN: CATEGORIES (with Fields support)
         // =============================================
         async function loadAdminCategories() {
             if (!isAdmin) return;
@@ -1284,9 +1214,11 @@
                 let html = '';
                 Object.entries(categories).forEach(([key, cat]) => {
                     const status = cat.active !== false ? '🟢 Active' : '🔴 Inactive';
+                    const fields = cat.fields ? `📋 ${cat.fields}` : 'No fields set';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div><div style="font-weight:600;">${cat.icon || '📁'} ${cat.name}</div>
-                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${status}</div></div>
+                        <div style="font-size:12px; color:var(--tg-hint);">${cat.details || 'No details'} • ${status}</div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${fields}</div></div>
                         <div style="display:flex; gap:4px;">
                             <button onclick="editCategory('${key}')" class="btn-sm" style="background:var(--tg-button); color:white;">✏️</button>
                             <button onclick="deleteCategory('${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
@@ -1309,6 +1241,7 @@
                         document.getElementById('categoryIcon').value = data.icon || '';
                         document.getElementById('categoryDetails').value = data.details || '';
                         document.getElementById('categoryStatus').value = String(data.active !== false);
+                        document.getElementById('categoryFields').value = data.fields || 'ID, Password';
                     }
                 }).catch(e => showToast('❌ Error loading category', 'error'));
             } else {
@@ -1316,6 +1249,7 @@
                 document.getElementById('categoryIcon').value = '';
                 document.getElementById('categoryDetails').value = '';
                 document.getElementById('categoryStatus').value = 'true';
+                document.getElementById('categoryFields').value = 'ID, Password';
             }
             document.getElementById('categoryModal').classList.add('active');
         }
@@ -1327,10 +1261,12 @@
             const icon = document.getElementById('categoryIcon').value.trim() || '📁';
             const details = document.getElementById('categoryDetails').value.trim();
             const active = document.getElementById('categoryStatus').value === 'true';
+            const fields = document.getElementById('categoryFields').value.trim() || 'ID, Password';
+
             if (!name) { showToast('❌ Enter name', 'error'); return; }
 
             try {
-                const data = { name, icon, details, active };
+                const data = { name, icon, details, active, fields };
                 if (editingCategoryId) {
                     await setData(`categories/${editingCategoryId}`, data);
                     showToast('✅ Updated!', 'success');
@@ -1528,11 +1464,8 @@
                         userSubs.forEach(([key, data]) => {
                             const statusText = data.status || 'pending';
                             const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
-                            let dupText = '';
-                            if (data.duplicateCount > 0) {
-                                dupText = ` ⚠️ ${data.duplicateCount} dup removed`;
-                            }
-                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${data.fileName}${dupText}</span><span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
+                            const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
+                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${typeText} ${data.fileName || data.categoryName || 'Submission'}</span><span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                         });
                     }
                 }
@@ -1649,7 +1582,7 @@
         }
 
         // =============================================
-        // ADMIN: FILES
+        // ADMIN: FILES (Submissions)
         // =============================================
         function switchFileTab(tab) {
             currentFileTab = tab;
@@ -1664,7 +1597,7 @@
                 const container = document.getElementById('adminFileList');
                 
                 if (!submissions) {
-                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
+                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} submissions</div>`;
                     return;
                 }
 
@@ -1674,25 +1607,26 @@
                     .slice(0, 50);
 
                 if (filtered.length === 0) {
-                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} files</div>`;
+                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); padding:20px;">No ${status} submissions</div>`;
                     return;
                 }
 
                 let html = '';
                 filtered.forEach(([key, data]) => {
-                    const dupText = data.duplicateCount > 0 ? ` ⚠️ ${data.duplicateCount} duplicates` : '';
+                    const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
+                    const fieldsText = data.fields ? data.fields.join(', ') : '';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div><div style="font-weight:600;">📄 ${data.fileName}${dupText}</div>
+                            <div><div style="font-weight:600;">${typeText} ${data.categoryName || 'Unknown'}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">📁 ${data.categoryName || 'Unknown'} • ${new Date(data.timestamp).toLocaleString()}</div></div>
+                            <div style="font-size:11px; color:var(--tg-hint);">📋 ${fieldsText || 'No fields'} • ${new Date(data.timestamp).toLocaleString()}</div></div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span class="status-badge status-${data.status}">${data.status}</span>
                                 ${data.status === 'pending' ? `
                                     <button onclick="approveFile('${key}')" class="btn-sm" style="background:#28a745; color:white;">✅ Approve</button>
                                     <button onclick="rejectFile('${key}')" class="btn-sm" style="background:#dc3545; color:white;">❌ Reject</button>
                                 ` : ''}
-                                <button onclick="window.open('${data.fileUrl}','_blank')" class="btn-sm" style="background:var(--tg-button); color:white;">📥</button>
+                                <button onclick="viewSubmission('${key}')" class="btn-sm" style="background:var(--tg-button); color:white;">👁️ View</button>
                                 <button onclick="deleteFile('${key}')" class="btn-sm" style="background:#dc3545; color:white;">🗑️</button>
                             </div>
                         </div>
@@ -1702,13 +1636,39 @@
             } catch (e) { console.error('Load files error:', e); }
         }
 
+        function viewSubmission(subId) {
+            getData(`submissions/${subId}`).then(data => {
+                if (!data) { showToast('❌ Not found', 'error'); return; }
+                
+                let html = `<div style="margin-bottom:12px;">
+                    <div style="font-weight:600;">📋 Submission Details</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">User: ${data.userName || data.userId}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Category: ${data.categoryName}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Status: ${data.status}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Date: ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>`;
+                
+                if (data.fields && data.data) {
+                    html += `<div style="background:var(--tg-secondary); border-radius:10px; padding:12px;">`;
+                    data.fields.forEach(field => {
+                        const val = data.data[field] || '';
+                        html += `<div style="margin-bottom:6px;"><strong>${field}:</strong><br><code style="font-size:12px; white-space:pre-wrap; word-break:break-all;">${val}</code></div>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                document.getElementById('userDetailContent').innerHTML = html;
+                document.getElementById('userDetailModal').classList.add('active');
+            }).catch(e => showToast('❌ Error', 'error'));
+        }
+
         // =============================================
         // APPROVE/REJECT
         // =============================================
         async function approveFile(fileId) {
             try {
                 const data = await getData(`submissions/${fileId}`);
-                if (!data) { showToast('❌ File not found', 'error'); return; }
+                if (!data) { showToast('❌ Not found', 'error'); return; }
 
                 await updateData(`submissions/${fileId}`, { status: 'approved' });
 
@@ -1753,19 +1713,16 @@
                         timestamp: new Date().toISOString()
                     });
 
-                    await sendReportToUser(data.userId, data.categoryId, approvedCount, ratePerId, commissionBonus, totalEarnings);
-
                     sendTelegramMessage(data.userId,
                         `✅ <b>IDs Approved!</b>\n\n` +
-                        `📄 ${data.fileName}\n` +
-                        `✅ ${approvedCount} IDs\n` +
+                        `📊 ${approvedCount} IDs\n` +
                         `💰 ${ratePerId} Taka/ID\n` +
                         `🎯 Commission: ${commissionBonus} Taka\n` +
                         `💵 Total: ${totalEarnings} Taka`
                     );
                 }
 
-                showToast('✅ Approved with commission!', 'success');
+                showToast('✅ Approved!', 'success');
                 await loadFileList(currentFileTab);
                 await loadDashboard();
                 await loadPaymentHistory();
@@ -1779,7 +1736,7 @@
         async function rejectFile(fileId) {
             try {
                 const data = await getData(`submissions/${fileId}`);
-                if (!data) { showToast('❌ File not found', 'error'); return; }
+                if (!data) { showToast('❌ Not found', 'error'); return; }
 
                 await updateData(`submissions/${fileId}`, { status: 'rejected' });
 
@@ -1788,11 +1745,8 @@
                     rejected: (userData.rejected || 0) + 1
                 });
 
-                await sendRejectionReport(data.userId, data.fileName);
-
                 sendTelegramMessage(data.userId,
                     `❌ <b>IDs Rejected</b>\n\n` +
-                    `📄 ${data.fileName}\n` +
                     `❌ Status: Rejected`
                 );
 
@@ -1803,114 +1757,6 @@
                 console.error('Reject error:', e); 
                 showToast('❌ Error: ' + e.message, 'error'); 
             }
-        }
-
-        // =============================================
-        // SEND REPORT TO USER
-        // =============================================
-        async function sendReportToUser(userId, categoryId, approvedCount, ratePerId, commission, totalEarnings) {
-            try {
-                const submissions = await getData('submissions');
-                const approvedIds = [];
-                const rejectedIds = [];
-
-                if (submissions) {
-                    Object.entries(submissions).forEach(([key, data]) => {
-                        if (data.userId === userId && data.categoryId === categoryId && data.status === 'approved') {
-                            if (data.fileData && Array.isArray(data.fileData)) {
-                                data.fileData.forEach(id => {
-                                    if (id && id.toString().trim()) {
-                                        approvedIds.push(id.toString().trim());
-                                    }
-                                });
-                            } else if (data.idCount) {
-                                for (let i = 0; i < data.idCount; i++) {
-                                    approvedIds.push(`ID_${data.userId}_${i+1}`);
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // Approved Excel
-                const wbApproved = XLSX.utils.book_new();
-                const approvedData = [
-                    ['SL', 'ID', 'Status', 'Rate', 'Earnings'],
-                    ...approvedIds.map((id, i) => [i+1, id, 'Approved', ratePerId, ratePerId])
-                ];
-                if (approvedIds.length === 0) approvedData.push(['No approved IDs found']);
-                const wsApproved = XLSX.utils.aoa_to_sheet(approvedData);
-                XLSX.utils.book_append_sheet(wbApproved, wsApproved, 'Approved');
-                const approvedExcel = XLSX.write(wbApproved, { type: 'array', bookType: 'xlsx' });
-
-                // Rejected Excel
-                const wbRejected = XLSX.utils.book_new();
-                const rejectedData = [
-                    ['SL', 'ID', 'Status', 'Reason']
-                ];
-                if (rejectedIds.length === 0) {
-                    rejectedData.push(['No rejected IDs']);
-                } else {
-                    rejectedIds.forEach((id, i) => {
-                        rejectedData.push([i+1, id, 'Rejected', 'Invalid format']);
-                    });
-                }
-                const wsRejected = XLSX.utils.aoa_to_sheet(rejectedData);
-                XLSX.utils.book_append_sheet(wbRejected, wsRejected, 'Rejected');
-                const rejectedExcel = XLSX.write(wbRejected, { type: 'array', bookType: 'xlsx' });
-
-                const approvedBlob = new Blob([approvedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const rejectedBlob = new Blob([rejectedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-                // Send Approved
-                const formDataApproved = new FormData();
-                formDataApproved.append('chat_id', userId);
-                formDataApproved.append('document', approvedBlob, `approved_${new Date().toISOString().split('T')[0]}.xlsx`);
-                formDataApproved.append('caption', 
-                    `✅ <b>Approved IDs Report</b>\n\n` +
-                    `📊 Total Approved: ${approvedIds.length}\n` +
-                    `💰 Rate: ${ratePerId} Taka/ID\n` +
-                    `🎯 Commission: ${commission} Taka\n` +
-                    `💵 Total: ${totalEarnings} Taka`
-                );
-                formDataApproved.append('parse_mode', 'HTML');
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataApproved });
-
-                // Send Rejected
-                const formDataRejected = new FormData();
-                formDataRejected.append('chat_id', userId);
-                formDataRejected.append('document', rejectedBlob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
-                formDataRejected.append('caption', 
-                    `❌ <b>Rejected IDs Report</b>\n\n` +
-                    `📊 Total Rejected: ${rejectedIds.length}`
-                );
-                formDataRejected.append('parse_mode', 'HTML');
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formDataRejected });
-
-            } catch (e) { console.error('Send report error:', e); }
-        }
-
-        async function sendRejectionReport(userId, fileName) {
-            try {
-                const wb = XLSX.utils.book_new();
-                const data = [['SL', 'ID', 'Status', 'Reason']];
-                data.push([1, 'All IDs', 'Rejected', 'File rejected by admin']);
-                const ws = XLSX.utils.aoa_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, 'Rejected');
-                const excel = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-                const blob = new Blob([excel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-                const formData = new FormData();
-                formData.append('chat_id', userId);
-                formData.append('document', blob, `rejected_${new Date().toISOString().split('T')[0]}.xlsx`);
-                formData.append('caption', 
-                    `❌ <b>File Rejected</b>\n\n` +
-                    `📄 ${fileName}\n` +
-                    `❌ All IDs Rejected`
-                );
-                formData.append('parse_mode', 'HTML');
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
-            } catch (e) { console.error('Send rejection error:', e); }
         }
 
         // =============================================
@@ -1979,6 +1825,133 @@
         }
 
         // =============================================
+        // ADMIN: REPORT (Send to Users)
+        // =============================================
+        async function loadReportCategories() {
+            try {
+                const categories = await getData('categories');
+                const sel = document.getElementById('reportCategorySelect');
+                sel.innerHTML = '<option value="">All Categories</option>';
+                if (categories) {
+                    Object.entries(categories).forEach(([key, cat]) => {
+                        sel.innerHTML += `<option value="${key}">${cat.icon || '📁'} ${cat.name}</option>`;
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function sendReport() {
+            const category = document.getElementById('reportCategorySelect').value;
+            const idsText = document.getElementById('reportIdsInput').value.trim();
+            const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
+
+            if (!idsText) {
+                showToast('❌ Enter some IDs', 'error');
+                return;
+            }
+
+            const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
+            if (ids.length === 0) {
+                showToast('❌ No valid IDs', 'error');
+                return;
+            }
+
+            document.getElementById('reportProgress').style.display = 'block';
+            document.getElementById('reportResult').innerHTML = '';
+
+            try {
+                let processed = 0;
+                let totalEarnings = 0;
+                let totalIds = 0;
+
+                for (const userId of ids) {
+                    const userData = await getData(`users/${userId}`);
+                    if (!userData) continue;
+
+                    // Get approved submissions for this user
+                    const submissions = await getData('submissions');
+                    let approvedCount = 0;
+                    
+                    if (submissions) {
+                        Object.values(submissions).forEach(sub => {
+                            if (sub.userId === userId && sub.status === 'approved') {
+                                if (category && sub.categoryId !== category) return;
+                                approvedCount += sub.idCount || 0;
+                            }
+                        });
+                    }
+
+                    if (approvedCount === 0) continue;
+
+                    // Check commission
+                    let commissionBonus = 0;
+                    if (category) {
+                        const commissionData = await getData(`categoryCommission/${category}`);
+                        if (commissionData && commissionData.rules) {
+                            const rules = commissionData.rules;
+                            const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
+                            for (const key of sortedKeys) {
+                                if (approvedCount >= parseInt(key)) {
+                                    commissionBonus = rules[key] * approvedCount;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    const earnings = approvedCount * ratePerId;
+                    const total = earnings + commissionBonus;
+
+                    if (total > 0) {
+                        await updateData(`users/${userId}`, {
+                            balance: (userData.balance || 0) + total
+                        });
+
+                        await pushData('transactions', {
+                            userId: userId,
+                            amount: total,
+                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
+                            timestamp: new Date().toISOString()
+                        });
+
+                        totalEarnings += total;
+                        totalIds += approvedCount;
+                        processed++;
+
+                        sendTelegramMessage(userId,
+                            `📊 <b>Report Received!</b>\n\n` +
+                            `✅ ${approvedCount} IDs approved\n` +
+                            `💰 ${ratePerId} Taka/ID\n` +
+                            `🎯 Commission: ${commissionBonus} Taka\n` +
+                            `💵 Total: ${total} Taka\n\n` +
+                            `Check your balance in the app.`
+                        );
+                    }
+                }
+
+                document.getElementById('reportResult').innerHTML = `
+                    <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
+                        <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Report Sent!</div>
+                        <div>👤 Users: ${processed}</div>
+                        <div>📊 Total IDs: ${totalIds}</div>
+                        <div>💰 Total Earnings: ${totalEarnings} Taka</div>
+                    </div>
+                `;
+
+                showToast(`✅ Report sent to ${processed} users!`, 'success');
+                await loadUserData();
+                await loadBalanceStats();
+                document.getElementById('reportIdsInput').value = '';
+
+            } catch (e) {
+                console.error('Report error:', e);
+                showToast('❌ Error: ' + e.message, 'error');
+            } finally {
+                document.getElementById('reportProgress').style.display = 'none';
+            }
+        }
+
+        // =============================================
         // ADMIN: DELETE SUBMISSIONS
         // =============================================
         async function loadDeleteCategories() {
@@ -2005,7 +1978,7 @@
 
             if (!confirm(`Delete submissions for ${date}${category ? ' in category' : ''}? This cannot be undone!`)) return;
 
-            showToast('🗑️ Deleting submissions...', 'info');
+            showToast('🗑️ Deleting...', 'info');
 
             try {
                 const submissions = await getData('submissions');
@@ -2156,7 +2129,7 @@
                                 user: data.userName || data.userId,
                                 amount: amount,
                                 date: data.timestamp,
-                                details: `${data.idCount} IDs - ${data.fileName}`
+                                details: `${data.idCount} IDs`
                             });
                         } else if (data.status === 'pending') {
                             totalPending += amount;
@@ -2248,13 +2221,13 @@
                         const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
                         if (itemDate !== date) return;
                     }
-                    const dupText = item.duplicateCount > 0 ? ` (${item.duplicateCount} dup removed)` : '';
+                    const typeText = item.type === 'manual' ? 'Manual' : 'File';
                     data.push([
                         item.userName || item.userId,
-                        item.fileName + dupText,
+                        item.categoryName || 'Unknown',
+                        typeText,
                         item.idCount || 0,
                         item.status || 'pending',
-                        item.categoryName || 'Unknown',
                         new Date(item.timestamp).toLocaleString()
                     ]);
                     totalIds += item.idCount || 0;
@@ -2267,7 +2240,7 @@
 
                 const wb = XLSX.utils.book_new();
                 const wsData = [
-                    ['User', 'File Name', 'ID Count', 'Status', 'Category', 'Date'],
+                    ['User', 'Category', 'Type', 'ID Count', 'Status', 'Date'],
                     ...data
                 ];
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -2281,7 +2254,7 @@
                 a.download = `submissions_${date || 'all'}_${category || 'all'}_${totalIds}.xlsx`;
                 a.click();
                 URL.revokeObjectURL(url);
-                showToast(`✅ Downloaded! ${data.length} files, ${totalIds} IDs`, 'success');
+                showToast(`✅ Downloaded! ${data.length} submissions, ${totalIds} IDs`, 'success');
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
@@ -2450,10 +2423,10 @@
         // DELETE FILE
         // =============================================
         async function deleteFile(fileId) {
-            if (!confirm('Delete this file?')) return;
+            if (!confirm('Delete this submission?')) return;
             try {
                 await deleteData(`submissions/${fileId}`);
-                showToast('✅ File deleted!', 'success');
+                showToast('✅ Deleted!', 'success');
                 await loadFileList(currentFileTab);
             } catch (e) { 
                 console.error('Delete file error:', e); 
