@@ -156,6 +156,10 @@
             resize: none;
             width: 100%;
             box-sizing: border-box;
+            /* CRITICAL: each line stays separate */
+            white-space: pre;
+            word-wrap: normal;
+            overflow-wrap: normal;
         }
         .input-box-wrapper .box-scroll:focus {
             border-color: var(--tg-button);
@@ -285,6 +289,28 @@
             left: 0;
             width: 100%;
             height: 100%;
+        }
+        
+        /* Report Date Filter */
+        .report-date-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .report-date-group input[type="date"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 14px;
+            border: 2px solid var(--tg-secondary);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+        }
+        .report-date-group label {
+            font-weight: 600;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -492,7 +518,17 @@
         <div class="card">
             <div class="card-title">📤 Send Report</div>
             <div class="form-group"><label>📁 Category</label><select id="reportCategorySelect"><option value="">All</option></select></div>
-            <div class="form-group"><label>📝 Enter IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter IDs line by line..."></textarea></div>
+            
+            <!-- DATE FILTER ADDED -->
+            <div class="form-group">
+                <label>📅 Report Date</label>
+                <div class="report-date-group">
+                    <input type="date" id="reportDate">
+                    <span style="font-size:12px; color:var(--tg-hint);">Select date to filter submissions</span>
+                </div>
+            </div>
+            
+            <div class="form-group"><label>📝 Enter User IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter User IDs line by line..."></textarea></div>
             <div class="form-group"><label>💰 Rate/ID (Taka)</label><input type="number" id="reportRate" value="5"></div>
             <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
             <div id="reportProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Processing...</div></div>
@@ -525,7 +561,10 @@
         <div class="card"><div class="card-title">💰 Withdraw Methods</div><div id="withdrawMethodsList"></div><div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"><input type="text" id="newMethodName" placeholder="Method" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><input type="number" id="newMethodLimit" placeholder="Min amount" style="flex:1; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px;"><button class="btn-primary" onclick="addWithdrawMethod()" style="flex:0.5; padding:10px;">Add</button></div></div>
         <div class="card"><div class="card-title">📜 Price & Rules</div><textarea id="priceRulesInput" style="width:100%; min-height:80px; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"></textarea><button class="btn-primary" onclick="updatePriceRules()">💾 Save</button></div>
         <div class="card"><div class="card-title">📹 Tutorial Video</div>
-            <div class="form-group"><label>YouTube Video ID</label><input type="text" id="tutorialVideoId" placeholder="e.g. dQw4w9WgXcQ" style="width:100%; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);"></div>
+            <div class="form-group"><label>YouTube Video ID (শুধু কোড)</label>
+                <input type="text" id="tutorialVideoId" placeholder="e.g. dQw4w9WgXcQ" style="width:100%; padding:10px; border:2px solid var(--tg-secondary); border-radius:10px; background:var(--tg-bg); color:var(--tg-text);">
+                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">শুধুমাত্র Video ID দিন, পুরো লিংক নয়। যেমন: dQw4w9WgXcQ</div>
+            </div>
             <button class="btn-primary" onclick="updateTutorialVideo()">💾 Save</button>
             <div id="videoPreview" style="margin-top:10px;"></div>
         </div>
@@ -687,6 +726,7 @@
 
                 document.getElementById('downloadDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('deleteDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
             } catch (error) {
                 console.error('Init error:', error);
                 showToast('❌ Error: ' + error.message, 'error');
@@ -917,6 +957,10 @@
                 scrollDiv.setAttribute('role', 'textbox');
                 scrollDiv.setAttribute('aria-multiline', 'true');
                 scrollDiv.textContent = '';
+                // CRITICAL: each line stays separate, long lines scroll horizontally
+                scrollDiv.style.whiteSpace = 'pre';
+                scrollDiv.style.overflowWrap = 'normal';
+                scrollDiv.style.wordWrap = 'normal';
                 
                 // Paste event – preserve lines
                 scrollDiv.addEventListener('paste', function(e) {
@@ -1363,7 +1407,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // ===== TUTORIAL VIDEO – YouTube embed using video ID =====
+        // ===== TUTORIAL VIDEO – YouTube embed using ONLY video ID =====
         async function loadTutorialVideo() {
             try {
                 const data = await getData('settings/tutorial');
@@ -1391,6 +1435,10 @@
 
         async function updateTutorialVideo() {
             const videoId = document.getElementById('tutorialVideoId').value.trim();
+            if (!videoId) {
+                showToast('❌ Please enter a YouTube Video ID', 'error');
+                return;
+            }
             try {
                 await setData('settings/tutorial', { videoId });
                 showToast('✅ Video ID updated!', 'success');
@@ -2065,7 +2113,7 @@
         }
 
         // =============================================
-        // ADMIN: REPORT
+        // ADMIN: REPORT (WITH DATE FILTER)
         // =============================================
         async function loadReportCategories() {
             try {
@@ -2082,17 +2130,23 @@
 
         async function sendReport() {
             const category = document.getElementById('reportCategorySelect').value;
+            const reportDate = document.getElementById('reportDate').value;
             const idsText = document.getElementById('reportIdsInput').value.trim();
             const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
 
             if (!idsText) {
-                showToast('❌ Enter some IDs', 'error');
+                showToast('❌ Enter some User IDs', 'error');
+                return;
+            }
+
+            if (!reportDate) {
+                showToast('❌ Select a date', 'error');
                 return;
             }
 
             const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
             if (ids.length === 0) {
-                showToast('❌ No valid IDs', 'error');
+                showToast('❌ No valid User IDs', 'error');
                 return;
             }
 
@@ -2115,6 +2169,9 @@
                         Object.values(submissions).forEach(sub => {
                             if (sub.userId === userId && sub.status === 'approved') {
                                 if (category && sub.categoryId !== category) return;
+                                // Date filter
+                                const subDate = new Date(sub.timestamp).toISOString().split('T')[0];
+                                if (subDate !== reportDate) return;
                                 approvedCount += sub.idCount || 0;
                             }
                         });
@@ -2148,7 +2205,7 @@
                         await pushData('transactions', {
                             userId: userId,
                             amount: total,
-                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka`,
+                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka (${reportDate})`,
                             timestamp: new Date().toISOString()
                         });
 
@@ -2162,10 +2219,11 @@
                         ];
                         const csvContent = csvRows.join('\n');
                         const csvBlob = new Blob([csvContent], { type: 'text/csv' });
-                        const csvFile = new File([csvBlob], `report_${userId}_${Date.now()}.csv`, { type: 'text/csv' });
+                        const csvFile = new File([csvBlob], `report_${userId}_${reportDate}_${Date.now()}.csv`, { type: 'text/csv' });
 
                         sendTelegramDocument(userId, csvFile,
                             `📊 <b>Report Received!</b>\n\n` +
+                            `📅 ${reportDate}\n` +
                             `✅ ${approvedCount} IDs approved\n` +
                             `💰 ${ratePerId} Taka/ID\n` +
                             `🎯 Commission: ${commissionBonus} Taka\n` +
@@ -2177,6 +2235,7 @@
                 document.getElementById('reportResult').innerHTML = `
                     <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
                         <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Report Sent!</div>
+                        <div>📅 Date: ${reportDate}</div>
                         <div>👤 Users: ${processed}</div>
                         <div>📊 Total IDs: ${totalIds}</div>
                         <div>💰 Total Earnings: ${totalEarnings} Taka</div>
@@ -2565,7 +2624,54 @@
             } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
-        // Support contacts (already above)
+        // Support contacts
+        async function loadSupportContactsList() {
+            try {
+                const data = await getData('settings/support');
+                const container = document.getElementById('supportContactsList');
+                if (data && data.contacts) {
+                    container.innerHTML = data.contacts.map((s, i) =>
+                        `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--tg-bg); border-radius:8px; margin-bottom:4px;">
+                            <span>📞 ${s.name} (@${s.username})</span>
+                            <button onclick="removeSupportContact(${i})" style="background:none; border:none; color:#dc3545; cursor:pointer;">🗑️</button>
+                        </div>`
+                    ).join('');
+                } else {
+                    container.innerHTML = '<div style="color:var(--tg-hint);">No contacts</div>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function addSupportContact() {
+            const name = document.getElementById('newSupportName').value.trim();
+            const username = document.getElementById('newSupportUsername').value.trim();
+            if (!name || !username) { showToast('❌ Fill all fields', 'error'); return; }
+
+            try {
+                const data = await getData('settings/support');
+                let contacts = data && data.contacts ? data.contacts : [];
+                contacts.push({ name, username });
+                await setData('settings/support', { contacts });
+                showToast('✅ Added!', 'success');
+                await loadSupportContactsList();
+                await loadSupportContacts();
+                document.getElementById('newSupportName').value = '';
+                document.getElementById('newSupportUsername').value = '';
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
+        }
+
+        async function removeSupportContact(index) {
+            try {
+                const data = await getData('settings/support');
+                if (data && data.contacts) {
+                    data.contacts.splice(index, 1);
+                    await setData('settings/support', data);
+                    showToast('✅ Removed!', 'success');
+                    await loadSupportContactsList();
+                    await loadSupportContacts();
+                }
+            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
+        }
 
         // =============================================
         // ADMIN: BACKUP
