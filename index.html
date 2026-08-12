@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ID Submit System</title>
     
+    <!-- Telegram & Firebase -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -109,28 +110,27 @@
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
-        /* ===== SIDE BY SIDE SCROLLABLE INPUT BOXES ===== */
+        /* ===== FIXED SIDE BY SIDE BOXES – FULL VISIBLE, NO HORIZONTAL SCROLL ===== */
         .input-boxes-container {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 12px;
             flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 4px;
+            width: 100%;
+            overflow: visible;
         }
         .input-box-wrapper {
-            flex: 1;
-            min-width: 120px;
-            max-width: 33.33%;
+            flex: 1 1 0;
+            min-width: 0;          /* allow shrinking */
+            max-width: 100%;
             display: flex;
             flex-direction: column;
         }
         .input-box-wrapper label {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: var(--tg-text);
-            margin-bottom: 4px;
-            display: block;
+            margin-bottom: 3px;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
@@ -138,30 +138,32 @@
         }
         .input-box-wrapper .box-scroll {
             flex: 1;
-            min-height: 350px;
-            max-height: 450px;
-            padding: 8px 10px;
+            min-height: 200px;
+            max-height: 350px;
+            padding: 6px 8px;
             border: 2px solid var(--tg-secondary);
-            border-radius: 12px;
-            font-size: 13px;
-            font-family: monospace;
+            border-radius: 10px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
             background: var(--tg-bg);
             color: var(--tg-text);
             overflow-y: auto;
             overflow-x: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
-            line-height: 1.6;
+            line-height: 1.5;
             transition: border-color 0.2s;
             resize: none;
             width: 100%;
+            box-sizing: border-box;
         }
         .input-box-wrapper .box-scroll:focus {
             border-color: var(--tg-button);
             outline: none;
         }
         .input-box-wrapper .box-scroll::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
+            height: 5px;
         }
         .input-box-wrapper .box-scroll::-webkit-scrollbar-track {
             background: var(--tg-secondary);
@@ -174,11 +176,18 @@
         .input-box-wrapper .field-hint {
             font-size: 10px;
             color: var(--tg-hint);
-            margin-top: 4px;
+            margin-top: 3px;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .input-box-wrapper .line-count {
+            font-size: 10px;
+            color: var(--tg-hint);
+            text-align: right;
+            padding-right: 2px;
+            margin-top: 2px;
         }
         
         .clear-btn {
@@ -325,7 +334,7 @@
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ========== SUBMIT (Side by Side Scrollable Boxes) ========== -->
+    <!-- ========== SUBMIT (Side by Side Scrollable Boxes – FIXED) ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 FB & IG ID SUBMIT</h3>
@@ -335,7 +344,7 @@
         <div id="submitSection" style="display:none;">
             <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
-            <!-- Side by Side Scrollable Boxes -->
+            <!-- Side by Side Boxes – no horizontal scroll, fixed width -->
             <div class="input-boxes-container" id="inputBoxes"></div>
             
             <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
@@ -848,7 +857,7 @@
                     <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} boxes • Enter one per line in each box</div>
                 `;
                 
-                // Build side by side scrollable boxes
+                // Build boxes – fixed layout
                 buildBoxes();
                 
                 showToast('📁 Category selected! Fill in the boxes.', 'info');
@@ -858,7 +867,7 @@
         }
 
         // =============================================
-        // BUILD SIDE BY SIDE SCROLLABLE BOXES
+        // BUILD SIDE BY SIDE BOXES – FULL VISIBLE
         // =============================================
         function buildBoxes() {
             const container = document.getElementById('inputBoxes');
@@ -866,13 +875,15 @@
             textareas = {};
             
             const totalFields = fieldNames.length;
-            const maxWidth = totalFields <= 3 ? 33.33 : (100 / totalFields);
+            // each box gets equal width, automatically shrink
+            const flexBasis = totalFields > 0 ? (100 / totalFields) : 33.33;
             
             fieldNames.forEach((field, index) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'input-box-wrapper';
-                wrapper.style.maxWidth = maxWidth + '%';
-                wrapper.style.minWidth = Math.max(120, 100 / totalFields) + '%';
+                wrapper.style.flex = `1 1 ${flexBasis}%`;
+                wrapper.style.minWidth = '60px';  // minimum readable
+                wrapper.style.maxWidth = '100%';
                 
                 const label = document.createElement('label');
                 label.textContent = field;
@@ -886,41 +897,67 @@
                 scrollDiv.setAttribute('aria-multiline', 'true');
                 scrollDiv.textContent = '';
                 
-                // Paste event handler
+                // Paste event
                 scrollDiv.addEventListener('paste', function(e) {
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text');
                     document.execCommand('insertText', false, text);
+                    updateLineCount(index);
+                });
+                
+                // Input event for line count
+                scrollDiv.addEventListener('input', function() {
+                    updateLineCount(index);
                 });
                 
                 const hint = document.createElement('div');
                 hint.className = 'field-hint';
-                hint.textContent = `One per line`;
+                hint.textContent = 'One per line';
+                
+                const count = document.createElement('div');
+                count.className = 'line-count';
+                count.id = `count_${index}`;
+                count.textContent = '0 lines';
                 
                 wrapper.appendChild(label);
                 wrapper.appendChild(scrollDiv);
                 wrapper.appendChild(hint);
+                wrapper.appendChild(count);
                 container.appendChild(wrapper);
                 
                 textareas[field] = scrollDiv;
             });
         }
 
+        function updateLineCount(index) {
+            const el = document.getElementById(`box_${index}`);
+            if (el) {
+                const lines = el.textContent.split('\n').filter(line => line.trim());
+                const countEl = document.getElementById(`count_${index}`);
+                if (countEl) countEl.textContent = lines.length + ' lines';
+            }
+        }
+
         function clearAllBoxes() {
             if (!confirm('Clear all boxes?')) return;
-            Object.values(textareas).forEach(el => el.textContent = '');
+            Object.values(textareas).forEach(el => {
+                el.textContent = '';
+                updateLineCount(0);
+            });
+            // update all counts
+            fieldNames.forEach((_, i) => updateLineCount(i));
             showToast('🗑️ All boxes cleared', 'info');
         }
 
         // =============================================
-        // GET DATA FROM BOXES
+        // GET DATA FROM BOXES (each line = one row)
         // =============================================
         function getBoxData(el) {
             return el.textContent.split('\n').filter(line => line.trim());
         }
 
         // =============================================
-        // SUBMIT BOXES
+        // SUBMIT BOXES – CSV ONLY DATA, NO HEADERS
         // =============================================
         async function submitBoxes() {
             if (!selectedCategory || !selectedCategoryData) {
@@ -934,7 +971,6 @@
             }
 
             // Collect data from all boxes
-            const allData = [];
             const fieldValues = {};
             let hasData = false;
             let maxLines = 0;
@@ -954,12 +990,13 @@
                 return;
             }
 
-            // Build data rows - one per line
+            // Build data rows – one per line, each field gets its line
+            const allData = [];
             for (let i = 0; i < maxLines; i++) {
                 const row = {};
                 fieldNames.forEach(field => {
                     const lines = fieldValues[field] || [];
-                    row[field] = lines[i] || (lines.length > 0 ? lines[lines.length - 1] : '');
+                    row[field] = lines[i] || '';
                 });
                 // Only add if at least one field has data
                 let hasRowData = false;
@@ -1006,17 +1043,21 @@
                     });
                 }
 
-                // Create CSV - ONLY DATA, NO EXTRA TEXT
-                const csvRows = [fieldNames.join(',')];
+                // ===== CREATE CSV – ONLY DATA, NO HEADERS, NO EXTRA TEXT =====
+                // Each row is one line from the boxes, each field is a column
+                const csvRows = [];
                 allData.forEach(row => {
-                    csvRows.push(fieldNames.map(f => {
+                    const rowArr = fieldNames.map(f => {
                         let val = row[f] || '';
+                        // Escape quotes and commas if needed
                         if (val.includes(',') || val.includes('"') || val.includes('\n')) {
                             val = '"' + val.replace(/"/g, '""') + '"';
                         }
                         return val;
-                    }).join(','));
+                    });
+                    csvRows.push(rowArr.join(','));
                 });
+                // NO HEADER ROW – as requested
                 const csvContent = csvRows.join('\n');
                 const csvBlob = new Blob([csvContent], { type: 'text/csv' });
                 const csvFile = new File([csvBlob], `submission_${Date.now()}.csv`, { type: 'text/csv' });
@@ -1051,7 +1092,10 @@
                 loadDashboard();
                 
                 // Clear boxes
-                Object.values(textareas).forEach(el => el.textContent = '');
+                Object.values(textareas).forEach(el => {
+                    el.textContent = '';
+                });
+                fieldNames.forEach((_, i) => updateLineCount(i));
                 document.getElementById('submitProgress').style.display = 'none';
                 
             } catch (e) {
@@ -1846,17 +1890,18 @@
                         timestamp: new Date().toISOString()
                     });
 
-                    // Send CSV file to user - ONLY DATA, NO EXTRA TEXT
+                    // Send CSV – ONLY DATA, NO HEADERS
                     if (data.fields && data.data && Array.isArray(data.data)) {
-                        const csvRows = [data.fields.join(',')];
+                        const csvRows = [];
                         data.data.forEach(row => {
-                            csvRows.push(data.fields.map(f => {
+                            const rowArr = data.fields.map(f => {
                                 let val = row[f] || '';
                                 if (val.includes(',') || val.includes('"') || val.includes('\n')) {
                                     val = '"' + val.replace(/"/g, '""') + '"';
                                 }
                                 return val;
-                            }).join(','));
+                            });
+                            csvRows.push(rowArr.join(','));
                         });
                         const csvContent = csvRows.join('\n');
                         const csvBlob = new Blob([csvContent], { type: 'text/csv' });
@@ -2074,9 +2119,11 @@
                         totalIds += approvedCount;
                         processed++;
 
-                        // CSV with ONLY DATA
-                        const csvRows = [[userId, category || 'All', approvedCount, ratePerId, commissionBonus, total]];
-                        const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                        // CSV with ONLY DATA – no headers
+                        const csvRows = [
+                            [userId, category || 'All', approvedCount, ratePerId, commissionBonus, total].join(',')
+                        ];
+                        const csvContent = csvRows.join('\n');
                         const csvBlob = new Blob([csvContent], { type: 'text/csv' });
                         const csvFile = new File([csvBlob], `report_${userId}_${Date.now()}.csv`, { type: 'text/csv' });
 
