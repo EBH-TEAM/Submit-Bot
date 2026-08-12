@@ -110,7 +110,6 @@
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
-        /* FIXED BOXES – প্রতিটি লাইন আলাদা */
         .input-boxes-container {
             display: flex;
             gap: 8px;
@@ -206,6 +205,21 @@
             width: auto;
         }
         .clear-btn:active { transform: scale(0.95); }
+        
+        .upload-excel-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 12px;
+            width: auto;
+        }
+        .upload-excel-btn:active { transform: scale(0.95); }
         
         .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .history-left .h-title { font-weight: 600; font-size: 14px; }
@@ -309,14 +323,48 @@
             font-size: 13px;
         }
         
-        .notification-badge {
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 10px;
-            font-weight: bold;
-            margin-left: 4px;
+        .upload-area {
+            border: 2px dashed var(--tg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--tg-bg);
+        }
+        .upload-area:hover {
+            border-color: var(--tg-button);
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        .upload-area .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .upload-area p {
+            color: var(--tg-hint);
+            font-size: 14px;
+        }
+        
+        .file-preview {
+            background: var(--tg-bg);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+        .file-preview.active {
+            display: block;
+        }
+        .file-preview .file-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .file-preview .file-info {
+            font-size: 12px;
+            color: var(--tg-hint);
         }
     </style>
 </head>
@@ -394,6 +442,19 @@
         <div id="submitSection" style="display:none;">
             <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
+            <!-- Excel Upload Area -->
+            <div class="upload-area" onclick="document.getElementById('excelUpload').click()">
+                <span class="icon">📊</span>
+                <p>Click to upload Excel file (.xlsx / .xls)</p>
+                <input type="file" id="excelUpload" accept=".xlsx,.xls" onchange="handleExcelUpload(event)">
+            </div>
+            
+            <div class="file-preview" id="filePreview">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+            
+            <!-- Input Boxes -->
             <div class="input-boxes-container" id="inputBoxes"></div>
             
             <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
@@ -661,9 +722,6 @@
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
-        // =============================================
-        // DATABASE HELPERS
-        // =============================================
         function getData(path) { 
             return new Promise((resolve, reject) => { 
                 db.ref(path).once('value', (snap) => { resolve(snap.val()); }, (err) => { reject(err); }); 
@@ -923,11 +981,12 @@
                     <div style="font-weight:600; font-size:16px;">${catData.icon || '📁'} ${catData.name}</div>
                     ${catData.details ? `<div style="font-size:13px; color:var(--tg-hint); margin-top:4px;">${catData.details}</div>` : ''}
                     <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} boxes • Enter one per line in each box</div>
+                    <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">📊 Upload Excel file to auto-fill boxes</div>
                 `;
                 
                 buildBoxes();
                 
-                showToast('📁 Category selected! Fill in the boxes.', 'info');
+                showToast('📁 Category selected! Fill in the boxes or upload Excel.', 'info');
             }).catch(e => {
                 showToast('❌ Error loading category', 'error');
             });
@@ -1011,6 +1070,8 @@
                 el.textContent = '';
             });
             fieldNames.forEach((_, i) => updateLineCount(i));
+            document.getElementById('filePreview').classList.remove('active');
+            document.getElementById('excelUpload').value = '';
             showToast('🗑️ All boxes cleared', 'info');
         }
 
@@ -1019,7 +1080,92 @@
         }
 
         // =============================================
-        // SUBMIT BOXES - প্রতিটি লাইন আলাদা CSV
+        // EXCEL UPLOAD - Auto fill boxes
+        // =============================================
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    if (jsonData.length === 0) {
+                        showToast('❌ No data found in Excel', 'error');
+                        return;
+                    }
+                    
+                    // Get headers from first row
+                    const headers = jsonData[0].map(h => String(h).trim());
+                    
+                    // Map headers to fieldNames
+                    const fieldMap = {};
+                    headers.forEach((h, idx) => {
+                        const lowerH = h.toLowerCase();
+                        fieldNames.forEach(f => {
+                            if (lowerH.includes(f.toLowerCase()) || f.toLowerCase().includes(lowerH)) {
+                                if (!fieldMap[f]) fieldMap[f] = idx;
+                            }
+                        });
+                    });
+                    
+                    // If no match, use column order
+                    if (Object.keys(fieldMap).length === 0) {
+                        fieldNames.forEach((f, idx) => {
+                            if (idx < headers.length) fieldMap[f] = idx;
+                        });
+                    }
+                    
+                    // Clear existing boxes
+                    Object.values(textareas).forEach(el => {
+                        el.textContent = '';
+                    });
+                    
+                    // Fill data row by row (skip header)
+                    let totalRows = 0;
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        let hasData = false;
+                        fieldNames.forEach(f => {
+                            const colIdx = fieldMap[f];
+                            if (colIdx !== undefined && row[colIdx] !== undefined && row[colIdx] !== null && String(row[colIdx]).trim() !== '') {
+                                const val = String(row[colIdx]).trim();
+                                const el = textareas[f];
+                                if (el) {
+                                    if (el.textContent) el.textContent += '\n';
+                                    el.textContent += val;
+                                    hasData = true;
+                                }
+                            }
+                        });
+                        if (hasData) totalRows++;
+                    }
+                    
+                    // Show file preview
+                    const preview = document.getElementById('filePreview');
+                    preview.classList.add('active');
+                    document.getElementById('fileName').textContent = `📄 ${file.name}`;
+                    document.getElementById('fileInfo').textContent = `📊 ${totalRows} rows loaded • ${fieldNames.length} columns`;
+                    
+                    // Update line counts
+                    fieldNames.forEach((_, i) => updateLineCount(i));
+                    
+                    showToast(`✅ ${totalRows} rows loaded from Excel!`, 'success');
+                    
+                } catch (err) {
+                    console.error('Excel parse error:', err);
+                    showToast('❌ Error reading Excel file: ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // =============================================
+        // SUBMIT BOXES
         // =============================================
         async function submitBoxes() {
             if (!selectedCategory || !selectedCategoryData) {
@@ -1052,26 +1198,42 @@
             }
 
             const allData = [];
+            const seenIds = new Set();
+            let duplicateCount = 0;
+            
             for (let i = 0; i < maxLines; i++) {
                 const row = {};
                 let hasRowData = false;
+                let rowId = '';
+                
                 fieldNames.forEach(field => {
                     const lines = fieldValues[field] || [];
                     row[field] = lines[i] || '';
                     if (row[field].trim()) hasRowData = true;
+                    if (field.toLowerCase() === 'id' || field.toLowerCase() === 'userid' || field.toLowerCase() === 'uid') {
+                        rowId = row[field];
+                    }
                 });
-                if (hasRowData) allData.push(row);
+                
+                if (hasRowData) {
+                    // Check duplicate
+                    if (rowId && seenIds.has(rowId)) {
+                        duplicateCount++;
+                        continue;
+                    }
+                    if (rowId) seenIds.add(rowId);
+                    allData.push(row);
+                }
             }
 
             if (allData.length === 0) {
-                showToast('❌ No valid data rows', 'error');
+                showToast('❌ No valid data rows (all duplicates?)', 'error');
                 return;
             }
 
             document.getElementById('submitProgress').style.display = 'block';
 
             try {
-                // প্রতিটি লাইনের জন্য আলাদা ডাটা সেভ
                 const submissionId = Date.now();
                 const subData = {
                     userId: currentUserId,
@@ -1082,6 +1244,7 @@
                     fields: fieldNames,
                     data: allData,
                     idCount: allData.length,
+                    duplicateCount: duplicateCount,
                     status: 'pending',
                     timestamp: new Date().toISOString(),
                     type: 'boxes',
@@ -1104,7 +1267,7 @@
                     });
                 }
 
-                // CSV তৈরি - প্রতিটি লাইন আলাদা
+                // CSV তৈরি
                 const csvRows = [];
                 allData.forEach(row => {
                     const rowArr = fieldNames.map(f => {
@@ -1124,6 +1287,7 @@
                     `✅ <b>Submission Successful!</b>\n\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
                     `📊 <b>Total IDs:</b> ${allData.length}\n` +
+                    `⚠️ <b>Duplicates Removed:</b> ${duplicateCount}\n` +
                     `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
                     `⏳ <b>Status:</b> Pending Review\n\n` +
                     `📌 <b>Next Step:</b> Wait for admin approval.`;
@@ -1138,6 +1302,7 @@
                     `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
                     `📊 <b>Total IDs:</b> ${allData.length}\n` +
+                    `⚠️ <b>Duplicates Removed:</b> ${duplicateCount}\n` +
                     `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
                     `⏳ <b>Status:</b> Pending Review\n` +
                     `🆔 <b>Submission ID:</b> <code>${submissionId}</code>`;
@@ -1152,6 +1317,8 @@
                     el.textContent = '';
                 });
                 fieldNames.forEach((_, i) => updateLineCount(i));
+                document.getElementById('filePreview').classList.remove('active');
+                document.getElementById('excelUpload').value = '';
                 document.getElementById('submitProgress').style.display = 'none';
                 
             } catch (e) {
@@ -1186,7 +1353,7 @@
         }
 
         // =============================================
-        // DOWNLOAD ALL SUBMISSIONS - তারিখ ও ক্যাটাগরি অনুযায়ী
+        // DOWNLOAD ALL SUBMISSIONS
         // =============================================
         async function downloadAllSubmissions() {
             const date = document.getElementById('downloadDate').value;
@@ -1220,7 +1387,6 @@
                     totalUsers.add(sub.userId);
                     totalIds += sub.idCount || 0;
                     
-                    // ডাটা তৈরি
                     if (sub.data && Array.isArray(sub.data)) {
                         sub.data.forEach(row => {
                             const rowData = {
@@ -1228,9 +1394,9 @@
                                 userName: sub.userName || 'Unknown',
                                 category: sub.categoryName || 'Unknown',
                                 status: sub.status || 'pending',
-                                timestamp: sub.timestamp
+                                timestamp: sub.timestamp,
+                                submissionId: sub.submissionId || 'N/A'
                             };
-                            // ফিল্ড গুলো যোগ করো
                             if (sub.fields) {
                                 sub.fields.forEach(field => {
                                     rowData[field] = row[field] || '';
@@ -1247,13 +1413,11 @@
                     return;
                 }
 
-                // Excel তৈরি
                 const wb = XLSX.utils.book_new();
                 
-                // হেডার তৈরি
-                const headers = ['User ID', 'User Name', 'Category', 'Status', 'Date'];
+                const headers = ['User ID', 'User Name', 'Category', 'Status', 'Date', 'Submission ID'];
                 const sampleData = filteredData[0] || {};
-                const fieldKeys = Object.keys(sampleData).filter(k => !['userId', 'userName', 'category', 'status', 'timestamp'].includes(k));
+                const fieldKeys = Object.keys(sampleData).filter(k => !['userId', 'userName', 'category', 'status', 'timestamp', 'submissionId'].includes(k));
                 headers.push(...fieldKeys);
 
                 const wsData = [headers];
@@ -1263,7 +1427,8 @@
                         row.userName || '',
                         row.category || '',
                         row.status || '',
-                        new Date(row.timestamp).toLocaleString()
+                        new Date(row.timestamp).toLocaleString(),
+                        row.submissionId || 'N/A'
                     ];
                     fieldKeys.forEach(key => {
                         rowArr.push(row[key] || '');
@@ -1287,16 +1452,13 @@
                     <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
                         <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Download Complete!</div>
                         <div>📅 Date: ${date}</div>
-                        <div>📁 Category: ${category ? 'Selected' : 'All'}</div>
+                        <div>📁 Category: ${category || 'All'}</div>
                         <div>👥 Users: ${totalUsers.size}</div>
                         <div>📊 Total IDs: ${totalIds}</div>
                         <div>📄 Total Rows: ${filteredData.length}</div>
                     </div>
                 `;
 
-                showToast(`✅ Downloaded ${filteredData.length} rows!`, 'success');
-
-                // এডমিনকে নোটিফিকেশন
                 sendTelegramMessage(ADMIN_CHAT_ID, 
                     `📥 <b>Download Complete</b>\n\n` +
                     `📅 Date: ${date}\n` +
@@ -1305,6 +1467,8 @@
                     `📊 Total IDs: ${totalIds}\n` +
                     `📄 Total Rows: ${filteredData.length}`
                 );
+
+                showToast(`✅ Downloaded ${filteredData.length} rows!`, 'success');
 
             } catch (e) {
                 console.error('Download error:', e);
@@ -1315,7 +1479,7 @@
         }
 
         // =============================================
-        // REPORT SEND - তারিখ ও ক্যাটাগরি ফিল্টার সহ
+        // REPORT SEND
         // =============================================
         async function sendReport() {
             const category = document.getElementById('reportCategorySelect').value;
@@ -1441,7 +1605,6 @@
                     }
                 }
 
-                // রিপোর্ট ফলাফল
                 let resultHTML = `
                     <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
                         <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Report Sent!</div>
@@ -1456,7 +1619,6 @@
                 `;
                 document.getElementById('reportResult').innerHTML = resultHTML;
 
-                // এডমিনকে নোটিফিকেশন
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `📊 <b>Report Sent!</b>\n\n` +
                     `📅 Date: ${reportDate}\n` +
@@ -2158,7 +2320,7 @@
                             <div><div style="font-weight:600;">${typeText} ${data.categoryName || 'Unknown'}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
                             <div style="font-size:11px; color:var(--tg-hint);">📋 ${fieldsText || 'No fields'} • ${new Date(data.timestamp).toLocaleString()}</div>
-                            <div style="font-size:10px; color:var(--tg-hint);">🆔 ${data.submissionId || 'N/A'}</div>
+                            <div style="font-size:10px; color:var(--tg-hint);">🆔 ${data.submissionId || 'N/A'} • ⚠️ Duplicates: ${data.duplicateCount || 0}</div>
                             </div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span class="status-badge status-${data.status}">${data.status}</span>
@@ -2187,6 +2349,7 @@
                     <div style="font-size:12px; color:var(--tg-hint);">Status: ${data.status}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Date: ${new Date(data.timestamp).toLocaleString()}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Total IDs: ${data.idCount}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Duplicates Removed: ${data.duplicateCount || 0}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Submission ID: ${data.submissionId || 'N/A'}</div>
                 </div>`;
                 
@@ -2304,7 +2467,6 @@
                     }
                 }
 
-                // এডমিন নোটিফিকেশন
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `✅ <b>Submission Approved!</b>\n\n` +
                     `👤 User: ${data.userName || data.userId}\n` +
@@ -2343,7 +2505,6 @@
                     `🆔 Submission ID: ${data.submissionId || 'N/A'}`
                 );
 
-                // এডমিন নোটিফিকেশন
                 sendTelegramMessage(ADMIN_CHAT_ID,
                     `❌ <b>Submission Rejected!</b>\n\n` +
                     `👤 User: ${data.userName || data.userId}\n` +
@@ -2429,7 +2590,7 @@
         }
 
         // =============================================
-        // ADMIN: REPORT (with Date & Category filter)
+        // ADMIN: REPORT
         // =============================================
         async function loadReportCategories() {
             try {
@@ -2443,8 +2604,6 @@
                 }
             } catch (e) { console.error(e); }
         }
-
-        // Report send function is already updated above
 
         // =============================================
         // ADMIN: DELETE SUBMISSIONS
