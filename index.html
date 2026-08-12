@@ -110,7 +110,7 @@
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
-        /* ===== FIXED BOXES – NO WRAP, EACH LINE STAYS SEPARATE ===== */
+        /* FIXED BOXES – প্রতিটি লাইন আলাদা */
         .input-boxes-container {
             display: flex;
             gap: 8px;
@@ -149,17 +149,15 @@
             color: var(--tg-text);
             overflow-y: auto;
             overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            white-space: pre;
+            word-wrap: normal;
+            overflow-wrap: normal;
             line-height: 1.5;
             transition: border-color 0.2s;
             resize: none;
             width: 100%;
             box-sizing: border-box;
-            /* CRITICAL: each line stays separate */
-            white-space: pre;
-            word-wrap: normal;
-            overflow-wrap: normal;
+            tab-size: 4;
         }
         .input-box-wrapper .box-scroll:focus {
             border-color: var(--tg-button);
@@ -273,7 +271,6 @@
         .copy-number { background: none; border: none; color: var(--tg-link); cursor: pointer; font-size: 12px; }
         .copy-number:active { opacity: 0.6; }
         
-        /* video embed – only YouTube ID */
         .video-container {
             position: relative;
             padding-bottom: 56.25%;
@@ -291,7 +288,6 @@
             height: 100%;
         }
         
-        /* Report Date Filter */
         .report-date-group {
             display: flex;
             gap: 10px;
@@ -311,6 +307,16 @@
         .report-date-group label {
             font-weight: 600;
             font-size: 13px;
+        }
+        
+        .notification-badge {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 4px;
         }
     </style>
 </head>
@@ -378,7 +384,7 @@
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ========== SUBMIT (Side by Side Boxes – each line = separate row) ========== -->
+    <!-- ========== SUBMIT ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 FB & IG ID SUBMIT</h3>
@@ -388,7 +394,6 @@
         <div id="submitSection" style="display:none;">
             <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
-            <!-- Boxes – each line stays separate -->
             <div class="input-boxes-container" id="inputBoxes"></div>
             
             <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
@@ -518,8 +523,6 @@
         <div class="card">
             <div class="card-title">📤 Send Report</div>
             <div class="form-group"><label>📁 Category</label><select id="reportCategorySelect"><option value="">All</option></select></div>
-            
-            <!-- DATE FILTER ADDED -->
             <div class="form-group">
                 <label>📅 Report Date</label>
                 <div class="report-date-group">
@@ -527,7 +530,6 @@
                     <span style="font-size:12px; color:var(--tg-hint);">Select date to filter submissions</span>
                 </div>
             </div>
-            
             <div class="form-group"><label>📝 Enter User IDs (one per line)</label><textarea id="reportIdsInput" placeholder="Enter User IDs line by line..."></textarea></div>
             <div class="form-group"><label>💰 Rate/ID (Taka)</label><input type="number" id="reportRate" value="5"></div>
             <button class="btn-primary" onclick="sendReport()">📤 Send Report</button>
@@ -581,7 +583,13 @@
     <div id="pageAdminDownload" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3>📥 Download</h3>
-        <div class="card"><div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div><div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All</option></select></div><button class="btn-primary" onclick="downloadFiles()">📥 Download Excel</button></div>
+        <div class="card">
+            <div class="form-group"><label>📅 Date</label><input type="date" id="downloadDate"></div>
+            <div class="form-group"><label>📁 Category</label><select id="downloadCategorySelect"><option value="">All Categories</option></select></div>
+            <button class="btn-primary" onclick="downloadAllSubmissions()">📥 Download All Submissions</button>
+            <div id="downloadProgress" style="display:none; text-align:center; padding:10px;"><div class="spinner"></div><div style="margin-top:8px; color:var(--tg-hint);">Generating file...</div></div>
+            <div id="downloadResult" style="margin-top:12px;"></div>
+        </div>
     </div>
 
     <!-- ========== MODALS ========== -->
@@ -908,10 +916,8 @@
                 document.getElementById('submitSection').style.display = 'block';
                 document.getElementById('submitProgress').style.display = 'none';
                 
-                // Parse fields
                 fieldNames = catData.fields ? catData.fields.split(',').map(f => f.trim()) : ['ID', 'Password', 'Cookies'];
                 
-                // Show category info
                 const info = document.getElementById('categoryInfo');
                 info.innerHTML = `
                     <div style="font-weight:600; font-size:16px;">${catData.icon || '📁'} ${catData.name}</div>
@@ -919,7 +925,6 @@
                     <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} boxes • Enter one per line in each box</div>
                 `;
                 
-                // Build boxes – each line stays separate
                 buildBoxes();
                 
                 showToast('📁 Category selected! Fill in the boxes.', 'info');
@@ -929,7 +934,7 @@
         }
 
         // =============================================
-        // BUILD BOXES – each line = one row
+        // BUILD BOXES
         // =============================================
         function buildBoxes() {
             const container = document.getElementById('inputBoxes');
@@ -957,12 +962,10 @@
                 scrollDiv.setAttribute('role', 'textbox');
                 scrollDiv.setAttribute('aria-multiline', 'true');
                 scrollDiv.textContent = '';
-                // CRITICAL: each line stays separate, long lines scroll horizontally
                 scrollDiv.style.whiteSpace = 'pre';
                 scrollDiv.style.overflowWrap = 'normal';
                 scrollDiv.style.wordWrap = 'normal';
                 
-                // Paste event – preserve lines
                 scrollDiv.addEventListener('paste', function(e) {
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text');
@@ -970,7 +973,6 @@
                     updateLineCount(index);
                 });
                 
-                // Input event for line count
                 scrollDiv.addEventListener('input', function() {
                     updateLineCount(index);
                 });
@@ -1012,15 +1014,12 @@
             showToast('🗑️ All boxes cleared', 'info');
         }
 
-        // =============================================
-        // GET DATA FROM BOXES – each line = one row
-        // =============================================
         function getBoxData(el) {
             return el.textContent.split('\n').filter(line => line.trim());
         }
 
         // =============================================
-        // SUBMIT BOXES – CSV: one row per line, no header
+        // SUBMIT BOXES - প্রতিটি লাইন আলাদা CSV
         // =============================================
         async function submitBoxes() {
             if (!selectedCategory || !selectedCategoryData) {
@@ -1033,7 +1032,6 @@
                 return;
             }
 
-            // Collect data from all boxes
             const fieldValues = {};
             let hasData = false;
             let maxLines = 0;
@@ -1053,7 +1051,6 @@
                 return;
             }
 
-            // Build data rows – one per line, each field gets its value from that line
             const allData = [];
             for (let i = 0; i < maxLines; i++) {
                 const row = {};
@@ -1074,6 +1071,8 @@
             document.getElementById('submitProgress').style.display = 'block';
 
             try {
+                // প্রতিটি লাইনের জন্য আলাদা ডাটা সেভ
+                const submissionId = Date.now();
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
@@ -1085,13 +1084,13 @@
                     idCount: allData.length,
                     status: 'pending',
                     timestamp: new Date().toISOString(),
-                    type: 'boxes'
+                    type: 'boxes',
+                    submissionId: submissionId
                 };
 
                 const subKey = await pushData('submissions', subData);
                 console.log('✅ Submission saved! Key:', subKey);
 
-                // Update user stats
                 const userData = await getData(`users/${currentUserId}`);
                 await updateData(`users/${currentUserId}`, {
                     totalSubmits: (userData.totalSubmits || 0) + 1
@@ -1105,7 +1104,7 @@
                     });
                 }
 
-                // ===== CREATE CSV – ONLY DATA, NO HEADERS =====
+                // CSV তৈরি - প্রতিটি লাইন আলাদা
                 const csvRows = [];
                 allData.forEach(row => {
                     const rowArr = fieldNames.map(f => {
@@ -1119,9 +1118,8 @@
                 });
                 const csvContent = csvRows.join('\n');
                 const csvBlob = new Blob([csvContent], { type: 'text/csv' });
-                const csvFile = new File([csvBlob], `submission_${Date.now()}.csv`, { type: 'text/csv' });
+                const csvFile = new File([csvBlob], `submission_${submissionId}.csv`, { type: 'text/csv' });
 
-                // Send to user
                 const userMsg = 
                     `✅ <b>Submission Successful!</b>\n\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
@@ -1133,7 +1131,6 @@
                 sendTelegramMessage(currentUserId, userMsg);
                 sendTelegramDocument(currentUserId, csvFile, `📊 <b>Your Submission Data</b>\n\n📁 ${selectedCategoryData.name}\n📊 ${allData.length} IDs`);
 
-                // Send to admin
                 const adminMsg = 
                     `📤 <b>New Box Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
@@ -1142,7 +1139,8 @@
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
                     `📊 <b>Total IDs:</b> ${allData.length}\n` +
                     `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
-                    `⏳ <b>Status:</b> Pending Review`;
+                    `⏳ <b>Status:</b> Pending Review\n` +
+                    `🆔 <b>Submission ID:</b> <code>${submissionId}</code>`;
 
                 sendTelegramMessage(ADMIN_CHAT_ID, adminMsg);
                 sendTelegramDocument(ADMIN_CHAT_ID, csvFile, `📊 <b>Submission Data</b>\n\n👤 ${tgUser.first_name || 'User'}\n📁 ${selectedCategoryData.name}\n📊 ${allData.length} IDs`);
@@ -1150,7 +1148,6 @@
                 showToast('✅ Submitted successfully!', 'success');
                 loadDashboard();
                 
-                // Clear boxes
                 Object.values(textareas).forEach(el => {
                     el.textContent = '';
                 });
@@ -1186,6 +1183,300 @@
                 method: 'POST',
                 body: formData
             }).catch(console.error);
+        }
+
+        // =============================================
+        // DOWNLOAD ALL SUBMISSIONS - তারিখ ও ক্যাটাগরি অনুযায়ী
+        // =============================================
+        async function downloadAllSubmissions() {
+            const date = document.getElementById('downloadDate').value;
+            const category = document.getElementById('downloadCategorySelect').value;
+
+            if (!date) {
+                showToast('❌ Please select a date', 'error');
+                return;
+            }
+
+            document.getElementById('downloadProgress').style.display = 'block';
+            document.getElementById('downloadResult').innerHTML = '';
+
+            try {
+                const submissions = await getData('submissions');
+                if (!submissions) {
+                    showToast('❌ No submissions found', 'error');
+                    document.getElementById('downloadProgress').style.display = 'none';
+                    return;
+                }
+
+                const filteredData = [];
+                let totalIds = 0;
+                let totalUsers = new Set();
+
+                for (const [key, sub] of Object.entries(submissions)) {
+                    const subDate = new Date(sub.timestamp).toISOString().split('T')[0];
+                    if (subDate !== date) continue;
+                    if (category && sub.categoryId !== category) continue;
+                    
+                    totalUsers.add(sub.userId);
+                    totalIds += sub.idCount || 0;
+                    
+                    // ডাটা তৈরি
+                    if (sub.data && Array.isArray(sub.data)) {
+                        sub.data.forEach(row => {
+                            const rowData = {
+                                userId: sub.userId,
+                                userName: sub.userName || 'Unknown',
+                                category: sub.categoryName || 'Unknown',
+                                status: sub.status || 'pending',
+                                timestamp: sub.timestamp
+                            };
+                            // ফিল্ড গুলো যোগ করো
+                            if (sub.fields) {
+                                sub.fields.forEach(field => {
+                                    rowData[field] = row[field] || '';
+                                });
+                            }
+                            filteredData.push(rowData);
+                        });
+                    }
+                }
+
+                if (filteredData.length === 0) {
+                    showToast('❌ No data found for this date/category', 'error');
+                    document.getElementById('downloadProgress').style.display = 'none';
+                    return;
+                }
+
+                // Excel তৈরি
+                const wb = XLSX.utils.book_new();
+                
+                // হেডার তৈরি
+                const headers = ['User ID', 'User Name', 'Category', 'Status', 'Date'];
+                const sampleData = filteredData[0] || {};
+                const fieldKeys = Object.keys(sampleData).filter(k => !['userId', 'userName', 'category', 'status', 'timestamp'].includes(k));
+                headers.push(...fieldKeys);
+
+                const wsData = [headers];
+                filteredData.forEach(row => {
+                    const rowArr = [
+                        row.userId || '',
+                        row.userName || '',
+                        row.category || '',
+                        row.status || '',
+                        new Date(row.timestamp).toLocaleString()
+                    ];
+                    fieldKeys.forEach(key => {
+                        rowArr.push(row[key] || '');
+                    });
+                    wsData.push(rowArr);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, 'Submissions');
+
+                const excel = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                const blob = new Blob([excel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `submissions_${date}_${category || 'all'}_${totalIds}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                document.getElementById('downloadResult').innerHTML = `
+                    <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
+                        <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Download Complete!</div>
+                        <div>📅 Date: ${date}</div>
+                        <div>📁 Category: ${category ? 'Selected' : 'All'}</div>
+                        <div>👥 Users: ${totalUsers.size}</div>
+                        <div>📊 Total IDs: ${totalIds}</div>
+                        <div>📄 Total Rows: ${filteredData.length}</div>
+                    </div>
+                `;
+
+                showToast(`✅ Downloaded ${filteredData.length} rows!`, 'success');
+
+                // এডমিনকে নোটিফিকেশন
+                sendTelegramMessage(ADMIN_CHAT_ID, 
+                    `📥 <b>Download Complete</b>\n\n` +
+                    `📅 Date: ${date}\n` +
+                    `📁 Category: ${category || 'All'}\n` +
+                    `👥 Users: ${totalUsers.size}\n` +
+                    `📊 Total IDs: ${totalIds}\n` +
+                    `📄 Total Rows: ${filteredData.length}`
+                );
+
+            } catch (e) {
+                console.error('Download error:', e);
+                showToast('❌ Error: ' + e.message, 'error');
+            } finally {
+                document.getElementById('downloadProgress').style.display = 'none';
+            }
+        }
+
+        // =============================================
+        // REPORT SEND - তারিখ ও ক্যাটাগরি ফিল্টার সহ
+        // =============================================
+        async function sendReport() {
+            const category = document.getElementById('reportCategorySelect').value;
+            const reportDate = document.getElementById('reportDate').value;
+            const idsText = document.getElementById('reportIdsInput').value.trim();
+            const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
+
+            if (!idsText) {
+                showToast('❌ Enter some User IDs', 'error');
+                return;
+            }
+
+            if (!reportDate) {
+                showToast('❌ Select a date', 'error');
+                return;
+            }
+
+            const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
+            if (ids.length === 0) {
+                showToast('❌ No valid User IDs', 'error');
+                return;
+            }
+
+            document.getElementById('reportProgress').style.display = 'block';
+            document.getElementById('reportResult').innerHTML = '';
+
+            try {
+                let processed = 0;
+                let totalEarnings = 0;
+                let totalIds = 0;
+                let reportDetails = [];
+
+                for (const userId of ids) {
+                    const userData = await getData(`users/${userId}`);
+                    if (!userData) continue;
+
+                    const submissions = await getData('submissions');
+                    let approvedCount = 0;
+                    let approvedData = [];
+                    
+                    if (submissions) {
+                        Object.values(submissions).forEach(sub => {
+                            if (sub.userId === userId && sub.status === 'approved') {
+                                if (category && sub.categoryId !== category) return;
+                                const subDate = new Date(sub.timestamp).toISOString().split('T')[0];
+                                if (subDate !== reportDate) return;
+                                approvedCount += sub.idCount || 0;
+                                if (sub.data && Array.isArray(sub.data)) {
+                                    approvedData.push(...sub.data);
+                                }
+                            }
+                        });
+                    }
+
+                    if (approvedCount === 0) continue;
+
+                    let commissionBonus = 0;
+                    if (category) {
+                        const commissionData = await getData(`categoryCommission/${category}`);
+                        if (commissionData && commissionData.rules) {
+                            const rules = commissionData.rules;
+                            const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
+                            for (const key of sortedKeys) {
+                                if (approvedCount >= parseInt(key)) {
+                                    commissionBonus = rules[key] * approvedCount;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    const earnings = approvedCount * ratePerId;
+                    const total = earnings + commissionBonus;
+
+                    if (total > 0) {
+                        await updateData(`users/${userId}`, {
+                            balance: (userData.balance || 0) + total
+                        });
+
+                        await pushData('transactions', {
+                            userId: userId,
+                            amount: total,
+                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka (${reportDate})`,
+                            timestamp: new Date().toISOString()
+                        });
+
+                        totalEarnings += total;
+                        totalIds += approvedCount;
+                        processed++;
+                        reportDetails.push({ userId, approvedCount, earnings, commissionBonus, total });
+
+                        // CSV তৈরি
+                        const csvRows = [];
+                        if (approvedData.length > 0) {
+                            const fields = approvedData[0] ? Object.keys(approvedData[0]) : ['ID'];
+                            csvRows.push(fields.join(','));
+                            approvedData.forEach(row => {
+                                const rowArr = fields.map(f => {
+                                    let val = row[f] || '';
+                                    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                                        val = '"' + val.replace(/"/g, '""') + '"';
+                                    }
+                                    return val;
+                                });
+                                csvRows.push(rowArr.join(','));
+                            });
+                        } else {
+                            csvRows.push('ID,Status');
+                            csvRows.push(`${userId},Approved`);
+                        }
+                        const csvContent = csvRows.join('\n');
+                        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+                        const csvFile = new File([csvBlob], `report_${userId}_${reportDate}_${Date.now()}.csv`, { type: 'text/csv' });
+
+                        sendTelegramDocument(userId, csvFile,
+                            `📊 <b>Report Received!</b>\n\n` +
+                            `📅 ${reportDate}\n` +
+                            `✅ ${approvedCount} IDs approved\n` +
+                            `💰 ${ratePerId} Taka/ID\n` +
+                            `🎯 Commission: ${commissionBonus} Taka\n` +
+                            `💵 Total: ${total} Taka`
+                        );
+                    }
+                }
+
+                // রিপোর্ট ফলাফল
+                let resultHTML = `
+                    <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
+                        <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Report Sent!</div>
+                        <div>📅 Date: ${reportDate}</div>
+                        <div>👤 Users: ${processed}</div>
+                        <div>📊 Total IDs: ${totalIds}</div>
+                        <div>💰 Total Earnings: ${totalEarnings} Taka</div>
+                        <div style="margin-top:8px; font-size:12px; color:#666;">
+                            ${reportDetails.map(d => `👤 ${d.userId}: ${d.approvedCount} IDs → ${d.total} Taka`).join('<br>')}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('reportResult').innerHTML = resultHTML;
+
+                // এডমিনকে নোটিফিকেশন
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `📊 <b>Report Sent!</b>\n\n` +
+                    `📅 Date: ${reportDate}\n` +
+                    `👤 Users: ${processed}\n` +
+                    `📊 Total IDs: ${totalIds}\n` +
+                    `💰 Total Earnings: ${totalEarnings} Taka\n\n` +
+                    `📋 Details:\n${reportDetails.map(d => `👤 ${d.userId}: ${d.approvedCount} IDs → ${d.total} Taka`).join('\n')}`
+                );
+
+                showToast(`✅ Report sent to ${processed} users!`, 'success');
+                await loadUserData();
+                await loadBalanceStats();
+                document.getElementById('reportIdsInput').value = '';
+
+            } catch (e) {
+                console.error('Report error:', e);
+                showToast('❌ Error: ' + e.message, 'error');
+            } finally {
+                document.getElementById('reportProgress').style.display = 'none';
+            }
         }
 
         // =============================================
@@ -1407,7 +1698,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // ===== TUTORIAL VIDEO – YouTube embed using ONLY video ID =====
         async function loadTutorialVideo() {
             try {
                 const data = await getData('settings/tutorial');
@@ -1867,7 +2157,9 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                             <div><div style="font-weight:600;">${typeText} ${data.categoryName || 'Unknown'}</div>
                             <div style="font-size:12px; color:var(--tg-hint);">👤 ${data.userName || data.userId} • ${data.idCount || 0} IDs</div>
-                            <div style="font-size:11px; color:var(--tg-hint);">📋 ${fieldsText || 'No fields'} • ${new Date(data.timestamp).toLocaleString()}</div></div>
+                            <div style="font-size:11px; color:var(--tg-hint);">📋 ${fieldsText || 'No fields'} • ${new Date(data.timestamp).toLocaleString()}</div>
+                            <div style="font-size:10px; color:var(--tg-hint);">🆔 ${data.submissionId || 'N/A'}</div>
+                            </div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span class="status-badge status-${data.status}">${data.status}</span>
                                 ${data.status === 'pending' ? `
@@ -1895,6 +2187,7 @@
                     <div style="font-size:12px; color:var(--tg-hint);">Status: ${data.status}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Date: ${new Date(data.timestamp).toLocaleString()}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Total IDs: ${data.idCount}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Submission ID: ${data.submissionId || 'N/A'}</div>
                 </div>`;
                 
                 if (data.fields && data.data && Array.isArray(data.data)) {
@@ -1975,7 +2268,6 @@
                         timestamp: new Date().toISOString()
                     });
 
-                    // Send CSV – ONLY DATA, NO HEADERS
                     if (data.fields && data.data && Array.isArray(data.data)) {
                         const csvRows = [];
                         data.data.forEach(row => {
@@ -1990,14 +2282,15 @@
                         });
                         const csvContent = csvRows.join('\n');
                         const csvBlob = new Blob([csvContent], { type: 'text/csv' });
-                        const csvFile = new File([csvBlob], `approved_${Date.now()}.csv`, { type: 'text/csv' });
+                        const csvFile = new File([csvBlob], `approved_${data.submissionId || Date.now()}.csv`, { type: 'text/csv' });
                         
                         sendTelegramDocument(data.userId, csvFile,
                             `✅ <b>IDs Approved!</b>\n\n` +
                             `📊 ${approvedCount} IDs\n` +
                             `💰 ${ratePerId} Taka/ID\n` +
                             `🎯 Commission: ${commissionBonus} Taka\n` +
-                            `💵 Total: ${totalEarnings} Taka`
+                            `💵 Total: ${totalEarnings} Taka\n` +
+                            `🆔 Submission ID: ${data.submissionId || 'N/A'}`
                         );
                     } else {
                         sendTelegramMessage(data.userId,
@@ -2005,10 +2298,21 @@
                             `📊 ${approvedCount} IDs\n` +
                             `💰 ${ratePerId} Taka/ID\n` +
                             `🎯 Commission: ${commissionBonus} Taka\n` +
-                            `💵 Total: ${totalEarnings} Taka`
+                            `💵 Total: ${totalEarnings} Taka\n` +
+                            `🆔 Submission ID: ${data.submissionId || 'N/A'}`
                         );
                     }
                 }
+
+                // এডমিন নোটিফিকেশন
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `✅ <b>Submission Approved!</b>\n\n` +
+                    `👤 User: ${data.userName || data.userId}\n` +
+                    `📁 Category: ${data.categoryName}\n` +
+                    `📊 IDs: ${approvedCount}\n` +
+                    `💰 Earnings: ${totalEarnings} Taka\n` +
+                    `🆔 Submission ID: ${data.submissionId || 'N/A'}`
+                );
 
                 showToast('✅ Approved!', 'success');
                 await loadFileList(currentFileTab);
@@ -2035,7 +2339,17 @@
 
                 sendTelegramMessage(data.userId,
                     `❌ <b>IDs Rejected</b>\n\n` +
-                    `❌ Status: Rejected`
+                    `❌ Status: Rejected\n` +
+                    `🆔 Submission ID: ${data.submissionId || 'N/A'}`
+                );
+
+                // এডমিন নোটিফিকেশন
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `❌ <b>Submission Rejected!</b>\n\n` +
+                    `👤 User: ${data.userName || data.userId}\n` +
+                    `📁 Category: ${data.categoryName}\n` +
+                    `📊 IDs: ${data.idCount || 0}\n` +
+                    `🆔 Submission ID: ${data.submissionId || 'N/A'}`
                 );
 
                 showToast('✅ Rejected!', 'success');
@@ -2092,6 +2406,7 @@
             try {
                 await updateData(`withdrawals/${wdId}`, { status: 'approved' });
                 sendTelegramMessage(userId, `✅ <b>Withdraw Approved</b>\n\n💰 ${amount} Taka`);
+                sendTelegramMessage(ADMIN_CHAT_ID, `✅ <b>Withdraw Approved!</b>\n\n👤 User: ${userId}\n💰 Amount: ${amount} Taka`);
                 showToast('✅ Approved!', 'success');
                 await loadWithdrawRequests();
                 await loadPaymentHistory();
@@ -2106,6 +2421,7 @@
                     balance: (userData.balance || 0) + amount
                 });
                 sendTelegramMessage(userId, `❌ <b>Withdraw Rejected</b>\n\n💰 ${amount} Taka refunded`);
+                sendTelegramMessage(ADMIN_CHAT_ID, `❌ <b>Withdraw Rejected!</b>\n\n👤 User: ${userId}\n💰 Amount: ${amount} Taka refunded`);
                 showToast('✅ Rejected, refunded', 'success');
                 await loadWithdrawRequests();
                 await loadPaymentHistory();
@@ -2113,7 +2429,7 @@
         }
 
         // =============================================
-        // ADMIN: REPORT (WITH DATE FILTER)
+        // ADMIN: REPORT (with Date & Category filter)
         // =============================================
         async function loadReportCategories() {
             try {
@@ -2128,132 +2444,7 @@
             } catch (e) { console.error(e); }
         }
 
-        async function sendReport() {
-            const category = document.getElementById('reportCategorySelect').value;
-            const reportDate = document.getElementById('reportDate').value;
-            const idsText = document.getElementById('reportIdsInput').value.trim();
-            const ratePerId = parseFloat(document.getElementById('reportRate').value) || 5;
-
-            if (!idsText) {
-                showToast('❌ Enter some User IDs', 'error');
-                return;
-            }
-
-            if (!reportDate) {
-                showToast('❌ Select a date', 'error');
-                return;
-            }
-
-            const ids = idsText.split('\n').map(id => id.trim()).filter(id => id);
-            if (ids.length === 0) {
-                showToast('❌ No valid User IDs', 'error');
-                return;
-            }
-
-            document.getElementById('reportProgress').style.display = 'block';
-            document.getElementById('reportResult').innerHTML = '';
-
-            try {
-                let processed = 0;
-                let totalEarnings = 0;
-                let totalIds = 0;
-
-                for (const userId of ids) {
-                    const userData = await getData(`users/${userId}`);
-                    if (!userData) continue;
-
-                    const submissions = await getData('submissions');
-                    let approvedCount = 0;
-                    
-                    if (submissions) {
-                        Object.values(submissions).forEach(sub => {
-                            if (sub.userId === userId && sub.status === 'approved') {
-                                if (category && sub.categoryId !== category) return;
-                                // Date filter
-                                const subDate = new Date(sub.timestamp).toISOString().split('T')[0];
-                                if (subDate !== reportDate) return;
-                                approvedCount += sub.idCount || 0;
-                            }
-                        });
-                    }
-
-                    if (approvedCount === 0) continue;
-
-                    let commissionBonus = 0;
-                    if (category) {
-                        const commissionData = await getData(`categoryCommission/${category}`);
-                        if (commissionData && commissionData.rules) {
-                            const rules = commissionData.rules;
-                            const sortedKeys = Object.keys(rules).sort((a, b) => parseInt(b) - parseInt(a));
-                            for (const key of sortedKeys) {
-                                if (approvedCount >= parseInt(key)) {
-                                    commissionBonus = rules[key] * approvedCount;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    const earnings = approvedCount * ratePerId;
-                    const total = earnings + commissionBonus;
-
-                    if (total > 0) {
-                        await updateData(`users/${userId}`, {
-                            balance: (userData.balance || 0) + total
-                        });
-
-                        await pushData('transactions', {
-                            userId: userId,
-                            amount: total,
-                            reason: `Report: ${approvedCount} IDs (${ratePerId} Taka/ID) + Commission ${commissionBonus} Taka (${reportDate})`,
-                            timestamp: new Date().toISOString()
-                        });
-
-                        totalEarnings += total;
-                        totalIds += approvedCount;
-                        processed++;
-
-                        // CSV – ONLY DATA, no headers
-                        const csvRows = [
-                            [userId, category || 'All', approvedCount, ratePerId, commissionBonus, total].join(',')
-                        ];
-                        const csvContent = csvRows.join('\n');
-                        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
-                        const csvFile = new File([csvBlob], `report_${userId}_${reportDate}_${Date.now()}.csv`, { type: 'text/csv' });
-
-                        sendTelegramDocument(userId, csvFile,
-                            `📊 <b>Report Received!</b>\n\n` +
-                            `📅 ${reportDate}\n` +
-                            `✅ ${approvedCount} IDs approved\n` +
-                            `💰 ${ratePerId} Taka/ID\n` +
-                            `🎯 Commission: ${commissionBonus} Taka\n` +
-                            `💵 Total: ${total} Taka`
-                        );
-                    }
-                }
-
-                document.getElementById('reportResult').innerHTML = `
-                    <div style="background:#d4edda; border-radius:12px; padding:16px; text-align:center;">
-                        <div style="font-size:18px; font-weight:bold; color:#155724;">✅ Report Sent!</div>
-                        <div>📅 Date: ${reportDate}</div>
-                        <div>👤 Users: ${processed}</div>
-                        <div>📊 Total IDs: ${totalIds}</div>
-                        <div>💰 Total Earnings: ${totalEarnings} Taka</div>
-                    </div>
-                `;
-
-                showToast(`✅ Report sent to ${processed} users!`, 'success');
-                await loadUserData();
-                await loadBalanceStats();
-                document.getElementById('reportIdsInput').value = '';
-
-            } catch (e) {
-                console.error('Report error:', e);
-                showToast('❌ Error: ' + e.message, 'error');
-            } finally {
-                document.getElementById('reportProgress').style.display = 'none';
-            }
-        }
+        // Report send function is already updated above
 
         // =============================================
         // ADMIN: DELETE SUBMISSIONS
@@ -2319,6 +2510,14 @@
                         <div>📊 ${totalDeleted} IDs removed</div>
                     </div>
                 `;
+
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `🗑️ <b>Deletion Complete</b>\n\n` +
+                    `📅 Date: ${date}\n` +
+                    `📁 Category: ${category || 'All'}\n` +
+                    `🗑️ Files: ${deleted}\n` +
+                    `📊 IDs: ${totalDeleted}`
+                );
 
                 showToast(`✅ ${deleted} files deleted!`, 'success');
                 await loadFileList('pending');
@@ -2398,6 +2597,12 @@
                         ${buttonText && buttonUrl ? `<div>🔗 Button: ${buttonText} → ${buttonUrl}</div>` : ''}
                     </div>
                 `;
+
+                sendTelegramMessage(ADMIN_CHAT_ID,
+                    `📢 <b>Broadcast Complete</b>\n\n` +
+                    `📤 Sent: ${sent} users\n` +
+                    `${failed > 0 ? `❌ Failed: ${failed} users` : ''}`
+                );
 
                 showToast(`✅ Broadcast sent to ${sent} users!`, 'success');
 
@@ -2491,7 +2696,7 @@
         }
 
         // =============================================
-        // ADMIN: DOWNLOAD FILES
+        // ADMIN: DOWNLOAD CATEGORIES
         // =============================================
         async function loadDownloadCategories() {
             try {
@@ -2504,62 +2709,6 @@
                     });
                 }
             } catch (e) { console.error(e); }
-        }
-
-        async function downloadFiles() {
-            const date = document.getElementById('downloadDate').value;
-            const category = document.getElementById('downloadCategorySelect').value;
-
-            showToast('📥 Generating download...', 'info');
-
-            try {
-                const submissions = await getData('submissions');
-                if (!submissions) { showToast('❌ No data', 'error'); return; }
-
-                const data = [];
-                let totalIds = 0;
-
-                Object.values(submissions).forEach(item => {
-                    if (category && item.categoryId !== category) return;
-                    if (date) {
-                        const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
-                        if (itemDate !== date) return;
-                    }
-                    const typeText = item.type === 'boxes' ? 'Boxes' : 'File';
-                    data.push([
-                        item.userName || item.userId,
-                        item.categoryName || 'Unknown',
-                        typeText,
-                        item.idCount || 0,
-                        item.status || 'pending',
-                        new Date(item.timestamp).toLocaleString()
-                    ]);
-                    totalIds += item.idCount || 0;
-                });
-
-                if (data.length === 0) {
-                    showToast('❌ No data found', 'error');
-                    return;
-                }
-
-                const wb = XLSX.utils.book_new();
-                const wsData = [
-                    ['User', 'Category', 'Type', 'ID Count', 'Status', 'Date'],
-                    ...data
-                ];
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                XLSX.utils.book_append_sheet(wb, ws, 'Submissions');
-                const excel = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-
-                const blob = new Blob([excel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `submissions_${date || 'all'}_${category || 'all'}_${totalIds}.xlsx`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showToast(`✅ Downloaded! ${data.length} submissions, ${totalIds} IDs`, 'success');
-            } catch (e) { console.error(e); showToast('❌ Error: ' + e.message, 'error'); }
         }
 
         // =============================================
