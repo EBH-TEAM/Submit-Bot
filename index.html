@@ -23,17 +23,7 @@
         .user-id { font-size: 11px; color: var(--tg-hint); }
         .admin-badge { background: #ffc107; color: #333; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
         
-        /* Connection Status - Small badge on right of header */
-        .connection-badge { 
-            font-size: 10px; 
-            font-weight: 600; 
-            padding: 4px 10px; 
-            border-radius: 12px; 
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
+        .connection-badge { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .connection-badge.online { background: #d4edda; color: #155724; }
         .connection-badge.offline { background: #f8d7da; color: #721c24; }
         .connection-badge .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
@@ -119,8 +109,28 @@
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
-        .input-fields-area { margin-top: 12px; }
-        .input-fields-area .form-group textarea { min-height: 40px; }
+        /* ===== INPUT TABLE STYLE ===== */
+        .input-table-wrapper { overflow-x: auto; margin-top: 12px; }
+        .input-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .input-table th { background: var(--tg-button); color: var(--tg-button-text); padding: 8px 6px; text-align: center; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+        .input-table td { padding: 4px; border-bottom: 1px solid var(--tg-secondary); }
+        .input-table td input, .input-table td textarea { 
+            width: 100%; 
+            padding: 6px 8px; 
+            border: 1px solid var(--tg-secondary); 
+            border-radius: 6px; 
+            background: var(--tg-bg); 
+            color: var(--tg-text); 
+            font-size: 13px; 
+            font-family: monospace;
+            min-width: 80px;
+            transition: border-color 0.2s;
+        }
+        .input-table td input:focus, .input-table td textarea:focus { border-color: var(--tg-button); outline: none; }
+        .input-table td textarea { min-height: 36px; resize: vertical; }
+        
+        .table-actions { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+        .table-actions .btn-primary { flex: 0 1 auto; padding: 10px 20px; width: auto; }
         
         .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .history-left .h-title { font-weight: 600; font-size: 14px; }
@@ -190,6 +200,10 @@
         .field-row .field-label { font-weight: 600; font-size: 13px; min-width: 80px; color: var(--tg-text); }
         .field-row .field-input { flex: 1; background: var(--tg-secondary); border: none; padding: 6px 10px; border-radius: 6px; color: var(--tg-text); font-size: 13px; }
         .field-row .field-input:focus { outline: 2px solid var(--tg-button); }
+
+        /* Row counter */
+        .row-counter { font-size: 12px; color: var(--tg-hint); margin-top: 8px; text-align: right; }
+        .row-counter span { font-weight: 600; color: var(--tg-text); }
     </style>
 </head>
 <body>
@@ -256,7 +270,7 @@
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ========== SUBMIT (Input Box System) ========== -->
+    <!-- ========== SUBMIT (Input Table System) ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 FB & IG ID SUBMIT</h3>
@@ -266,14 +280,26 @@
         <div id="submitSection" style="display:none;">
             <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
-            <div class="input-fields-area" id="inputFields"></div>
+            <div class="table-actions">
+                <button class="btn-primary" onclick="addRow()" style="flex:0 1 auto; padding:8px 16px; width:auto;">➕ Add Row</button>
+                <button class="btn-primary btn-success" onclick="pasteFromClipboard()" style="flex:0 1 auto; padding:8px 16px; width:auto;">📋 Paste from Clipboard</button>
+                <button class="btn-danger" onclick="clearTable()" style="flex:0 1 auto; padding:8px 16px; width:auto;">🗑️ Clear All</button>
+            </div>
+            
+            <div class="input-table-wrapper">
+                <table class="input-table" id="inputTable">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="row-counter">Total Rows: <span id="rowCount">0</span></div>
             
             <div id="submitProgress" style="display:none; text-align:center; padding:20px;">
                 <div class="spinner"></div>
                 <div style="margin-top:8px; color:var(--tg-hint);">Submitting...</div>
             </div>
             <div id="submitButtons" style="display:none;" class="confirm-buttons">
-                <button class="btn-primary btn-success" onclick="submitIDs()">✅ Confirm Submit</button>
+                <button class="btn-primary btn-success" onclick="submitTable()">✅ Confirm Submit</button>
                 <button class="btn-primary btn-danger" onclick="cancelSubmit()">❌ Cancel</button>
             </div>
         </div>
@@ -462,8 +488,8 @@
             <div class="form-group"><label>Details</label><textarea id="categoryDetails" placeholder="Category details (show to users)"></textarea></div>
             <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
             <div class="form-group"><label>📋 Input Fields (comma separated)</label>
-                <input type="text" id="categoryFields" placeholder="e.g. ID, Password, Cookies" value="ID, Password">
-                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Enter field names separated by comma. Users will see these as input boxes.</div>
+                <input type="text" id="categoryFields" placeholder="e.g. ID, Password, Cookies" value="ID, Password, Cookies">
+                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Enter field names separated by comma. Users will see these as columns.</div>
             </div>
             <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
@@ -507,7 +533,7 @@
         let selectedCategoryData = null;
         let editingCategoryId = null;
         let currentFileTab = 'pending';
-        let inputData = {};
+        let fieldNames = [];
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
@@ -546,7 +572,6 @@
         // =============================================
         function init() {
             try {
-                // Connection status - update badge
                 db.ref('.info/connected').on('value', (snap) => {
                     const badge = document.getElementById('connectionBadge');
                     const text = document.getElementById('connText');
@@ -713,8 +738,8 @@
                     const statusText = data.status || 'pending';
                     const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
                     html += `<div style="background:var(--tg-secondary); border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><div style="font-weight:600; font-size:14px;">📄 ${data.fileName || 'Manual Entry'}</div>
-                        <div style="font-size:11px; color:var(--tg-hint);">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleDateString()}</div></div>
+                        <div><div style="font-weight:600; font-size:14px;">📊 ${data.idCount || 0} IDs</div>
+                        <div style="font-size:11px; color:var(--tg-hint);">${new Date(data.timestamp).toLocaleDateString()}</div></div>
                         <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span>
                     </div>`;
                 });
@@ -742,7 +767,7 @@
                     const statusClass = isActive ? 'online' : 'offline';
                     const disabledClass = isActive ? '' : 'disabled';
                     const statusText = isActive ? '🟢 Online' : '🔴 Offline';
-                    const fieldsText = cat.fields ? `📋 ${cat.fields.split(',').length} fields` : '';
+                    const fieldsText = cat.fields ? `📋 ${cat.fields.split(',').length} columns` : '';
                     
                     grid.innerHTML += `
                         <div class="category-item ${disabledClass}" onclick="${isActive ? `selectCategory('${key}')` : ''}" data-id="${key}" style="${!isActive ? 'opacity:0.5; cursor:not-allowed;' : ''}">
@@ -761,94 +786,244 @@
             document.querySelectorAll('.category-item').forEach(el => el.classList.toggle('selected', el.dataset.id === catId));
             selectedCategory = catId;
             
-            // Load category data
             getData(`categories/${catId}`).then(catData => {
                 selectedCategoryData = catData;
                 document.getElementById('submitSection').style.display = 'block';
                 document.getElementById('submitButtons').style.display = 'none';
                 document.getElementById('submitProgress').style.display = 'none';
                 
+                // Parse fields
+                fieldNames = catData.fields ? catData.fields.split(',').map(f => f.trim()) : ['ID', 'Password', 'Cookies'];
+                
                 // Show category info
                 const info = document.getElementById('categoryInfo');
                 info.innerHTML = `
                     <div style="font-weight:600; font-size:16px;">${catData.icon || '📁'} ${catData.name}</div>
                     ${catData.details ? `<div style="font-size:13px; color:var(--tg-hint); margin-top:4px;">${catData.details}</div>` : ''}
-                    <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 Fill in the fields below and submit</div>
+                    <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} columns • Fill the table below</div>
                 `;
                 
-                // Generate input fields
-                const fieldsContainer = document.getElementById('inputFields');
-                const fieldNames = catData.fields ? catData.fields.split(',').map(f => f.trim()) : ['ID', 'Password'];
-                
-                fieldsContainer.innerHTML = '';
-                inputData = {};
-                
-                fieldNames.forEach((field, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'form-group';
-                    div.innerHTML = `
-                        <label>${field}</label>
-                        ${field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass') ? 
-                            `<textarea id="field_${index}" placeholder="Enter ${field}..." style="min-height:50px;"></textarea>` :
-                            `<input type="text" id="field_${index}" placeholder="Enter ${field}...">`
-                        }
-                    `;
-                    fieldsContainer.appendChild(div);
-                    
-                    // Store reference
-                    inputData[field] = document.getElementById(`field_${index}`);
-                });
+                // Build table
+                buildTable();
                 
                 // Show submit button
                 document.getElementById('submitButtons').style.display = 'flex';
                 
-                showToast('📁 Category selected! Fill in the fields.', 'info');
+                showToast('📁 Category selected! Fill in the table.', 'info');
             }).catch(e => {
                 showToast('❌ Error loading category', 'error');
             });
         }
 
         // =============================================
-        // SUBMIT IDs (Input Box System)
+        // TABLE FUNCTIONS
+        // =============================================
+        function buildTable() {
+            const thead = document.getElementById('tableHeader');
+            const tbody = document.getElementById('tableBody');
+            
+            // Build header
+            let headerHtml = '<tr><th style="width:40px;">#</th>';
+            fieldNames.forEach(field => {
+                headerHtml += `<th>${field}</th>`;
+            });
+            headerHtml += '<th style="width:40px;">🗑️</th></tr>';
+            thead.innerHTML = headerHtml;
+            
+            // Start with 3 empty rows
+            tbody.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                addRowInternal();
+            }
+            updateRowCount();
+        }
+
+        function addRow() {
+            addRowInternal();
+            updateRowCount();
+            showToast('➕ Row added', 'info');
+        }
+
+        function addRowInternal() {
+            const tbody = document.getElementById('tableBody');
+            const rowNum = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.id = `row_${rowNum}`;
+            
+            // Row number
+            let html = `<td style="text-align:center; font-weight:600; color:var(--tg-hint);">${rowNum}</td>`;
+            
+            // Input fields
+            fieldNames.forEach((field, idx) => {
+                const isLong = field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass');
+                if (isLong) {
+                    html += `<td><textarea id="cell_${rowNum}_${idx}" placeholder="${field}..."></textarea></td>`;
+                } else {
+                    html += `<td><input type="text" id="cell_${rowNum}_${idx}" placeholder="${field}"></td>`;
+                }
+            });
+            
+            // Delete button
+            html += `<td><button onclick="deleteRow(${rowNum})" style="background:#dc3545; color:white; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:16px;">×</button></td>`;
+            
+            tr.innerHTML = html;
+            tbody.appendChild(tr);
+        }
+
+        function deleteRow(rowNum) {
+            const tbody = document.getElementById('tableBody');
+            const row = document.getElementById(`row_${rowNum}`);
+            if (row && tbody.children.length > 1) {
+                row.remove();
+                // Renumber rows
+                tbody.querySelectorAll('tr').forEach((tr, idx) => {
+                    const num = idx + 1;
+                    tr.id = `row_${num}`;
+                    tr.cells[0].textContent = num;
+                    // Update delete button onclick
+                    const delBtn = tr.cells[tr.cells.length - 1].querySelector('button');
+                    if (delBtn) {
+                        delBtn.onclick = function() { deleteRow(num); };
+                    }
+                    // Update cell IDs
+                    fieldNames.forEach((field, fIdx) => {
+                        const cell = tr.cells[fIdx + 1].querySelector('input, textarea');
+                        if (cell) {
+                            cell.id = `cell_${num}_${fIdx}`;
+                        }
+                    });
+                });
+                updateRowCount();
+                showToast('🗑️ Row deleted', 'info');
+            } else {
+                showToast('❌ Cannot delete last row', 'error');
+            }
+        }
+
+        function clearTable() {
+            if (confirm('Clear all rows?')) {
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    addRowInternal();
+                }
+                updateRowCount();
+                showToast('🗑️ Table cleared', 'info');
+            }
+        }
+
+        function updateRowCount() {
+            const count = document.getElementById('tableBody').children.length;
+            document.getElementById('rowCount').textContent = count;
+        }
+
+        // =============================================
+        // PASTE FROM CLIPBOARD - Google Sheets style
+        // =============================================
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text) {
+                    showToast('❌ No text in clipboard', 'error');
+                    return;
+                }
+                
+                // Parse tab-separated data (from Google Sheets)
+                const lines = text.split('\n').filter(line => line.trim());
+                const rows = lines.map(line => line.split('\t').map(cell => cell.trim()));
+                
+                if (rows.length === 0) {
+                    showToast('❌ No data to paste', 'error');
+                    return;
+                }
+                
+                // Clear existing rows
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                
+                // Add pasted rows
+                rows.forEach((rowData, rowIdx) => {
+                    const rowNum = rowIdx + 1;
+                    const tr = document.createElement('tr');
+                    tr.id = `row_${rowNum}`;
+                    
+                    let html = `<td style="text-align:center; font-weight:600; color:var(--tg-hint);">${rowNum}</td>`;
+                    
+                    fieldNames.forEach((field, fIdx) => {
+                        const value = rowData[fIdx] || '';
+                        const isLong = field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass');
+                        if (isLong) {
+                            html += `<td><textarea id="cell_${rowNum}_${fIdx}">${value}</textarea></td>`;
+                        } else {
+                            html += `<td><input type="text" id="cell_${rowNum}_${fIdx}" value="${value}"></td>`;
+                        }
+                    });
+                    
+                    html += `<td><button onclick="deleteRow(${rowNum})" style="background:#dc3545; color:white; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:16px;">×</button></td>`;
+                    
+                    tr.innerHTML = html;
+                    tbody.appendChild(tr);
+                });
+                
+                updateRowCount();
+                showToast(`✅ ${rows.length} rows pasted from clipboard!`, 'success');
+                
+            } catch (e) {
+                console.error('Paste error:', e);
+                showToast('❌ Could not read clipboard. Please grant permission.', 'error');
+            }
+        }
+
+        // =============================================
+        // SUBMIT TABLE
         // =============================================
         function cancelSubmit() {
             document.getElementById('submitSection').style.display = 'none';
             document.getElementById('submitButtons').style.display = 'none';
             document.getElementById('submitProgress').style.display = 'none';
-            document.getElementById('inputFields').innerHTML = '';
             selectedCategory = null;
             selectedCategoryData = null;
+            fieldNames = [];
             showToast('❌ Submission cancelled', 'info');
         }
 
-        async function submitIDs() {
+        async function submitTable() {
             if (!selectedCategory || !selectedCategoryData) {
                 showToast('❌ Select a category first', 'error');
                 return;
             }
 
-            // Collect data from fields
-            const fieldNames = selectedCategoryData.fields ? selectedCategoryData.fields.split(',').map(f => f.trim()) : ['ID', 'Password'];
-            const fieldData = {};
-            let hasData = false;
-
-            fieldNames.forEach((field, index) => {
-                const el = document.getElementById(`field_${index}`);
-                if (el) {
-                    const val = el.value.trim();
-                    fieldData[field] = val;
-                    if (val) hasData = true;
-                }
-            });
-
-            if (!hasData) {
-                showToast('❌ Please fill in at least one field', 'error');
+            if (selectedCategoryData.active === false) {
+                showToast('❌ Category is offline', 'error');
                 return;
             }
 
-            // Check if category is active
-            if (selectedCategoryData.active === false) {
-                showToast('❌ Category is offline', 'error');
+            // Collect data from table
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.querySelectorAll('tr');
+            const allData = [];
+            
+            rows.forEach((tr, rowIdx) => {
+                const rowData = {};
+                let hasData = false;
+                fieldNames.forEach((field, fIdx) => {
+                    const cell = tr.cells[fIdx + 1];
+                    if (cell) {
+                        const input = cell.querySelector('input, textarea');
+                        if (input) {
+                            const val = input.value.trim();
+                            rowData[field] = val;
+                            if (val) hasData = true;
+                        }
+                    }
+                });
+                if (hasData) {
+                    allData.push(rowData);
+                }
+            });
+
+            if (allData.length === 0) {
+                showToast('❌ No data to submit', 'error');
                 return;
             }
 
@@ -856,13 +1031,6 @@
             document.getElementById('submitButtons').style.display = 'none';
 
             try {
-                // Count how many entries (based on first field)
-                const firstField = fieldNames[0];
-                const firstFieldValue = fieldData[firstField] || '';
-                const entries = firstFieldValue.split('\n').filter(line => line.trim());
-                const idCount = entries.length;
-
-                // Create submission data
                 const subData = {
                     userId: currentUserId,
                     userName: tgUser.first_name || 'User',
@@ -870,14 +1038,13 @@
                     categoryId: selectedCategory,
                     categoryName: selectedCategoryData.name || 'Unknown',
                     fields: fieldNames,
-                    data: fieldData,
-                    idCount: idCount,
+                    data: allData,
+                    idCount: allData.length,
                     status: 'pending',
                     timestamp: new Date().toISOString(),
-                    type: 'manual'
+                    type: 'table'
                 };
 
-                // Save to database
                 const subKey = await pushData('submissions', subData);
                 console.log('✅ Submission saved! Key:', subKey);
 
@@ -887,7 +1054,6 @@
                     totalSubmits: (userData.totalSubmits || 0) + 1
                 });
 
-                // Update global stats
                 const stats = await getData('stats/summary');
                 if (stats) {
                     await updateData('stats/summary', {
@@ -897,42 +1063,51 @@
                 }
 
                 // =============================================
-                // SEND CONFIRMATION TO USER
+                // CREATE CSV FILE
                 // =============================================
-                let userMsg = 
+                const csvRows = [fieldNames.join(',')];
+                allData.forEach(row => {
+                    csvRows.push(fieldNames.map(f => {
+                        let val = row[f] || '';
+                        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                            val = '"' + val.replace(/"/g, '""') + '"';
+                        }
+                        return val;
+                    }).join(','));
+                });
+                const csvContent = csvRows.join('\n');
+                const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+                const csvFile = new File([csvBlob], `submission_${Date.now()}.csv`, { type: 'text/csv' });
+
+                // =============================================
+                // SEND CONFIRMATION TO USER WITH CSV
+                // =============================================
+                const userMsg = 
                     `✅ <b>Submission Successful!</b>\n\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
-                    `📊 <b>Total IDs:</b> ${idCount}\n` +
+                    `📊 <b>Total IDs:</b> ${allData.length}\n` +
                     `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
                     `⏳ <b>Status:</b> Pending Review\n\n` +
                     `📌 <b>Next Step:</b> Wait for admin approval.`;
 
                 sendTelegramMessage(currentUserId, userMsg);
+                sendTelegramDocument(currentUserId, csvFile, `📊 <b>Your Submission Data</b>\n\n📁 ${selectedCategoryData.name}\n📊 ${allData.length} IDs`);
 
                 // =============================================
-                // SEND TO ADMIN
+                // SEND TO ADMIN WITH CSV
                 // =============================================
-                let adminMsg = 
-                    `📤 <b>New Manual Submission</b>\n\n` +
+                const adminMsg = 
+                    `📤 <b>New Table Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
                     `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
-                    `📊 <b>Total IDs:</b> ${idCount}\n` +
+                    `📊 <b>Total IDs:</b> ${allData.length}\n` +
                     `📋 <b>Fields:</b> ${fieldNames.join(', ')}\n` +
                     `⏳ <b>Status:</b> Pending Review`;
 
-                // Send to admin
                 sendTelegramMessage(ADMIN_CHAT_ID, adminMsg);
-
-                // Also send the actual data to admin
-                let dataMsg = `📋 <b>Submitted Data:</b>\n\n`;
-                fieldNames.forEach(field => {
-                    const val = fieldData[field] || '';
-                    const displayVal = val.length > 200 ? val.substring(0, 200) + '...' : val;
-                    dataMsg += `<b>${field}:</b>\n<code>${displayVal}</code>\n\n`;
-                });
-                sendTelegramMessage(ADMIN_CHAT_ID, dataMsg);
+                sendTelegramDocument(ADMIN_CHAT_ID, csvFile, `📊 <b>Submission Data</b>\n\n👤 ${tgUser.first_name || 'User'}\n📁 ${selectedCategoryData.name}\n📊 ${allData.length} IDs`);
 
                 showToast('✅ Submitted successfully!', 'success');
                 loadDashboard();
@@ -941,9 +1116,9 @@
                 document.getElementById('submitSection').style.display = 'none';
                 document.getElementById('submitButtons').style.display = 'none';
                 document.getElementById('submitProgress').style.display = 'none';
-                document.getElementById('inputFields').innerHTML = '';
                 selectedCategory = null;
                 selectedCategoryData = null;
+                fieldNames = [];
                 
             } catch (e) {
                 console.error('Submit error:', e);
@@ -954,13 +1129,26 @@
         }
 
         // =============================================
-        // SEND TELEGRAM MESSAGE
+        // SEND TELEGRAM MESSAGE & DOCUMENT
         // =============================================
         function sendTelegramMessage(chatId, text) {
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+            }).catch(console.error);
+        }
+
+        function sendTelegramDocument(chatId, file, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('document', file);
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'HTML');
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                method: 'POST',
+                body: formData
             }).catch(console.error);
         }
 
@@ -1142,9 +1330,8 @@
                     userSubs.forEach(([key, data]) => {
                         const statusText = data.status || 'pending';
                         const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
-                        const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
-                        html += `<div class="history-item"><div class="history-left"><div class="h-title">${typeText} ${data.fileName || data.categoryName || 'Submission'}</div>
-                            <div class="h-date">${data.idCount || 0} IDs • ${new Date(data.timestamp).toLocaleString()}</div></div>
+                        html += `<div class="history-item"><div class="history-left"><div class="h-title">📊 ${data.idCount || 0} IDs</div>
+                            <div class="h-date">${new Date(data.timestamp).toLocaleString()}</div></div>
                             <span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                     });
                 }
@@ -1198,7 +1385,7 @@
         }
 
         // =============================================
-        // ADMIN: CATEGORIES (with Fields support)
+        // ADMIN: CATEGORIES
         // =============================================
         async function loadAdminCategories() {
             if (!isAdmin) return;
@@ -1241,7 +1428,7 @@
                         document.getElementById('categoryIcon').value = data.icon || '';
                         document.getElementById('categoryDetails').value = data.details || '';
                         document.getElementById('categoryStatus').value = String(data.active !== false);
-                        document.getElementById('categoryFields').value = data.fields || 'ID, Password';
+                        document.getElementById('categoryFields').value = data.fields || 'ID, Password, Cookies';
                     }
                 }).catch(e => showToast('❌ Error loading category', 'error'));
             } else {
@@ -1249,7 +1436,7 @@
                 document.getElementById('categoryIcon').value = '';
                 document.getElementById('categoryDetails').value = '';
                 document.getElementById('categoryStatus').value = 'true';
-                document.getElementById('categoryFields').value = 'ID, Password';
+                document.getElementById('categoryFields').value = 'ID, Password, Cookies';
             }
             document.getElementById('categoryModal').classList.add('active');
         }
@@ -1261,7 +1448,7 @@
             const icon = document.getElementById('categoryIcon').value.trim() || '📁';
             const details = document.getElementById('categoryDetails').value.trim();
             const active = document.getElementById('categoryStatus').value === 'true';
-            const fields = document.getElementById('categoryFields').value.trim() || 'ID, Password';
+            const fields = document.getElementById('categoryFields').value.trim() || 'ID, Password, Cookies';
 
             if (!name) { showToast('❌ Enter name', 'error'); return; }
 
@@ -1464,8 +1651,7 @@
                         userSubs.forEach(([key, data]) => {
                             const statusText = data.status || 'pending';
                             const statusEmoji = statusText === 'approved' ? '✅' : statusText === 'rejected' ? '❌' : '⏳';
-                            const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
-                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>${typeText} ${data.fileName || data.categoryName || 'Submission'}</span><span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
+                            html += `<div style="background:var(--tg-secondary); padding:8px 12px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:13px;"><span>📊 ${data.idCount || 0} IDs</span><span class="status-badge status-${statusText}">${statusEmoji} ${statusText}</span></div>`;
                         });
                     }
                 }
@@ -1613,7 +1799,7 @@
 
                 let html = '';
                 filtered.forEach(([key, data]) => {
-                    const typeText = data.type === 'manual' ? '📝 Manual' : '📄 File';
+                    const typeText = data.type === 'table' ? '📊 Table' : '📄 File';
                     const fieldsText = data.fields ? data.fields.join(', ') : '';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -1646,15 +1832,29 @@
                     <div style="font-size:12px; color:var(--tg-hint);">Category: ${data.categoryName}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Status: ${data.status}</div>
                     <div style="font-size:12px; color:var(--tg-hint);">Date: ${new Date(data.timestamp).toLocaleString()}</div>
+                    <div style="font-size:12px; color:var(--tg-hint);">Total IDs: ${data.idCount}</div>
                 </div>`;
                 
-                if (data.fields && data.data) {
-                    html += `<div style="background:var(--tg-secondary); border-radius:10px; padding:12px;">`;
+                if (data.fields && data.data && Array.isArray(data.data)) {
+                    html += `<div style="background:var(--tg-secondary); border-radius:10px; padding:12px; overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                            <tr style="background:var(--tg-bg);">`;
                     data.fields.forEach(field => {
-                        const val = data.data[field] || '';
-                        html += `<div style="margin-bottom:6px;"><strong>${field}:</strong><br><code style="font-size:12px; white-space:pre-wrap; word-break:break-all;">${val}</code></div>`;
+                        html += `<th style="padding:6px 8px; text-align:left; border-bottom:1px solid var(--tg-secondary);">${field}</th>`;
                     });
-                    html += `</div>`;
+                    html += `</tr>`;
+                    data.data.slice(0, 20).forEach(row => {
+                        html += `<tr>`;
+                        data.fields.forEach(field => {
+                            const val = row[field] || '';
+                            html += `<td style="padding:4px 8px; border-bottom:1px solid var(--tg-secondary);">${val}</td>`;
+                        });
+                        html += `</tr>`;
+                    });
+                    if (data.data.length > 20) {
+                        html += `<tr><td colspan="${data.fields.length}" style="padding:8px; text-align:center; color:var(--tg-hint);">... and ${data.data.length - 20} more rows</td></tr>`;
+                    }
+                    html += `</table></div>`;
                 }
                 
                 document.getElementById('userDetailContent').innerHTML = html;
@@ -1713,13 +1913,38 @@
                         timestamp: new Date().toISOString()
                     });
 
-                    sendTelegramMessage(data.userId,
-                        `✅ <b>IDs Approved!</b>\n\n` +
-                        `📊 ${approvedCount} IDs\n` +
-                        `💰 ${ratePerId} Taka/ID\n` +
-                        `🎯 Commission: ${commissionBonus} Taka\n` +
-                        `💵 Total: ${totalEarnings} Taka`
-                    );
+                    // Send CSV file to user
+                    if (data.fields && data.data && Array.isArray(data.data)) {
+                        const csvRows = [data.fields.join(',')];
+                        data.data.forEach(row => {
+                            csvRows.push(data.fields.map(f => {
+                                let val = row[f] || '';
+                                if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                                    val = '"' + val.replace(/"/g, '""') + '"';
+                                }
+                                return val;
+                            }).join(','));
+                        });
+                        const csvContent = csvRows.join('\n');
+                        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+                        const csvFile = new File([csvBlob], `approved_${Date.now()}.csv`, { type: 'text/csv' });
+                        
+                        sendTelegramDocument(data.userId, csvFile,
+                            `✅ <b>IDs Approved!</b>\n\n` +
+                            `📊 ${approvedCount} IDs\n` +
+                            `💰 ${ratePerId} Taka/ID\n` +
+                            `🎯 Commission: ${commissionBonus} Taka\n` +
+                            `💵 Total: ${totalEarnings} Taka`
+                        );
+                    } else {
+                        sendTelegramMessage(data.userId,
+                            `✅ <b>IDs Approved!</b>\n\n` +
+                            `📊 ${approvedCount} IDs\n` +
+                            `💰 ${ratePerId} Taka/ID\n` +
+                            `🎯 Commission: ${commissionBonus} Taka\n` +
+                            `💵 Total: ${totalEarnings} Taka`
+                        );
+                    }
                 }
 
                 showToast('✅ Approved!', 'success');
@@ -1825,7 +2050,7 @@
         }
 
         // =============================================
-        // ADMIN: REPORT (Send to Users)
+        // ADMIN: REPORT
         // =============================================
         async function loadReportCategories() {
             try {
@@ -1868,7 +2093,6 @@
                     const userData = await getData(`users/${userId}`);
                     if (!userData) continue;
 
-                    // Get approved submissions for this user
                     const submissions = await getData('submissions');
                     let approvedCount = 0;
                     
@@ -1883,7 +2107,6 @@
 
                     if (approvedCount === 0) continue;
 
-                    // Check commission
                     let commissionBonus = 0;
                     if (category) {
                         const commissionData = await getData(`categoryCommission/${category}`);
@@ -1918,13 +2141,19 @@
                         totalIds += approvedCount;
                         processed++;
 
-                        sendTelegramMessage(userId,
+                        // Send CSV with report data
+                        const csvRows = [['ID', 'Category', 'Approved IDs', 'Rate', 'Commission', 'Total']];
+                        csvRows.push([userId, category || 'All', approvedCount, ratePerId, commissionBonus, total]);
+                        const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+                        const csvFile = new File([csvBlob], `report_${userId}_${Date.now()}.csv`, { type: 'text/csv' });
+
+                        sendTelegramDocument(userId, csvFile,
                             `📊 <b>Report Received!</b>\n\n` +
                             `✅ ${approvedCount} IDs approved\n` +
                             `💰 ${ratePerId} Taka/ID\n` +
                             `🎯 Commission: ${commissionBonus} Taka\n` +
-                            `💵 Total: ${total} Taka\n\n` +
-                            `Check your balance in the app.`
+                            `💵 Total: ${total} Taka`
                         );
                     }
                 }
@@ -2221,7 +2450,7 @@
                         const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
                         if (itemDate !== date) return;
                     }
-                    const typeText = item.type === 'manual' ? 'Manual' : 'File';
+                    const typeText = item.type === 'table' ? 'Table' : 'File';
                     data.push([
                         item.userName || item.userId,
                         item.categoryName || 'Unknown',
