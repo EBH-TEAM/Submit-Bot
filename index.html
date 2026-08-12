@@ -109,28 +109,64 @@
         .category-item .cat-details { font-size: 11px; color: var(--tg-hint); margin-top: 4px; }
         .category-item .cat-fields { font-size: 10px; color: var(--tg-hint); margin-top: 2px; }
         
-        /* ===== INPUT TABLE STYLE ===== */
-        .input-table-wrapper { overflow-x: auto; margin-top: 12px; }
-        .input-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .input-table th { background: var(--tg-button); color: var(--tg-button-text); padding: 8px 6px; text-align: center; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-        .input-table td { padding: 4px; border-bottom: 1px solid var(--tg-secondary); }
-        .input-table td input, .input-table td textarea { 
-            width: 100%; 
-            padding: 6px 8px; 
-            border: 1px solid var(--tg-secondary); 
-            border-radius: 6px; 
-            background: var(--tg-bg); 
-            color: var(--tg-text); 
-            font-size: 13px; 
+        /* ===== SIDE BY SIDE INPUT BOXES ===== */
+        .input-boxes-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .input-box-wrapper {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-box-wrapper label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tg-text);
+            margin-bottom: 4px;
+            display: block;
+        }
+        .input-box-wrapper textarea {
+            flex: 1;
+            min-height: 300px;
+            padding: 10px 12px;
+            border: 2px solid var(--tg-secondary);
+            border-radius: 12px;
+            font-size: 13px;
             font-family: monospace;
-            min-width: 80px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            resize: vertical;
+            line-height: 1.6;
             transition: border-color 0.2s;
         }
-        .input-table td input:focus, .input-table td textarea:focus { border-color: var(--tg-button); outline: none; }
-        .input-table td textarea { min-height: 36px; resize: vertical; }
+        .input-box-wrapper textarea:focus {
+            border-color: var(--tg-button);
+            outline: none;
+        }
+        .input-box-wrapper .field-hint {
+            font-size: 11px;
+            color: var(--tg-hint);
+            margin-top: 4px;
+        }
         
-        .table-actions { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
-        .table-actions .btn-primary { flex: 0 1 auto; padding: 10px 20px; width: auto; }
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 12px;
+            width: auto;
+        }
+        .clear-btn:active { transform: scale(0.95); }
         
         .history-item { background: var(--tg-bg); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .history-left .h-title { font-weight: 600; font-size: 14px; }
@@ -195,15 +231,6 @@
         
         .copy-number { background: none; border: none; color: var(--tg-link); cursor: pointer; font-size: 12px; }
         .copy-number:active { opacity: 0.6; }
-        
-        .field-row { display: flex; gap: 8px; align-items: center; background: var(--tg-bg); padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; }
-        .field-row .field-label { font-weight: 600; font-size: 13px; min-width: 80px; color: var(--tg-text); }
-        .field-row .field-input { flex: 1; background: var(--tg-secondary); border: none; padding: 6px 10px; border-radius: 6px; color: var(--tg-text); font-size: 13px; }
-        .field-row .field-input:focus { outline: 2px solid var(--tg-button); }
-
-        /* Row counter */
-        .row-counter { font-size: 12px; color: var(--tg-hint); margin-top: 8px; text-align: right; }
-        .row-counter span { font-weight: 600; color: var(--tg-text); }
     </style>
 </head>
 <body>
@@ -270,7 +297,7 @@
         <div id="recentSubmissions"></div>
     </div>
 
-    <!-- ========== SUBMIT (Input Table System) ========== -->
+    <!-- ========== SUBMIT (Side by Side Input Boxes) ========== -->
     <div id="pageSubmit" class="page">
         <button class="back-btn" onclick="switchPage('home')">← Back</button>
         <h3 style="margin-bottom:12px;">📤 FB & IG ID SUBMIT</h3>
@@ -280,27 +307,17 @@
         <div id="submitSection" style="display:none;">
             <div id="categoryInfo" style="background:var(--tg-secondary); border-radius:12px; padding:12px; margin-bottom:12px;"></div>
             
-            <div class="table-actions">
-                <button class="btn-primary" onclick="addRow()" style="flex:0 1 auto; padding:8px 16px; width:auto;">➕ Add Row</button>
-                <button class="btn-primary btn-success" onclick="pasteFromClipboard()" style="flex:0 1 auto; padding:8px 16px; width:auto;">📋 Paste from Clipboard</button>
-                <button class="btn-danger" onclick="clearTable()" style="flex:0 1 auto; padding:8px 16px; width:auto;">🗑️ Clear All</button>
-            </div>
+            <!-- Side by Side Input Boxes -->
+            <div class="input-boxes-container" id="inputBoxes"></div>
             
-            <div class="input-table-wrapper">
-                <table class="input-table" id="inputTable">
-                    <thead id="tableHeader"></thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+            <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                <button class="clear-btn" onclick="clearAllBoxes()">🗑️ Clear All</button>
+                <button class="btn-primary" onclick="submitBoxes()" style="flex:1;">✅ Submit</button>
             </div>
-            <div class="row-counter">Total Rows: <span id="rowCount">0</span></div>
             
             <div id="submitProgress" style="display:none; text-align:center; padding:20px;">
                 <div class="spinner"></div>
                 <div style="margin-top:8px; color:var(--tg-hint);">Submitting...</div>
-            </div>
-            <div id="submitButtons" style="display:none;" class="confirm-buttons">
-                <button class="btn-primary btn-success" onclick="submitTable()">✅ Confirm Submit</button>
-                <button class="btn-primary btn-danger" onclick="cancelSubmit()">❌ Cancel</button>
             </div>
         </div>
     </div>
@@ -489,7 +506,7 @@
             <div class="form-group"><label>Status</label><select id="categoryStatus"><option value="true">🟢 Active</option><option value="false">🔴 Inactive</option></select></div>
             <div class="form-group"><label>📋 Input Fields (comma separated)</label>
                 <input type="text" id="categoryFields" placeholder="e.g. ID, Password, Cookies" value="ID, Password, Cookies">
-                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Enter field names separated by comma. Users will see these as columns.</div>
+                <div style="font-size:11px; color:var(--tg-hint); margin-top:4px;">Enter field names separated by comma. Each will be a separate text box.</div>
             </div>
             <button class="btn-primary" id="categorySubmitBtn" onclick="saveCategory()">💾 Save</button>
         </div>
@@ -506,7 +523,7 @@
 
     <script>
         // =============================================
-        // FIREBASE CONFIG - Realtime Database
+        // FIREBASE CONFIG
         // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_VHmCFdGiDzABQyoSwdy5QlbK7FUw944",
@@ -534,6 +551,7 @@
         let editingCategoryId = null;
         let currentFileTab = 'pending';
         let fieldNames = [];
+        let textareas = {};
         const BOT_TOKEN = '8885676936:AAGE77fC2xik1O0eHy8TrufGjPnf6ioKdCk';
         const ADMIN_CHAT_ID = '6140196943';
 
@@ -749,7 +767,7 @@
         }
 
         // =============================================
-        // LOAD CATEGORIES (User)
+        // LOAD CATEGORIES
         // =============================================
         async function loadCategories() {
             try {
@@ -767,7 +785,7 @@
                     const statusClass = isActive ? 'online' : 'offline';
                     const disabledClass = isActive ? '' : 'disabled';
                     const statusText = isActive ? '🟢 Online' : '🔴 Offline';
-                    const fieldsText = cat.fields ? `📋 ${cat.fields.split(',').length} columns` : '';
+                    const fieldsText = cat.fields ? `📋 ${cat.fields.split(',').length} boxes` : '';
                     
                     grid.innerHTML += `
                         <div class="category-item ${disabledClass}" onclick="${isActive ? `selectCategory('${key}')` : ''}" data-id="${key}" style="${!isActive ? 'opacity:0.5; cursor:not-allowed;' : ''}">
@@ -789,7 +807,6 @@
             getData(`categories/${catId}`).then(catData => {
                 selectedCategoryData = catData;
                 document.getElementById('submitSection').style.display = 'block';
-                document.getElementById('submitButtons').style.display = 'none';
                 document.getElementById('submitProgress').style.display = 'none';
                 
                 // Parse fields
@@ -800,194 +817,61 @@
                 info.innerHTML = `
                     <div style="font-weight:600; font-size:16px;">${catData.icon || '📁'} ${catData.name}</div>
                     ${catData.details ? `<div style="font-size:13px; color:var(--tg-hint); margin-top:4px;">${catData.details}</div>` : ''}
-                    <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} columns • Fill the table below</div>
+                    <div style="font-size:12px; color:var(--tg-hint); margin-top:4px;">📋 ${fieldNames.length} boxes • Enter one item per line in each box</div>
                 `;
                 
-                // Build table
-                buildTable();
+                // Build side by side boxes
+                buildBoxes();
                 
-                // Show submit button
-                document.getElementById('submitButtons').style.display = 'flex';
-                
-                showToast('📁 Category selected! Fill in the table.', 'info');
+                showToast('📁 Category selected! Fill in the boxes.', 'info');
             }).catch(e => {
                 showToast('❌ Error loading category', 'error');
             });
         }
 
         // =============================================
-        // TABLE FUNCTIONS
+        // BUILD SIDE BY SIDE BOXES
         // =============================================
-        function buildTable() {
-            const thead = document.getElementById('tableHeader');
-            const tbody = document.getElementById('tableBody');
+        function buildBoxes() {
+            const container = document.getElementById('inputBoxes');
+            container.innerHTML = '';
+            textareas = {};
             
-            // Build header
-            let headerHtml = '<tr><th style="width:40px;">#</th>';
-            fieldNames.forEach(field => {
-                headerHtml += `<th>${field}</th>`;
+            fieldNames.forEach((field, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'input-box-wrapper';
+                
+                const label = document.createElement('label');
+                label.textContent = field;
+                
+                const textarea = document.createElement('textarea');
+                textarea.id = `box_${index}`;
+                textarea.placeholder = `Enter ${field} one per line...`;
+                textarea.style.minHeight = '300px';
+                
+                const hint = document.createElement('div');
+                hint.className = 'field-hint';
+                hint.textContent = `Enter ${field} one per line`;
+                
+                wrapper.appendChild(label);
+                wrapper.appendChild(textarea);
+                wrapper.appendChild(hint);
+                container.appendChild(wrapper);
+                
+                textareas[field] = textarea;
             });
-            headerHtml += '<th style="width:40px;">🗑️</th></tr>';
-            thead.innerHTML = headerHtml;
-            
-            // Start with 3 empty rows
-            tbody.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                addRowInternal();
-            }
-            updateRowCount();
         }
 
-        function addRow() {
-            addRowInternal();
-            updateRowCount();
-            showToast('➕ Row added', 'info');
-        }
-
-        function addRowInternal() {
-            const tbody = document.getElementById('tableBody');
-            const rowNum = tbody.children.length + 1;
-            const tr = document.createElement('tr');
-            tr.id = `row_${rowNum}`;
-            
-            // Row number
-            let html = `<td style="text-align:center; font-weight:600; color:var(--tg-hint);">${rowNum}</td>`;
-            
-            // Input fields
-            fieldNames.forEach((field, idx) => {
-                const isLong = field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass');
-                if (isLong) {
-                    html += `<td><textarea id="cell_${rowNum}_${idx}" placeholder="${field}..."></textarea></td>`;
-                } else {
-                    html += `<td><input type="text" id="cell_${rowNum}_${idx}" placeholder="${field}"></td>`;
-                }
-            });
-            
-            // Delete button
-            html += `<td><button onclick="deleteRow(${rowNum})" style="background:#dc3545; color:white; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:16px;">×</button></td>`;
-            
-            tr.innerHTML = html;
-            tbody.appendChild(tr);
-        }
-
-        function deleteRow(rowNum) {
-            const tbody = document.getElementById('tableBody');
-            const row = document.getElementById(`row_${rowNum}`);
-            if (row && tbody.children.length > 1) {
-                row.remove();
-                // Renumber rows
-                tbody.querySelectorAll('tr').forEach((tr, idx) => {
-                    const num = idx + 1;
-                    tr.id = `row_${num}`;
-                    tr.cells[0].textContent = num;
-                    // Update delete button onclick
-                    const delBtn = tr.cells[tr.cells.length - 1].querySelector('button');
-                    if (delBtn) {
-                        delBtn.onclick = function() { deleteRow(num); };
-                    }
-                    // Update cell IDs
-                    fieldNames.forEach((field, fIdx) => {
-                        const cell = tr.cells[fIdx + 1].querySelector('input, textarea');
-                        if (cell) {
-                            cell.id = `cell_${num}_${fIdx}`;
-                        }
-                    });
-                });
-                updateRowCount();
-                showToast('🗑️ Row deleted', 'info');
-            } else {
-                showToast('❌ Cannot delete last row', 'error');
-            }
-        }
-
-        function clearTable() {
-            if (confirm('Clear all rows?')) {
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '';
-                for (let i = 0; i < 3; i++) {
-                    addRowInternal();
-                }
-                updateRowCount();
-                showToast('🗑️ Table cleared', 'info');
-            }
-        }
-
-        function updateRowCount() {
-            const count = document.getElementById('tableBody').children.length;
-            document.getElementById('rowCount').textContent = count;
+        function clearAllBoxes() {
+            if (!confirm('Clear all boxes?')) return;
+            Object.values(textareas).forEach(ta => ta.value = '');
+            showToast('🗑️ All boxes cleared', 'info');
         }
 
         // =============================================
-        // PASTE FROM CLIPBOARD - Google Sheets style
+        // SUBMIT BOXES
         // =============================================
-        async function pasteFromClipboard() {
-            try {
-                const text = await navigator.clipboard.readText();
-                if (!text) {
-                    showToast('❌ No text in clipboard', 'error');
-                    return;
-                }
-                
-                // Parse tab-separated data (from Google Sheets)
-                const lines = text.split('\n').filter(line => line.trim());
-                const rows = lines.map(line => line.split('\t').map(cell => cell.trim()));
-                
-                if (rows.length === 0) {
-                    showToast('❌ No data to paste', 'error');
-                    return;
-                }
-                
-                // Clear existing rows
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '';
-                
-                // Add pasted rows
-                rows.forEach((rowData, rowIdx) => {
-                    const rowNum = rowIdx + 1;
-                    const tr = document.createElement('tr');
-                    tr.id = `row_${rowNum}`;
-                    
-                    let html = `<td style="text-align:center; font-weight:600; color:var(--tg-hint);">${rowNum}</td>`;
-                    
-                    fieldNames.forEach((field, fIdx) => {
-                        const value = rowData[fIdx] || '';
-                        const isLong = field.toLowerCase().includes('cookie') || field.toLowerCase().includes('pass');
-                        if (isLong) {
-                            html += `<td><textarea id="cell_${rowNum}_${fIdx}">${value}</textarea></td>`;
-                        } else {
-                            html += `<td><input type="text" id="cell_${rowNum}_${fIdx}" value="${value}"></td>`;
-                        }
-                    });
-                    
-                    html += `<td><button onclick="deleteRow(${rowNum})" style="background:#dc3545; color:white; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:16px;">×</button></td>`;
-                    
-                    tr.innerHTML = html;
-                    tbody.appendChild(tr);
-                });
-                
-                updateRowCount();
-                showToast(`✅ ${rows.length} rows pasted from clipboard!`, 'success');
-                
-            } catch (e) {
-                console.error('Paste error:', e);
-                showToast('❌ Could not read clipboard. Please grant permission.', 'error');
-            }
-        }
-
-        // =============================================
-        // SUBMIT TABLE
-        // =============================================
-        function cancelSubmit() {
-            document.getElementById('submitSection').style.display = 'none';
-            document.getElementById('submitButtons').style.display = 'none';
-            document.getElementById('submitProgress').style.display = 'none';
-            selectedCategory = null;
-            selectedCategoryData = null;
-            fieldNames = [];
-            showToast('❌ Submission cancelled', 'info');
-        }
-
-        async function submitTable() {
+        async function submitBoxes() {
             if (!selectedCategory || !selectedCategoryData) {
                 showToast('❌ Select a category first', 'error');
                 return;
@@ -998,37 +882,47 @@
                 return;
             }
 
-            // Collect data from table
-            const tbody = document.getElementById('tableBody');
-            const rows = tbody.querySelectorAll('tr');
+            // Collect data from all boxes
             const allData = [];
+            const fieldValues = {};
+            let hasData = false;
+            let maxLines = 0;
             
-            rows.forEach((tr, rowIdx) => {
-                const rowData = {};
-                let hasData = false;
-                fieldNames.forEach((field, fIdx) => {
-                    const cell = tr.cells[fIdx + 1];
-                    if (cell) {
-                        const input = cell.querySelector('input, textarea');
-                        if (input) {
-                            const val = input.value.trim();
-                            rowData[field] = val;
-                            if (val) hasData = true;
-                        }
-                    }
-                });
-                if (hasData) {
-                    allData.push(rowData);
+            fieldNames.forEach(field => {
+                const ta = textareas[field];
+                if (ta) {
+                    const lines = ta.value.split('\n').filter(line => line.trim());
+                    fieldValues[field] = lines;
+                    if (lines.length > 0) hasData = true;
+                    if (lines.length > maxLines) maxLines = lines.length;
                 }
             });
 
-            if (allData.length === 0) {
+            if (!hasData) {
                 showToast('❌ No data to submit', 'error');
                 return;
             }
 
+            // Build data rows - one per line
+            // If a field has fewer lines, repeat the last value or use empty
+            for (let i = 0; i < maxLines; i++) {
+                const row = {};
+                fieldNames.forEach(field => {
+                    const lines = fieldValues[field] || [];
+                    row[field] = lines[i] || (lines.length > 0 ? lines[lines.length - 1] : '');
+                });
+                // Only add if at least one field has data
+                let hasRowData = false;
+                Object.values(row).forEach(v => { if (v.trim()) hasRowData = true; });
+                if (hasRowData) allData.push(row);
+            }
+
+            if (allData.length === 0) {
+                showToast('❌ No valid data rows', 'error');
+                return;
+            }
+
             document.getElementById('submitProgress').style.display = 'block';
-            document.getElementById('submitButtons').style.display = 'none';
 
             try {
                 const subData = {
@@ -1042,7 +936,7 @@
                     idCount: allData.length,
                     status: 'pending',
                     timestamp: new Date().toISOString(),
-                    type: 'table'
+                    type: 'boxes'
                 };
 
                 const subKey = await pushData('submissions', subData);
@@ -1062,9 +956,7 @@
                     });
                 }
 
-                // =============================================
-                // CREATE CSV FILE
-                // =============================================
+                // Create CSV
                 const csvRows = [fieldNames.join(',')];
                 allData.forEach(row => {
                     csvRows.push(fieldNames.map(f => {
@@ -1079,9 +971,7 @@
                 const csvBlob = new Blob([csvContent], { type: 'text/csv' });
                 const csvFile = new File([csvBlob], `submission_${Date.now()}.csv`, { type: 'text/csv' });
 
-                // =============================================
-                // SEND CONFIRMATION TO USER WITH CSV
-                // =============================================
+                // Send to user
                 const userMsg = 
                     `✅ <b>Submission Successful!</b>\n\n` +
                     `📁 <b>Category:</b> ${selectedCategoryData.name}\n` +
@@ -1093,11 +983,9 @@
                 sendTelegramMessage(currentUserId, userMsg);
                 sendTelegramDocument(currentUserId, csvFile, `📊 <b>Your Submission Data</b>\n\n📁 ${selectedCategoryData.name}\n📊 ${allData.length} IDs`);
 
-                // =============================================
-                // SEND TO ADMIN WITH CSV
-                // =============================================
+                // Send to admin
                 const adminMsg = 
-                    `📤 <b>New Table Submission</b>\n\n` +
+                    `📤 <b>New Box Submission</b>\n\n` +
                     `👤 <b>User:</b> ${tgUser.first_name || 'User'}\n` +
                     `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
                     `👤 <b>Username:</b> @${tgUser.username || 'N/A'}\n` +
@@ -1112,19 +1000,14 @@
                 showToast('✅ Submitted successfully!', 'success');
                 loadDashboard();
                 
-                // Reset UI
-                document.getElementById('submitSection').style.display = 'none';
-                document.getElementById('submitButtons').style.display = 'none';
+                // Clear boxes
+                Object.values(textareas).forEach(ta => ta.value = '');
                 document.getElementById('submitProgress').style.display = 'none';
-                selectedCategory = null;
-                selectedCategoryData = null;
-                fieldNames = [];
                 
             } catch (e) {
                 console.error('Submit error:', e);
                 showToast('❌ Submission failed: ' + e.message, 'error');
                 document.getElementById('submitProgress').style.display = 'none';
-                document.getElementById('submitButtons').style.display = 'flex';
             }
         }
 
@@ -1799,7 +1682,7 @@
 
                 let html = '';
                 filtered.forEach(([key, data]) => {
-                    const typeText = data.type === 'table' ? '📊 Table' : '📄 File';
+                    const typeText = data.type === 'boxes' ? '📦 Boxes' : '📄 File';
                     const fieldsText = data.fields ? data.fields.join(', ') : '';
                     html += `<div style="background:var(--tg-bg); border-radius:12px; padding:12px 16px; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -2141,7 +2024,6 @@
                         totalIds += approvedCount;
                         processed++;
 
-                        // Send CSV with report data
                         const csvRows = [['ID', 'Category', 'Approved IDs', 'Rate', 'Commission', 'Total']];
                         csvRows.push([userId, category || 'All', approvedCount, ratePerId, commissionBonus, total]);
                         const csvContent = csvRows.map(row => row.join(',')).join('\n');
@@ -2450,7 +2332,7 @@
                         const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
                         if (itemDate !== date) return;
                     }
-                    const typeText = item.type === 'table' ? 'Table' : 'File';
+                    const typeText = item.type === 'boxes' ? 'Boxes' : 'File';
                     data.push([
                         item.userName || item.userId,
                         item.categoryName || 'Unknown',
